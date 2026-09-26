@@ -309,10 +309,7 @@ def main():
                 st.markdown("---")
                 st.markdown("#### ⚽ Gestionar Gols de les Jugadores (+ / -)")
                 
-                # Carregar llista actual de jugadores per al selectbox
                 noms_jugadores = [j.get('nom') for j in golejadores_data] if golejadores_data else ["Clàudia", "Júlia", "Martina", "Berta", "Carla", "Aina", "Noa"]
-                
-                # Afegir opció per crear nova jugadora si cal
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
                 jugadora_seleccionada = st.selectbox("Selecciona una jugadora:", noms_jugadores)
@@ -334,10 +331,9 @@ def main():
                         else:
                             st.warning("⚠️ Introdueix un nom.")
                 else:
-                    # Buscar els gols actuals de la jugadora seleccionada
                     gols_actuals = next((j.get('gols') for j in golejadores_data if j.get('nom') == jugadora_seleccionada), 0)
                     
-                    st.info(Jugadora seleccionada actualment: **{jugadora_seleccionada}** — Gols actuals: **{gols_actuals}** ⚽)
+                    st.info(f"Jugadora seleccionada: **{jugadora_seleccionada}** - Gols actuals: **{gols_actuals}** ⚽")
                     
                     col_bt1, col_bt2 = st.columns(2)
                     with col_bt1:
