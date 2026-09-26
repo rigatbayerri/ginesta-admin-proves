@@ -13,18 +13,13 @@ st.set_page_config(
 # --- ESTIL I COLORS PERSONALITZATS (Basat en la teva app vella) ---
 st.markdown("""
     <style>
-    /* Fons general de l'aplicació */
     .stApp {
         background-color: #f7f5fa;
         color: #2b1b3d;
     }
-    
-    /* Textos generals visibles */
     h1, h2, h3, h4, h5, h6, p, label {
         color: #2b1b3d !important;
     }
-    
-    /* Botons principals (lila amb lletra blanca) */
     .stButton>button, .stButton>button * {
         color: white !important;
         background-color: #5c2d73;
@@ -35,24 +30,18 @@ st.markdown("""
     .stButton>button:hover {
         background-color: #4a2858;
     }
-    
-    /* --- CAIXA DE CONTRASENYA (Fons blanc i text fosc ben visible) --- */
-    .stTextInput>div>div>input {
+    .stTextInput>div>div>input, .stNumberInput>div>div>input {
         background-color: white !important;
         color: #2b1b3d !important;
         border: 2px solid #5c2d73 !important;
         border-radius: 8px !important;
     }
-    
-    /* --- SELECTOR DE PARTITS (Fons lila i lletres blanques) --- */
     div[data-baseweb="select"] > div {
         background-color: #5c2d73 !important;
         color: white !important;
         border-color: #4a2858 !important;
         border-radius: 8px;
     }
-    
-    /* Text interior del selectbox i icones */
     div[data-baseweb="select"] span, div[data-baseweb="select"] svg {
         color: white !important;
         fill: white !important;
@@ -88,10 +77,10 @@ def check_access():
         
         input_pass = st.text_input("Contrasenya:", type="password")
         if st.button("Entrar"):
-            if input_pass == "admin2026":  # <-- Clau d'administració (desbloqueja tot)
+            if input_pass == "admin2026":  # <-- Clau d'administració
                 st.session_state["auth_level"] = "admin"
                 st.rerun()
-            elif input_pass == "ginesta2026":  # <-- Clau de famílies (vídeos i stats)
+            elif input_pass == "ginesta2026":  # <-- Clau de famílies
                 st.session_state["auth_level"] = "family"
                 st.rerun()
             else:
@@ -102,7 +91,7 @@ def check_access():
 if not check_access():
     st.stop()
 
-# --- BARRA LATERAL (Informació de sessió i tancar) ---
+# --- BARRA LATERAL ---
 with st.sidebar:
     st.write(f"Mode actual: **{st.session_state['auth_level'].upper()}**")
     if st.button("Tancar sessió"):
@@ -111,7 +100,6 @@ with st.sidebar:
 
 # --- APLICACIÓ PRINCIPAL ---
 def main():
-    # --- CAPÇALERA AMB EL LOGO DEL GINESTA ---
     col1, col2 = st.columns([1, 4])
     with col1:
         try:
@@ -124,7 +112,6 @@ def main():
 
     st.divider()
 
-    # --- DEFINIR PESTANYES SEGONS EL ROL ---
     if st.session_state["auth_level"] == "admin":
         tab_videos, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📊 Estadístiques", "⚙️ Administració"])
     else:
@@ -141,7 +128,7 @@ def main():
             response = supabase.table("partits").select("*").order("data", desc=True).execute()
             partits = response.data
         except Exception as e:
-            st.error(f"❌ Error en carregar els partits de Supabase: {e}")
+            st.error(f"❌ Error en carregar els partits: {e}")
 
         if not partits:
             st.warning("Encara no hi ha partits registrats a la base de dades.")
@@ -154,7 +141,6 @@ def main():
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;&nbsp;|&nbsp;&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
             
-            # Nota: Accepta tant 'video_url' com 'enllaç_video' per evitar fallos
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
             if video_url:
                 st.video(video_url)
@@ -167,22 +153,37 @@ def main():
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip (2x40 min)")
         
+        # Carregar dades d'estadístiques generals de Supabase (si existeixen)
+        try:
+            res_stats = supabase.table("estadistiques_generals").select("*").execute()
+            if res_stats.data:
+                st_data = res_stats.data[0]
+                n_partits = st_data.get("partits_jugats", 12)
+                g_favor = st_data.get("gols_favor", 34)
+                g_contra = st_data.get("gols_contra", 12)
+                porteries_zero = st_data.get("porteries_zero", 7)
+            else:
+                n_partits, g_favor, g_contra, porteries_zero = 12, 34, 12, 7
+        except:
+            n_partits, g_favor, g_contra, porteries_zero = 12, 34, 12, 7
+
         col_a, col_b, col_c = st.columns(3)
         with col_a:
-            st.metric(label="Partits Jugats", value="12")
+            st.metric(label="Partits Jugats", value=n_partits)
         with col_b:
-            st.metric(label="Gols a Favor", value="34")
+            st.metric(label="Gols a Favor", value=g_favor)
         with col_c:
-            st.metric(label="Gols en Contra", value="12")
+            st.metric(label="Gols en Contra", value=g_contra)
 
         st.markdown("---")
 
         st.markdown("### 🧤 Rendiment de Porteria (Clean Sheets)")
         col_porteria, _ = st.columns([1, 1])
         with col_porteria:
+            partits_amb_gols = max(0, n_partits - porteries_zero)
             fig_clean_sheets = px.pie(
                 names=["Porteries a Zero", "Partits amb Gols Encaixats"],
-                values=[7, 5],
+                values=[porteries_zero, partits_amb_gols],
                 hole=0.6,
                 color_discrete_sequence=["#5c2d73", "#d7bde2"]
             )
@@ -217,23 +218,30 @@ def main():
         st.markdown("---")
 
         st.markdown("### ⚽ Golejadores de l'Equip (Llista No Competitiva)")
-        golejadores_data = [
-            {"nom": "Clàudia", "gols": 8},
-            {"nom": "Júlia", "gols": 6},
-            {"nom": "Martina", "gols": 5},
-            {"nom": "Berta", "gols": 4},
-            {"nom": "Carla", "gols": 4},
-            {"nom": "Aina", "gols": 3},
-            {"nom": "Noa", "gols": 2}
-        ]
+        
+        # Carregar golejadores de Supabase
+        golejadores_data = []
+        try:
+            res_gol = supabase.table("golejadores").select("*").order("gols", desc=True).execute()
+            golejadores_data = res_gol.data
+        except:
+            pass
+
+        if not golejadores_data:
+            # Llista per defecte si encara no s'ha creat la taula
+            golejadores_data = [
+                {"nom": "Clàudia", "gols": 8}, {"nom": "Júlia", "gols": 6},
+                {"nom": "Martina", "gols": 5}, {"nom": "Berta", "gols": 4},
+                {"nom": "Carla", "gols": 4}, {"nom": "Aina", "gols": 3}, {"nom": "Noa", "gols": 2}
+            ]
 
         cols = st.columns(3)
         for i, jugadora in enumerate(golejadores_data):
             with cols[i % 3]:
                 st.markdown(f"""
                     <div style="background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
-                        <h4 style="margin: 0; color: #5c2d73;">{jugadora['nom']}</h4>
-                        <p style="margin: 5px 0 0 0; font-size: 16px; color: #2b1b3d !important;">⚽ <b>{jugadora['gols']}</b> gols</p>
+                        <h4 style="margin: 0; color: #5c2d73;">{jugadora.get('nom')}</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 16px; color: #2b1b3d !important;">⚽ <b>{jugadora.get('gols')}</b> gols</p>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -243,32 +251,85 @@ def main():
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració i Gestió")
-            st.markdown("Des d'aquí pots penjar nous partits directament a la base de dades de Supabase.")
+            
+            tab_adm_partits, tab_adm_stats = st.tabs(["🎬 Gestionar Partits", "📊 Actualitzar Estadístiques i Golejadores"])
 
-            st.markdown("#### ➕ Afegir Nou Partit")
-            with st.form("form_nou_partit"):
-                nou_titol = st.text_input("Títol del Partit (Ex: C.F. Ginesta vs CE Manresa)")
-                nova_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1)
-                nova_data = st.date_input("Data del Partit")
-                nou_video_url = st.text_input("Enllaç del Vídeo (YouTube, Drive, etc.)")
-                
-                submit_partit = st.form_submit_button(label="Guardar Partit a Supabase")
+            # --- SUBPANELL 1: PARTITS ---
+            with tab_adm_partits:
+                st.markdown("#### ➕ Afegir Nou Partit")
+                with st.form("form_nou_partit"):
+                    nou_titol = st.text_input("Títol del Partit (Ex: C.F. Ginesta vs CE Manresa)")
+                    nova_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1)
+                    nova_data = st.date_input("Data del Partit")
+                    nou_video_url = st.text_input("Enllaç del Vídeo (YouTube, Drive, etc.)")
+                    
+                    submit_partit = st.form_submit_button(label="Guardar Partit a Supabase")
 
-                if submit_partit:
-                    if nou_titol and nou_video_url:
+                    if submit_partit:
+                        if nou_titol and nou_video_url:
+                            try:
+                                data_a_inserir = {
+                                    "titol": nou_titol,
+                                    "jornada": int(nova_jornada),
+                                    "data": str(nova_data),
+                                    "video_url": nou_video_url
+                                }
+                                supabase.table("partits").insert(data_a_inserir).execute()
+                                st.success("🎉 Partit afegit correctament!")
+                            except Exception as e:
+                                st.error(f"❌ Error al guardar: {e}")
+                        else:
+                            st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
+
+            # --- SUBPANELL 2: ESTADÍSTIQUES I GOLEJADORES ---
+            with tab_adm_stats:
+                st.markdown("#### 📈 Actualitzar Mètriques Generals")
+                with st.form("form_metriques"):
+                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                    with col_m1:
+                        p_jugats = st.number_input("Partits Jugats", min_value=0, value=12)
+                    with col_m2:
+                        g_favor_in = st.number_input("Gols a Favor", min_value=0, value=34)
+                    with col_m3:
+                        g_contra_in = st.number_input("Gols en Contra", min_value=0, value=12)
+                    with col_m4:
+                        p_zero = st.number_input("Porteries a Zero", min_value=0, value=7)
+                    
+                    btn_metriques = st.form_submit_button("Actualitzar Mètriques")
+                    if btn_metriques:
                         try:
-                            data_a_inserir = {
-                                "titol": nou_titol,
-                                "jornada": int(nova_jornada),
-                                "data": str(nova_data),
-                                "video_url": nou_video_url
-                            }
-                            supabase.table("partits").insert(data_a_inserir).execute()
-                            st.success("🎉 Partit afegit correctament a Supabase!")
+                            # Comprovem si ja existeix registre previ
+                            supabase.table("estadistiques_generals").delete().neq("id", 0).execute() # Neteja i posa al dia
+                            supabase.table("estadistiques_generals").insert({
+                                "partits_jugats": int(p_jugats),
+                                "gols_favor": int(g_favor_in),
+                                "gols_contra": int(g_contra_in),
+                                "porteries_zero": int(p_zero)
+                            }).execute()
+                            st.success("✅ Mètriques generals actualitzades correctament!")
                         except Exception as e:
-                            st.error(f"❌ Error al guardar el partit: {e}")
-                    else:
-                        st.warning("⚠️ Si us plau, omple almenys el títol i l'enllaç del vídeo.")
+                            st.error(f"❌ Error (recorda crear la taula 'estadistiques_generals' a Supabase si no existeix): {e}")
+
+                st.markdown("---")
+                st.markdown("#### ⚽ Afegir / Actualitzar Golejadora")
+                with st.form("form_golejadora"):
+                    nom_jugadora = st.text_input("Nom de la Jugadora")
+                    gols_jugadora = st.number_input("Nombre de Gols", min_value=0, value=1)
+                    
+                    btn_gols = st.form_submit_button("Guardar Golejadora")
+                    if btn_gols:
+                        if nom_jugadora:
+                            try:
+                                # Inserir o actualitzar a la taula 'golejadores'
+                                supabase.table("golejadores").upsert({
+                                    "nom": nom_jugadora.strip(),
+                                    "gols": int(gols_jugadora)
+                                }, on_conflict="nom").execute()
+                                st.success(f"⚽ S'ha actualitzat la jugadora {nom_jugadora} amb {gols_jugadora} gols!")
+                            except Exception as e:
+                                st.error(f"❌ Error (recorda crear la taula 'golejadores' amb clau única a 'nom'): {e}")
+                        else:
+                            st.warning("⚠️ Introdueix el nom de la jugadora.")
 
 # Executar aplicació
 if check_access():
