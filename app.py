@@ -3,6 +3,7 @@ from supabase import create_client
 import pandas as pd
 import plotly.express as px
 import os
+import time
 
 # --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
@@ -210,25 +211,48 @@ def main():
                 lloc = partit.get('lloc', 'Casa')
                 escut_path = partit.get('escut_rival_url', '')
 
-                # Targeta visual per cada partit del calendari
+                # Targeta visual simètrica per cada partit del calendari
                 with st.container():
-                    col1, col2, col3, col4, col5 = st.columns([1.5, 2, 2.5, 1.5, 1])
+                    st.markdown(f"""
+                        <div style="background-color: white; padding: 12px 15px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.03);">
+                            <p style="margin: 0; font-size: 13px; color: #5c2d73; font-weight: bold;">Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    col_ginesta, col_vs, col_rival = st.columns([3, 1, 3])
                     
-                    with col1:
-                        st.markdown(f"**Jornada {jornada}**")
-                    with col2:
-                        st.markdown(f"📅 {data}<br>⏰ <b>{hora}</b>", unsafe_allow_html=True)
-                    with col3:
-                        st.markdown(f"**C.F. Ginesta** vs {rival}")
-                    with col4:
+                    # Columna Esquerra: C.F. Ginesta amb el seu logo
+                    with col_ginesta:
+                        cg1, cg2 = st.columns([1, 3])
+                        with cg1:
+                            try:
+                                st.image("logo.png", width=38)
+                            except:
+                                st.write("⚽")
+                        with cg2:
+                            st.markdown("<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                    
+                    # Columna Central: Informació de VS i Lloc (Casa / Fora)
+                    with col_vs:
                         color_lloc = "#5c2d73" if lloc == "Casa" else "#a569bd"
-                        st.markdown(f"<span style='color: white; background-color: {color_lloc}; padding: 4px 10px; border-radius: 6px; font-size: 13px;'><b>{lloc}</b></span>", unsafe_allow_html=True)
-                    with col5:
-                        if escut_path and os.path.exists(escut_path):
-                            st.image(escut_path, width=40)
-                        else:
-                            st.write("🛡️")
-                st.divider()
+                        st.markdown(f"""
+                            <div style="text-align: center; padding-top: 5px;">
+                                <span style="font-size: 14px; font-weight: bold; color: #888;">VS</span><br>
+                                <span style="color: white; background-color: {color_lloc}; padding: 2px 8px; border-radius: 5px; font-size: 11px;"><b>{lloc}</b></span>
+                            </div>
+                        """, unsafe_allow_html=True)
+
+                    # Columna Dreta: Rival amb el seu escut pujat
+                    with col_rival:
+                        cr1, cr2 = st.columns([3, 1])
+                        with cr1:
+                            st.markdown(f"<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                        with cr2:
+                            if escut_path and os.path.exists(escut_path):
+                                st.image(escut_path, width=38)
+                            else:
+                                st.write("🛡️")
+                st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================
     # PESTANYA 3: ESTADÍSTIQUES I GOLEJADORES
@@ -406,7 +430,7 @@ def main():
                     else:
                         st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
 
-            # --- SUBPANELL 2: CREAR CALENDARI ---
+            # --- SUBPANELL 2: CREAR CALENDARI (Amb ID automàtic corregit) ---
             with tab_adm_calendari:
                 st.markdown("#### 📅 Programar Partit al Calendari Oficial")
                 
@@ -432,6 +456,7 @@ def main():
                                     f.write(cal_escut.getbuffer())
 
                             supabase.table("calendari").insert({
+                                "id": int(time.time()),  # Solució de l'ID automàtic
                                 "jornada": int(cal_jornada),
                                 "data": str(cal_data),
                                 "hora": cal_hora,
@@ -442,7 +467,7 @@ def main():
                             st.success("✅ Partit afegit correctament al calendari!")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"❌ Error (recorda crear la taula 'calendari' a Supabase): {e}")
+                            st.error(f"❌ Error: {e}")
                     else:
                         st.warning("⚠️ Introdueix el nom del rival.")
 
