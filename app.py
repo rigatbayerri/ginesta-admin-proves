@@ -153,26 +153,46 @@ def main():
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip (2x40 min)")
         
+        # 1. Carregar dades generals i trams per calcular els totals automàticament
         try:
             res_stats = supabase.table("estadistiques_generals").select("*").execute()
             if res_stats.data:
                 st_data = res_stats.data[0]
                 n_partits = st_data.get("partits_jugats", 12)
-                g_favor = st_data.get("gols_favor", 34)
-                g_contra = st_data.get("gols_contra", 12)
                 porteries_zero = st_data.get("porteries_zero", 7)
             else:
-                n_partits, g_favor, g_contra, porteries_zero = 12, 34, 12, 7
+                n_partits, porteries_zero = 12, 7
         except:
-            n_partits, g_favor, g_contra, porteries_zero = 12, 34, 12, 7
+            n_partits, porteries_zero = 12, 7
 
+        # Carregar trams de minuts per sumar els gols reals a favor i en contra
+        trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
+        trams_data_db = []
+        try:
+            res_trams = supabase.table("trams_gols").select("*").execute()
+            trams_data_db = res_trams.data
+        except:
+            pass
+
+        dict_trams = {t: {"gols_favor": 0, "gols_contra": 0} for t in trams_llista}
+        for item in trams_data_db:
+            t = item.get("tram")
+            if t in dict_trams:
+                dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
+                dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
+
+        # Suma automàtica total dels 8 blocs de minuts
+        g_favor_total = sum(d["gols_favor"] for d in dict_trams.values())
+        g_contra_total = sum(d["gols_contra"] for d in dict_trams.values())
+
+        # Mètriques superiors actualitzades automàticament
         col_a, col_b, col_c = st.columns(3)
         with col_a:
             st.metric(label="Partits Jugats", value=n_partits)
         with col_b:
-            st.metric(label="Gols a Favor", value=g_favor)
+            st.metric(label="Gols a Favor (Total)", value=g_favor_total)
         with col_c:
-            st.metric(label="Gols en Contra", value=g_contra)
+            st.metric(label="Gols en Contra (Total)", value=g_contra_total)
 
         st.markdown("---")
 
@@ -193,21 +213,6 @@ def main():
 
         st.markdown("### ⏱️ Anàlisi Tàctica per Minuts de Partit (8 blocs de 10 min)")
         
-        trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
-        trams_data_db = []
-        try:
-            res_trams = supabase.table("trams_gols").select("*").execute()
-            trams_data_db = res_trams.data
-        except:
-            pass
-
-        dict_trams = {t: {"gols_favor": 0, "gols_contra": 0} for t in trams_llista}
-        for item in trams_data_db:
-            t = item.get("tram")
-            if t in dict_trams:
-                dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
-                dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
-
         df_trams = pd.DataFrame([
             {"Minuts": t, "Gols Favor": d["gols_favor"], "Gols Contra": d["gols_contra"]}
             for t, d in dict_trams.items()
@@ -295,6 +300,7 @@ def main():
                                     "video_url": nou_video_url
                                 }).execute()
                                 st.success("🎉 Partit afegit correctament!")
+                                st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
                         else:
@@ -304,26 +310,23 @@ def main():
             with tab_adm_stats:
                 st.markdown("#### 📈 Mètriques Generals")
                 with st.form("form_metriques"):
-                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                    col_m1, col_m4 = st.columns(2)
                     with col_m1:
                         p_jugats = st.number_input("Partits Jugats", min_value=0, value=n_partits)
-                    with col_m2:
-                        g_favor_in = st.number_input("Gols a Favor", min_value=0, value=g_favor)
-                    with col_m3:
-                        g_contra_in = st.number_input("Gols en Contra", min_value=0, value=g_contra)
                     with col_m4:
                         p_zero = st.number_input("Porteries a Zero", min_value=0, value=porteries_zero)
                     
-                    if st.form_submit_button("Actualitzar Mètriques"):
+                    if st.form_submit_button("Actualitzar Partits i Porteries"):
                         try:
                             supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
                             supabase.table("estadistiques_generals").insert({
                                 "partits_jugats": int(p_jugats),
-                                "gols_favor": int(g_favor_in),
-                                "gols_contra": int(g_contra_in),
+                                "gols_favor": int(g_favor_total),
+                                "gols_contra": int(g_contra_total),
                                 "porteries_zero": int(p_zero)
                             }).execute()
                             st.success("✅ Mètriques actualitzades!")
+                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
@@ -373,10 +376,8 @@ def main():
                 st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 st.markdown("Llegeix directament de la base de dades i permet sumar o restar gols a cada tram amb un sol clic.")
                 
-                # Seleccionar el tram que vols modificar ràpidament
-                tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista)
+                tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 
-                # Agafar valors actuals del tram escollit
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
                 actual_con = dict_trams[tram_coll]["gols_contra"]
                 
@@ -385,7 +386,7 @@ def main():
                 st.markdown("##### ⚽ Gols a Favor (Marcats en aquest tram)")
                 c_f1, c_f2 = st.columns(2)
                 with c_f1:
-                    if st.button(f"➕ Sumar Favor ({tram_coll})"):
+                    if st.button(f"➕ Sumar Favor ({tram_coll})", key="btn_sum_fav"):
                         try:
                             supabase.table("trams_gols").upsert({
                                 "tram": tram_coll,
@@ -397,7 +398,7 @@ def main():
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
                 with c_f2:
-                    if st.button(f"➖ Restar Favor ({tram_coll})") and actual_fav > 0:
+                    if st.button(f"➖ Restar Favor ({tram_coll})", key="btn_res_fav") and actual_fav > 0:
                         try:
                             supabase.table("trams_gols").upsert({
                                 "tram": tram_coll,
@@ -413,7 +414,7 @@ def main():
                 st.markdown("##### 🛡️ Gols en Contra (Encaixats en aquest tram)")
                 c_c1, c_c2 = st.columns(2)
                 with c_c1:
-                    if st.button(f"➕ Sumar Contra ({tram_coll})"):
+                    if st.button(f"➕ Sumar Contra ({tram_coll})", key="btn_sum_con"):
                         try:
                             supabase.table("trams_gols").upsert({
                                 "tram": tram_coll,
@@ -425,7 +426,7 @@ def main():
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
                 with c_c2:
-                    if st.button(f"➖ Restar Contra ({tram_coll})") and actual_con > 0:
+                    if st.button(f"➖ Restar Contra ({tram_coll})", key="btn_res_con") and actual_con > 0:
                         try:
                             supabase.table("trams_gols").upsert({
                                 "tram": tram_coll,
