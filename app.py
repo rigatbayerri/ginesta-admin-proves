@@ -117,7 +117,7 @@ def main():
 
     st.divider()
 
-    # Pestanyes segons el rol (Afegim "Calendari" per a tothom)
+    # Pestanyes segons el rol
     if st.session_state["auth_level"] == "admin":
         tab_videos, tab_calendari, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques", "⚙️ Administració"])
     else:
@@ -186,11 +186,11 @@ def main():
                 st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
 
     # ==========================================
-    # PESTANYA NOVA: CALENDARI DE LA TEMPORADA
+    # PESTANYA 2: CALENDARI DE LA TEMPORADA
     # ==========================================
     with tab_calendari:
         st.subheader("📅 Calendari Oficial de la Temporada")
-        st.markdown("Consulta els horaris, rivals i si juguem a casa o fora.")
+        st.markdown("Consulta els enfrontaments, horaris i si juguem a casa o fora.")
         
         calendari_data = []
         try:
@@ -208,24 +208,26 @@ def main():
                 hora = partit.get('hora', '-')
                 rival = partit.get('rival', '-')
                 lloc = partit.get('lloc', 'Casa')
-                escut = partit.get('escut_rival_url', '')
+                escut_path = partit.get('escut_rival_url', '')
 
-                # Estil visual per a cada jornada
-                bg_color = "#ffffff" if lloc == "Casa" else "#f3e9f7"
-                border_color = "#5c2d73" if lloc == "Casa" else "#a569bd"
-                
-                col_c1, col_c2, col_c3, col_c4 = st.columns([1, 2, 3, 2])
-                with col_c1:
-                    st.markdown(f"<div style='padding: 10px; background: {bg_color}; border-left: 4px solid {border_color}; border-radius: 8px; text-align: center;'><b>Jornada {jornada}</b></div>", unsafe_allow_html=True)
-                with col_c2:
-                    st.markdown(f"<div style='padding: 10px;'>📅 {data}<br>⏰ <b>{hora}</b></div>", unsafe_allow_html=True)
-                with col_c3:
-                    st.markdown(f"<div style='padding: 10px;'><b>C.F. Ginesta</b> vs {rival}<br><span style='color: #666;'>📍 Jugquem a <b>{lloc}</b></span></div>", unsafe_allow_html=True)
-                with col_c4:
-                    if escut and os.path.exists(escut):
-                        st.image(escut, width=40)
-                    else:
-                        st.write("🛡️")
+                # Targeta visual per cada partit del calendari
+                with st.container():
+                    col1, col2, col3, col4, col5 = st.columns([1.5, 2, 2.5, 1.5, 1])
+                    
+                    with col1:
+                        st.markdown(f"**Jornada {jornada}**")
+                    with col2:
+                        st.markdown(f"📅 {data}<br>⏰ <b>{hora}</b>", unsafe_allow_html=True)
+                    with col3:
+                        st.markdown(f"**C.F. Ginesta** vs {rival}")
+                    with col4:
+                        color_lloc = "#5c2d73" if lloc == "Casa" else "#a569bd"
+                        st.markdown(f"<span style='color: white; background-color: {color_lloc}; padding: 4px 10px; border-radius: 6px; font-size: 13px;'><b>{lloc}</b></span>", unsafe_allow_html=True)
+                    with col5:
+                        if escut_path and os.path.exists(escut_path):
+                            st.image(escut_path, width=40)
+                        else:
+                            st.write("🛡️")
                 st.divider()
 
     # ==========================================
@@ -404,7 +406,7 @@ def main():
                     else:
                         st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
 
-            # --- SUBPANELL NOU: CREAR CALENDARI ---
+            # --- SUBPANELL 2: CREAR CALENDARI ---
             with tab_adm_calendari:
                 st.markdown("#### 📅 Programar Partit al Calendari Oficial")
                 
