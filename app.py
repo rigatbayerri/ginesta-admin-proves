@@ -67,7 +67,7 @@ if not check_access():
 
 # Botó per tancar sessió a la barra lateral
 with st.sidebar:
-    st.write( അനുvat: f"Mode: **{st.session_state['auth_level'].upper()}**")
+    st.write(f"Mode: **{st.session_state['auth_level'].upper()}**")
     if st.button("Tancar sessió"):
         st.session_state["auth_level"] = None
         st.rerun()
