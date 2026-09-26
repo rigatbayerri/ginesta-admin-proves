@@ -191,27 +191,50 @@ def main():
 
         st.markdown("---")
 
-        st.markdown("### ⏱️ Anàlisi Tàctica per Trams de Partit (8 blocs de 10 min)")
+        st.markdown("### ⏱️ Anàlisi Tàctica per Minuts de Partit (8 blocs de 10 min)")
+        
+        trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
+        trams_data_db = []
+        try:
+            res_trams = supabase.table("trams_gols").select("*").execute()
+            trams_data_db = res_trams.data
+        except:
+            pass
+
+        dict_trams = {t: {"gols_favor": 0, "gols_contra": 0} for t in trams_llista}
+        for item in trams_data_db:
+            t = item.get("tram")
+            if t in dict_trams:
+                dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
+                dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
+
+        df_trams = pd.DataFrame([
+            {"Minuts": t, "Gols Favor": d["gols_favor"], "Gols Contra": d["gols_contra"]}
+            for t, d in dict_trams.items()
+        ])
+
         col_gols_favor, col_gols_contra = st.columns(2)
 
         with col_gols_favor:
             st.markdown("##### ⚽ Gols a Favor (Marcats)")
-            trams_favor_df = pd.DataFrame({
-                "Tram": ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"],
-                "Gols": [3, 5, 4, 6, 2, 5, 4, 5]
-            })
-            fig_favor = px.bar(trams_favor_df, x="Tram", y="Gols", color_discrete_sequence=["#5c2d73"])
-            fig_favor.update_layout(margin=dict(t=10, b=0, l=0, r=0), height=250)
+            fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", color_discrete_sequence=["#5c2d73"])
+            fig_favor.update_layout(
+                xaxis_title="Minuts del Partit",
+                yaxis_title="Gols",
+                margin=dict(t=10, b=0, l=0, r=0), 
+                height=250
+            )
             st.plotly_chart(fig_favor, use_container_width=True)
 
         with col_gols_contra:
             st.markdown("##### 🛡️ Gols en Contra (Encaixats)")
-            trams_contra_df = pd.DataFrame({
-                "Tram": ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"],
-                "Gols": [2, 1, 3, 2, 1, 0, 2, 1]
-            })
-            fig_contra = px.bar(trams_contra_df, x="Tram", y="Gols", color_discrete_sequence=["#a569bd"])
-            fig_contra.update_layout(margin=dict(t=10, b=0, l=0, r=0), height=250)
+            fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", color_discrete_sequence=["#a569bd"])
+            fig_contra.update_layout(
+                xaxis_title="Minuts del Partit",
+                yaxis_title="Gols",
+                margin=dict(t=10, b=0, l=0, r=0), 
+                height=250
+            )
             st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
@@ -249,7 +272,7 @@ def main():
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració i Gestió")
             
-            tab_adm_partits, tab_adm_stats = st.tabs(["🎬 Gestionar Partits", "📊 Actualitzar Estadístiques i Golejadores"])
+            tab_adm_partits, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Partits", "📊 Mètriques & Golejadores", "⏱️ Gols per Minuts (8 Blocs)"])
 
             # --- SUBPANELL 1: PARTITS ---
             with tab_adm_partits:
@@ -265,22 +288,21 @@ def main():
                     if submit_partit:
                         if nou_titol and nou_video_url:
                             try:
-                                data_a_inserir = {
+                                supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": int(nova_jornada),
                                     "data": str(nova_data),
                                     "video_url": nou_video_url
-                                }
-                                supabase.table("partits").insert(data_a_inserir).execute()
+                                }).execute()
                                 st.success("🎉 Partit afegit correctament!")
                             except Exception as e:
-                                st.error(f"❌ Error al guardar: {e}")
+                                st.error(f"❌ Error: {e}")
                         else:
                             st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
 
-            # --- SUBPANELL 2: ESTADÍSTIQUES I GOLEJADORES ---
+            # --- SUBPANELL 2: MÈTRIQUES I GOLEJADORES ---
             with tab_adm_stats:
-                st.markdown("#### 📈 Actualitzar Mètriques Generals")
+                st.markdown("#### 📈 Mètriques Generals")
                 with st.form("form_metriques"):
                     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
                     with col_m1:
@@ -292,8 +314,7 @@ def main():
                     with col_m4:
                         p_zero = st.number_input("Porteries a Zero", min_value=0, value=porteries_zero)
                     
-                    btn_metriques = st.form_submit_button("Actualitzar Mètriques")
-                    if btn_metriques:
+                    if st.form_submit_button("Actualitzar Mètriques"):
                         try:
                             supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
                             supabase.table("estadistiques_generals").insert({
@@ -302,12 +323,12 @@ def main():
                                 "gols_contra": int(g_contra_in),
                                 "porteries_zero": int(p_zero)
                             }).execute()
-                            st.success("✅ Mètriques generals actualitzades correctament!")
+                            st.success("✅ Mètriques actualitzades!")
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Gestionar Gols de les Jugadores (+ / -)")
+                st.markdown("#### ⚽ Gols de les Jugadores (+ / -)")
                 
                 noms_jugadores = [j.get('nom') for j in golejadores_data] if golejadores_data else ["Clàudia", "Júlia", "Martina", "Berta", "Carla", "Aina", "Noa"]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
@@ -320,47 +341,64 @@ def main():
                     if st.button("Crear Jugadora"):
                         if nova_jugadora_nom:
                             try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": nova_jugadora_nom.strip(),
-                                    "gols": int(gols_inicials)
-                                }, on_conflict="nom").execute()
-                                st.success(f"🎉 Jugadora {nova_jugadora_nom} afegida correctament!")
+                                supabase.table("golejadores").upsert({"nom": nova_jugadora_nom.strip(), "gols": int(gols_inicials)}, on_conflict="nom").execute()
+                                st.success(f"🎉 Jugadora {nova_jugadora_nom} afegida!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
-                        else:
-                            st.warning("⚠️ Introdueix un nom.")
                 else:
                     gols_actuals = next((j.get('gols') for j in golejadores_data if j.get('nom') == jugadora_seleccionada), 0)
-                    
-                    st.info(f"Jugadora seleccionada: **{jugadora_seleccionada}** - Gols actuals: **{gols_actuals}** ⚽")
+                    st.info(f"Jugadora: **{jugadora_seleccionada}** - Gols: **{gols_actuals}** ⚽")
                     
                     col_bt1, col_bt2 = st.columns(2)
                     with col_bt1:
                         if st.button("➕ Sumar 1 Gol"):
                             try:
-                                nous_gols = gols_actuals + 1
-                                supabase.table("golejadores").upsert({
-                                    "nom": jugadora_seleccionada,
-                                    "gols": nous_gols
-                                }, on_conflict="nom").execute()
-                                st.success(f"Gol sumat! {jugadora_seleccionada} ara porta {nous_gols} gols. 🚀")
+                                supabase.table("golejadores").upsert({"nom": jugadora_seleccionada, "gols": gols_actuals + 1}, on_conflict="nom").execute()
+                                st.success(f"Gol sumat a {jugadora_seleccionada}!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
-                                
                     with col_bt2:
                         if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
                             try:
-                                nous_gols = gols_actuals - 1
-                                supabase.table("golejadores").upsert({
-                                    "nom": jugadora_seleccionada,
-                                    "gols": nous_gols
-                                }, on_conflict="nom").execute()
-                                st.success(f"Gol restat. {jugadora_seleccionada} ara porta {nous_gols} gols.")
+                                supabase.table("golejadores").upsert({"nom": jugadora_seleccionada, "gols": gols_actuals - 1}, on_conflict="nom").execute()
+                                st.success(f"Gol restat a {jugadora_seleccionada}.")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
+
+            # --- SUBPANELL 3: GOLS PER MINUTS ---
+            with tab_adm_trams:
+                st.markdown("#### ⏱️ Actualitzar Gols per Minuts de Partit")
+                st.markdown("Modifica directament els gols a favor i en contra segons els minuts del partit (8 blocs de 10 min).")
+                
+                with st.form("form_trams_tots"):
+                    nous_valors_trams = {}
+                    
+                    for tram in trams_llista:
+                        st.markdown(f"**Minuts {tram}**")
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            gf = st.number_input(f"Favor (Min {tram})", min_value=0, value=dict_trams[tram]["gols_favor"], key=f"fav_{tram}")
+                        with c2:
+                            gc = st.number_input(f"Contra (Min {tram})", min_value=0, value=dict_trams[tram]["gols_contra"], key=f"con_{tram}")
+                        
+                        nous_valors_trams[tram] = {"gols_favor": gf, "gols_contra": gc}
+                        st.markdown("---")
+                        
+                    if st.form_submit_button("Guardar Tots els Minuts"):
+                        try:
+                            for tram, valors in nous_valors_trams.items():
+                                supabase.table("trams_gols").upsert({
+                                    "tram": tram,
+                                    "gols_favor": valors["gols_favor"],
+                                    "gols_contra": valors["gols_contra"]
+                                }, on_conflict="tram").execute()
+                            st.success("✅ Dades per minuts actualitzades correctament a Supabase!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error al guardar: {e}")
 
 # Executar aplicació
 if check_access():
