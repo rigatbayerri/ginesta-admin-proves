@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client
 import pandas as pd
 import plotly.express as px
+import os
 
 # --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
@@ -59,6 +60,10 @@ def init_supabase():
 
 supabase = init_supabase()
 
+# Assegurar carpeta d'escuts
+if not os.path.exists("escuts"):
+    os.makedirs("escuts")
+
 # --- SISTEMA DE DOBLE CLAU D'ACCÉS ---
 def check_access():
     if "auth_level" not in st.session_state:
@@ -112,16 +117,17 @@ def main():
 
     st.divider()
 
+    # Pestanyes segons el rol (Afegim "Calendari" per a tothom)
     if st.session_state["auth_level"] == "admin":
-        tab_videos, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📊 Estadístiques", "⚙️ Administració"])
+        tab_videos, tab_calendari, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques", "⚙️ Administració"])
     else:
-        tab_videos, tab_stats = st.tabs(["🎬 Videoteca", "📊 Estadístiques"])
+        tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
 
     # ==========================================
     # PESTANYA 1: VÍDEOS DELS PARTITS
     # ==========================================
     with tab_videos:
-        st.subheader("📺 Partits Gravats")
+        st.subheader("📺 Partits Gravats i Resultats")
         
         partits = []
         try:
@@ -133,11 +139,43 @@ def main():
         if not partits:
             st.warning("Encara no hi ha partits registrats a la base de dades.")
         else:
-            opcions_partits = {f"{p.get('data', '')} - {p.get('titol', 'Sense títol')} (Jornada {p.get('jornada', '')})": p for p in partits}
+            opcions_partits = {f"Jornada {p.get('jornada', '')} - {p.get('titol', 'Partit')} ({p.get('resultat', 'vs')})": p for p in partits}
             
             partit_seleccionat_str = st.selectbox("Selecciona un partit per veure:", list(opcions_partits.keys()))
             partit_actual = opcions_partits[partit_seleccionat_str]
             
+            rival = partit_actual.get('rival', 'Rival')
+            resultat = partit_actual.get('resultat', ' - ')
+            lloc = partit_actual.get('lloc', 'Casa')
+            escut_path = partit_actual.get('escut_rival_url') 
+            
+            st.markdown("---")
+            
+            col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
+            with col_res1:
+                c_g1, c_g2 = st.columns([1, 2])
+                with c_g1:
+                    try:
+                        st.image("logo.png", width=45)
+                    except:
+                        pass
+                with c_g2:
+                    st.markdown("<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                    
+            with col_res2:
+                st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
+                st.markdown(f"<p style='text-align: center; font-size: 14px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                
+            with col_res3:
+                c_r1, c_r2 = st.columns([2, 1])
+                with c_r1:
+                    st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                with c_r2:
+                    if escut_path and os.path.exists(escut_path):
+                        st.image(escut_path, width=45)
+                    else:
+                        st.write("🛡️")
+
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;&nbsp;|&nbsp;&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
             
@@ -148,12 +186,54 @@ def main():
                 st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
 
     # ==========================================
-    # PESTANYA 2: ESTADÍSTIQUES I GOLEJADORES
+    # PESTANYA NOVA: CALENDARI DE LA TEMPORADA
+    # ==========================================
+    with tab_calendari:
+        st.subheader("📅 Calendari Oficial de la Temporada")
+        st.markdown("Consulta els horaris, rivals i si juguem a casa o fora.")
+        
+        calendari_data = []
+        try:
+            res_cal = supabase.table("calendari").select("*").order("jornada", desc=False).execute()
+            calendari_data = res_cal.data
+        except Exception as e:
+            st.info("Encara no s'ha creat cap calendari a Supabase.")
+
+        if not calendari_data:
+            st.warning("No hi ha partits programats al calendari actualment.")
+        else:
+            for partit in calendari_data:
+                jornada = partit.get('jornada', '-')
+                data = partit.get('data', '-')
+                hora = partit.get('hora', '-')
+                rival = partit.get('rival', '-')
+                lloc = partit.get('lloc', 'Casa')
+                escut = partit.get('escut_rival_url', '')
+
+                # Estil visual per a cada jornada
+                bg_color = "#ffffff" if lloc == "Casa" else "#f3e9f7"
+                border_color = "#5c2d73" if lloc == "Casa" else "#a569bd"
+                
+                col_c1, col_c2, col_c3, col_c4 = st.columns([1, 2, 3, 2])
+                with col_c1:
+                    st.markdown(f"<div style='padding: 10px; background: {bg_color}; border-left: 4px solid {border_color}; border-radius: 8px; text-align: center;'><b>Jornada {jornada}</b></div>", unsafe_allow_html=True)
+                with col_c2:
+                    st.markdown(f"<div style='padding: 10px;'>📅 {data}<br>⏰ <b>{hora}</b></div>", unsafe_allow_html=True)
+                with col_c3:
+                    st.markdown(f"<div style='padding: 10px;'><b>C.F. Ginesta</b> vs {rival}<br><span style='color: #666;'>📍 Jugquem a <b>{lloc}</b></span></div>", unsafe_allow_html=True)
+                with col_c4:
+                    if escut and os.path.exists(escut):
+                        st.image(escut, width=40)
+                    else:
+                        st.write("🛡️")
+                st.divider()
+
+    # ==========================================
+    # PESTANYA 3: ESTADÍSTIQUES I GOLEJADORES
     # ==========================================
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip (2x40 min)")
         
-        # 1. Carregar dades generals i trams per calcular els totals automàticament
         try:
             res_stats = supabase.table("estadistiques_generals").select("*").execute()
             if res_stats.data:
@@ -165,7 +245,6 @@ def main():
         except:
             n_partits, porteries_zero = 12, 7
 
-        # Carregar trams de minuts per sumar els gols reals a favor i en contra
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
         trams_data_db = []
         try:
@@ -181,11 +260,9 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        # Suma automàtica total dels 8 blocs de minuts
         g_favor_total = sum(d["gols_favor"] for d in dict_trams.values())
         g_contra_total = sum(d["gols_contra"] for d in dict_trams.values())
 
-        # Mètriques superiors actualitzades automàticament
         col_a, col_b, col_c = st.columns(3)
         with col_a:
             st.metric(label="Partits Jugats", value=n_partits)
@@ -271,42 +348,103 @@ def main():
                 """, unsafe_allow_html=True)
 
     # ==========================================
-    # PESTANYA 3: ADMINISTRACIÓ (Només ADMIN)
+    # PESTANYA 4: ADMINISTRACIÓ (Només ADMIN)
     # ==========================================
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració i Gestió")
             
-            tab_adm_partits, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Partits", "📊 Mètriques & Golejadores", "⏱️ Gols per Minuts (+ / -)"])
+            tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Videoteca", "📅 Gestionar Calendari", "📊 Mètriques & Golejadores", "⏱️ Gols per Minuts"])
 
-            # --- SUBPANELL 1: PARTITS ---
+            # --- SUBPANELL 1: VÍDEOS DE PARTITS ---
             with tab_adm_partits:
-                st.markdown("#### ➕ Afegir Nou Partit")
-                with st.form("form_nou_partit"):
-                    nou_titol = st.text_input("Títol del Partit (Ex: C.F. Ginesta vs CE Manresa)")
-                    nova_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1)
-                    nova_data = st.date_input("Data del Partit")
-                    nou_video_url = st.text_input("Enllaç del Vídeo (YouTube, Drive, etc.)")
+                st.markdown("#### ➕ Pujar Vídeo i Resultat de Partit")
+                
+                nou_titol = st.text_input("Títol del Partit (Ex: C.F. Ginesta vs CE Manresa)")
+                nova_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1)
+                nova_data = st.date_input("Data del Partit")
+                
+                c_r1, c_r2 = st.columns(2)
+                with c_r1:
+                    nom_rival = st.text_input("Nom de l'Equip Rival")
+                with c_r2:
+                    resultat_partit = st.text_input("Resultat Final (Ex: 3-1)")
                     
-                    submit_partit = st.form_submit_button(label="Guardar Partit a Supabase")
+                c_l1, c_l2 = st.columns(2)
+                with c_l1:
+                    condicio_lloc = st.selectbox("Lloc del Partit", ["Casa", "Fora"])
+                with c_l2:
+                    arxiu_escut = st.file_uploader("Pujar Escut del Rival (PNG)", type=["png", "jpg", "jpeg"], key="escut_video")
 
-                    if submit_partit:
-                        if nou_titol and nou_video_url:
-                            try:
-                                supabase.table("partits").insert({
-                                    "titol": nou_titol,
-                                    "jornada": int(nova_jornada),
-                                    "data": str(nova_data),
-                                    "video_url": nou_video_url
-                                }).execute()
-                                st.success("🎉 Partit afegit correctament!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
-                        else:
-                            st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
+                nou_video_url = st.text_input("Enllaç del Vídeo (YouTube, Drive, etc.)")
+                
+                if st.button("Guardar Partit a Videoteca"):
+                    if nou_titol and nou_video_url:
+                        try:
+                            escut_path_saved = ""
+                            if arxiu_escut is not None:
+                                escut_path_saved = os.path.join("escuts", arxiu_escut.name)
+                                with open(escut_path_saved, "wb") as f:
+                                    f.write(arxiu_escut.getbuffer())
 
-            # --- SUBPANELL 2: MÈTRIQUES I GOLEJADORES ---
+                            supabase.table("partits").insert({
+                                "titol": nou_titol,
+                                "jornada": int(nova_jornada),
+                                "data": str(nova_data),
+                                "rival": nom_rival,
+                                "resultat": resultat_partit,
+                                "lloc": condicio_lloc,
+                                "escut_rival_url": escut_path_saved,
+                                "video_url": nou_video_url
+                            }).execute()
+                            st.success("🎉 Partit guardat a la videoteca!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+                    else:
+                        st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
+
+            # --- SUBPANELL NOU: CREAR CALENDARI ---
+            with tab_adm_calendari:
+                st.markdown("#### 📅 Programar Partit al Calendari Oficial")
+                
+                cal_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1, key="cal_j")
+                cal_data = st.date_input("Data del Partit", key="cal_d")
+                cal_hora = st.text_input("Hora del Partit (Ex: 10:30)", value="10:30")
+                
+                c_cr1, c_cr2 = st.columns(2)
+                with c_cr1:
+                    cal_rival = st.text_input("Equip Rival", key="cal_r")
+                with c_cr2:
+                    cal_lloc = st.selectbox("Lloc", ["Casa", "Fora"], key="cal_l")
+
+                cal_escut = st.file_uploader("Escut del Rival per al Calendari (PNG)", type=["png", "jpg", "jpeg"], key="escut_cal")
+
+                if st.button("Afegir al Calendari"):
+                    if cal_rival:
+                        try:
+                            escut_cal_path = ""
+                            if cal_escut is not None:
+                                escut_cal_path = os.path.join("escuts", cal_escut.name)
+                                with open(escut_cal_path, "wb") as f:
+                                    f.write(cal_escut.getbuffer())
+
+                            supabase.table("calendari").insert({
+                                "jornada": int(cal_jornada),
+                                "data": str(cal_data),
+                                "hora": cal_hora,
+                                "rival": cal_rival,
+                                "lloc": cal_lloc,
+                                "escut_rival_url": escut_cal_path
+                            }).execute()
+                            st.success("✅ Partit afegit correctament al calendari!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error (recorda crear la taula 'calendari' a Supabase): {e}")
+                    else:
+                        st.warning("⚠️ Introdueix el nom del rival.")
+
+            # --- SUBPANELL 3: MÈTRIQUES I GOLEJADORES ---
             with tab_adm_stats:
                 st.markdown("#### 📈 Mètriques Generals")
                 with st.form("form_metriques"):
@@ -371,7 +509,7 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-            # --- SUBPANELL 3: GOLS PER MINUTS INTERACTIU (+ / -) ---
+            # --- SUBPANELL 4: GOLS PER MINUTS INTERACTIU (+ / -) ---
             with tab_adm_trams:
                 st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 st.markdown("Llegeix directament de la base de dades i permet sumar o restar gols a cada tram amb un sol clic.")
@@ -433,7 +571,7 @@ def main():
                                 "gols_favor": actual_fav,
                                 "gols_contra": actual_con - 1
                             }, on_conflict="tram").execute()
-                            st.success(f"Gol en contra restat al bloc {tram_coll}.")
+                            st.success(f"Gol restat.")
                             st.rerun()
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
