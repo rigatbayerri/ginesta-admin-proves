@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estils CSS personalitzats (Colors corporatius lila i blanc)
+# Estils CSS personalitzats (Colors corporatius lila i blanc del Ginesta)
 st.markdown("""
     <style>
     .main {
@@ -23,6 +23,7 @@ st.markdown("""
         background-color: #5c2d73;
         color: white;
         border-radius: 8px;
+        border: none;
     }
     .stButton>button:hover {
         background-color: #4a235d;
@@ -47,14 +48,14 @@ def check_access():
         st.session_state["auth_level"] = None
 
     if st.session_state["auth_level"] is None:
-        st.markdown("### 🔐 Accés Restringit - C.F. Ginesta")
+        st.markdown("### 🔐 Accés Restringit - C.F. Ginesta Cadet F11")
         input_pass = st.text_input("Introdueix la contrasenya:", type="password")
         
         if input_pass:
-            if input_pass == "admin2026":  # <-- CANVIA-HO per la contrasenya d'administrador que vulguis
+            if input_pass == "admin2026":  # <-- Clau d'administració
                 st.session_state["auth_level"] = "admin"
                 st.rerun()
-            elif input_pass == "ginesta2026":  # <-- Contrasenya normal per a famílies
+            elif input_pass == "ginesta2026":  # <-- Clau per a famílies i aficionats
                 st.session_state["auth_level"] = "family"
                 st.rerun()
             else:
@@ -151,7 +152,7 @@ with tab_stats:
 
     st.markdown("---")
 
-    st.markdown("### ⏱️ Anàlisi Tàctica per Trams de Partit")
+    st.markdown("### ⏱️ Anàlisi Tàctica per Trams de Partit (8 blocs de 10 min)")
     col_gols_favor, col_gols_contra = st.columns(2)
 
     with col_gols_favor:
@@ -176,7 +177,7 @@ with tab_stats:
 
     st.markdown("---")
 
-    st.markdown("### ⚽ Golejadores de l'Equip")
+    st.markdown("### ⚽ Golejadores de l'Equip (Llista No Competitiva)")
     golejadores_data = [
         {"nom": "Clàudia", "gols": 8},
         {"nom": "Júlia", "gols": 6},
@@ -202,18 +203,19 @@ with tab_stats:
 # ==========================================
 if st.session_state["auth_level"] == "admin":
     with tab_admin:
-        st.subheader("⚙️ Panell d'Administració de Partits")
-        st.markdown("Omple el formulari per penjar un nou partit directament a la base de dades de Supabase:")
+        st.subheader("⚙️ Panell d'Administració i Gestió")
+        st.markdown("Des d'aquí pots penjar nous partits directament a la base de dades de Supabase sense accedir a codi.")
 
+        st.markdown("#### ➕ Afegir Nou Partit")
         with st.form("form_nou_partit"):
             nou_titol = st.text_input("Títol del Partit (Ex: C.F. Ginesta vs CE Manresa)")
             nova_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1)
             nova_data = st.date_input("Data del Partit")
             nou_video_url = st.text_input("Enllaç del Vídeo (YouTube, Drive, etc.)")
             
-            submit_button = st.form_submit_button(label="Guardar Partit a Supabase")
+            submit_partit = st.form_submit_button(label="Guardar Partit a Supabase")
 
-            if submit_button:
+            if submit_partit:
                 if nou_titol and nou_video_url:
                     try:
                         data_a_inserir = {
@@ -223,8 +225,8 @@ if st.session_state["auth_level"] == "admin":
                             "video_url": nou_video_url
                         }
                         supabase.table("partits").insert(data_a_inserir).execute()
-                        st.success("🎉 Partit afegit correctament a Supabase! Recarrega la pàgina per veure'l.")
+                        st.success("🎉 Partit afegit correctament a Supabase!")
                     except Exception as e:
-                        st.error(f"❌ Error al guardar a Supabase: {e}")
+                        st.error(f"❌ Error al guardar el partit: {e}")
                 else:
                     st.warning("⚠️ Si us plau, omple almenys el títol i l'enllaç del vídeo.")
