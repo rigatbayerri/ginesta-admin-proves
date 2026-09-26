@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ESTIL I COLORS PERSONALITZATS (Basat en la teva app vella) ---
+# --- ESTIL I COLORS PERSONALITZATS ---
 st.markdown("""
     <style>
     .stApp {
@@ -77,10 +77,10 @@ def check_access():
         
         input_pass = st.text_input("Contrasenya:", type="password")
         if st.button("Entrar"):
-            if input_pass == "admin2026":  # <-- Clau d'administració
+            if input_pass == "admin2026":
                 st.session_state["auth_level"] = "admin"
                 st.rerun()
-            elif input_pass == "ginesta2026":  # <-- Clau de famílies
+            elif input_pass == "ginesta2026":
                 st.session_state["auth_level"] = "family"
                 st.rerun()
             else:
@@ -153,7 +153,6 @@ def main():
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip (2x40 min)")
         
-        # Carregar dades d'estadístiques generals de Supabase (si existeixen)
         try:
             res_stats = supabase.table("estadistiques_generals").select("*").execute()
             if res_stats.data:
@@ -219,7 +218,6 @@ def main():
 
         st.markdown("### ⚽ Golejadores de l'Equip (Llista No Competitiva)")
         
-        # Carregar golejadores de Supabase
         golejadores_data = []
         try:
             res_gol = supabase.table("golejadores").select("*").order("gols", desc=True).execute()
@@ -228,7 +226,6 @@ def main():
             pass
 
         if not golejadores_data:
-            # Llista per defecte si encara no s'ha creat la taula
             golejadores_data = [
                 {"nom": "Clàudia", "gols": 8}, {"nom": "Júlia", "gols": 6},
                 {"nom": "Martina", "gols": 5}, {"nom": "Berta", "gols": 4},
@@ -287,19 +284,18 @@ def main():
                 with st.form("form_metriques"):
                     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
                     with col_m1:
-                        p_jugats = st.number_input("Partits Jugats", min_value=0, value=12)
+                        p_jugats = st.number_input("Partits Jugats", min_value=0, value=n_partits)
                     with col_m2:
-                        g_favor_in = st.number_input("Gols a Favor", min_value=0, value=34)
+                        g_favor_in = st.number_input("Gols a Favor", min_value=0, value=g_favor)
                     with col_m3:
-                        g_contra_in = st.number_input("Gols en Contra", min_value=0, value=12)
+                        g_contra_in = st.number_input("Gols en Contra", min_value=0, value=g_contra)
                     with col_m4:
-                        p_zero = st.number_input("Porteries a Zero", min_value=0, value=7)
+                        p_zero = st.number_input("Porteries a Zero", min_value=0, value=porteries_zero)
                     
                     btn_metriques = st.form_submit_button("Actualitzar Mètriques")
                     if btn_metriques:
                         try:
-                            # Comprovem si ja existeix registre previ
-                            supabase.table("estadistiques_generals").delete().neq("id", 0).execute() # Neteja i posa al dia
+                            supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
                             supabase.table("estadistiques_generals").insert({
                                 "partits_jugats": int(p_jugats),
                                 "gols_favor": int(g_favor_in),
@@ -308,28 +304,67 @@ def main():
                             }).execute()
                             st.success("✅ Mètriques generals actualitzades correctament!")
                         except Exception as e:
-                            st.error(f"❌ Error (recorda crear la taula 'estadistiques_generals' a Supabase si no existeix): {e}")
+                            st.error(f"❌ Error: {e}")
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Afegir / Actualitzar Golejadora")
-                with st.form("form_golejadora"):
-                    nom_jugadora = st.text_input("Nom de la Jugadora")
-                    gols_jugadora = st.number_input("Nombre de Gols", min_value=0, value=1)
-                    
-                    btn_gols = st.form_submit_button("Guardar Golejadora")
-                    if btn_gols:
-                        if nom_jugadora:
+                st.markdown("#### ⚽ Gestionar Gols de les Jugadores (+ / -)")
+                
+                # Carregar llista actual de jugadores per al selectbox
+                noms_jugadores = [j.get('nom') for j in golejadores_data] if golejadores_data else ["Clàudia", "Júlia", "Martina", "Berta", "Carla", "Aina", "Noa"]
+                
+                # Afegir opció per crear nova jugadora si cal
+                noms_jugadores.append("➕ Afegir nova jugadora...")
+                
+                jugadora_seleccionada = st.selectbox("Selecciona una jugadora:", noms_jugadores)
+                
+                if jugadora_seleccionada == "➕ Afegir nova jugadora...":
+                    nova_jugadora_nom = st.text_input("Nom de la nova jugadora:")
+                    gols_inicials = st.number_input("Gols inicials:", min_value=0, value=0)
+                    if st.button("Crear Jugadora"):
+                        if nova_jugadora_nom:
                             try:
-                                # Inserir o actualitzar a la taula 'golejadores'
                                 supabase.table("golejadores").upsert({
-                                    "nom": nom_jugadora.strip(),
-                                    "gols": int(gols_jugadora)
+                                    "nom": nova_jugadora_nom.strip(),
+                                    "gols": int(gols_inicials)
                                 }, on_conflict="nom").execute()
-                                st.success(f"⚽ S'ha actualitzat la jugadora {nom_jugadora} amb {gols_jugadora} gols!")
+                                st.success(f"🎉 Jugadora {nova_jugadora_nom} afegida correctament!")
+                                st.rerun()
                             except Exception as e:
-                                st.error(f"❌ Error (recorda crear la taula 'golejadores' amb clau única a 'nom'): {e}")
+                                st.error(f"❌ Error: {e}")
                         else:
-                            st.warning("⚠️ Introdueix el nom de la jugadora.")
+                            st.warning("⚠️ Introdueix un nom.")
+                else:
+                    # Buscar els gols actuals de la jugadora seleccionada
+                    gols_actuals = next((j.get('gols') for j in golejadores_data if j.get('nom') == jugadora_seleccionada), 0)
+                    
+                    st.info(Jugadora seleccionada actualment: **{jugadora_seleccionada}** — Gols actuals: **{gols_actuals}** ⚽)
+                    
+                    col_bt1, col_bt2 = st.columns(2)
+                    with col_bt1:
+                        if st.button("➕ Sumar 1 Gol"):
+                            try:
+                                nous_gols = gols_actuals + 1
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": nous_gols
+                                }, on_conflict="nom").execute()
+                                st.success(f"Gol sumat! {jugadora_seleccionada} ara porta {nous_gols} gols. 🚀")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+                                
+                    with col_bt2:
+                        if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
+                            try:
+                                nous_gols = gols_actuals - 1
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": nous_gols
+                                }, on_conflict="nom").execute()
+                                st.success(f"Gol restat. {jugadora_seleccionada} ara porta {nous_gols} gols.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
 
 # Executar aplicació
 if check_access():
