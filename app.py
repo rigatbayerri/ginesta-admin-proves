@@ -153,29 +153,53 @@ def main():
             st.markdown("---")
             
             col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
-            with col_res1:
-                c_g1, c_g2 = st.columns([1, 2])
-                with c_g1:
-                    try:
-                        st.image("logo.png", width=45)
-                    except:
-                        pass
-                with c_g2:
-                    st.markdown("<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
-                    
-            with col_res2:
-                st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
-                st.markdown(f"<p style='text-align: center; font-size: 14px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
-                
-            with col_res3:
-                c_r1, c_r2 = st.columns([2, 1])
-                with c_r1:
-                    st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
-                with c_r2:
-                    if escut_path and os.path.exists(escut_path):
-                        st.image(escut_path, width=45)
-                    else:
-                        st.write("🛡️")
+            
+            # Si juguem a Fora, invertim l'ordre a la videoteca també
+            if lloc == "Fora":
+                with col_res1:
+                    c_r1, c_r2 = st.columns([2, 1])
+                    with c_r1:
+                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                    with c_r2:
+                        if escut_path and os.path.exists(escut_path):
+                            st.image(escut_path, width=45)
+                        else:
+                            st.write("🛡️")
+                with col_res2:
+                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 14px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                with col_res3:
+                    c_g1, c_g2 = st.columns([1, 2])
+                    with c_g1:
+                        try:
+                            st.image("logo.png", width=45)
+                        except:
+                            pass
+                    with c_g2:
+                        st.markdown("<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+            else:
+                # Si juguem a Casa, Ginesta a l'esquerra i rival a la dreta
+                with col_res1:
+                    c_g1, c_g2 = st.columns([1, 2])
+                    with c_g1:
+                        try:
+                            st.image("logo.png", width=45)
+                        except:
+                            pass
+                    with c_g2:
+                        st.markdown("<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                with col_res2:
+                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 14px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                with col_res3:
+                    c_r1, c_r2 = st.columns([2, 1])
+                    with c_r1:
+                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                    with c_r2:
+                        if escut_path and os.path.exists(escut_path):
+                            st.image(escut_path, width=45)
+                        else:
+                            st.write("🛡️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;&nbsp;|&nbsp;&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
@@ -211,7 +235,6 @@ def main():
                 lloc = partit.get('lloc', 'Casa')
                 escut_path = partit.get('escut_rival_url', '')
 
-                # Targeta visual simètrica per cada partit del calendari
                 with st.container():
                     st.markdown(f"""
                         <div style="background-color: white; padding: 12px 15px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.03);">
@@ -219,39 +242,70 @@ def main():
                         </div>
                     """, unsafe_allow_html=True)
 
-                    col_ginesta, col_vs, col_rival = st.columns([3, 1, 3])
+                    col_left, col_vs, col_right = st.columns([3, 1, 3])
                     
-                    # Columna Esquerra: C.F. Ginesta amb el seu logo
-                    with col_ginesta:
-                        cg1, cg2 = st.columns([1, 3])
-                        with cg1:
-                            try:
-                                st.image("logo.png", width=38)
-                            except:
-                                st.write("⚽")
-                        with cg2:
-                            st.markdown("<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
-                    
-                    # Columna Central: Informació de VS i Lloc (Casa / Fora)
-                    with col_vs:
-                        color_lloc = "#5c2d73" if lloc == "Casa" else "#a569bd"
-                        st.markdown(f"""
-                            <div style="text-align: center; padding-top: 5px;">
-                                <span style="font-size: 14px; font-weight: bold; color: #888;">VS</span><br>
-                                <span style="color: white; background-color: {color_lloc}; padding: 2px 8px; border-radius: 5px; font-size: 11px;"><b>{lloc}</b></span>
-                            </div>
-                        """, unsafe_allow_html=True)
+                    # Si juguem a FORA: el rival surt a l'esquerra i el Ginesta a la dreta
+                    if lloc == "Fora":
+                        with col_left:
+                            cr1, cr2 = st.columns([1, 3])
+                            with cr1:
+                                if escut_path and os.path.exists(escut_path):
+                                    st.image(escut_path, width=38)
+                                else:
+                                    st.write("🛡️")
+                            with cr2:
+                                st.markdown(f"<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                        
+                        with col_vs:
+                            color_lloc = "#a569bd"
+                            st.markdown(f"""
+                                <div style="text-align: center; padding-top: 5px;">
+                                    <span style="font-size: 14px; font-weight: bold; color: #888;">VS</span><br>
+                                    <span style="color: white; background-color: {color_lloc}; padding: 2px 8px; border-radius: 5px; font-size: 11px;"><b>{lloc}</b></span>
+                                </div>
+                            """, unsafe_allow_html=True)
 
-                    # Columna Dreta: Rival amb el seu escut pujat
-                    with col_rival:
-                        cr1, cr2 = st.columns([3, 1])
-                        with cr1:
-                            st.markdown(f"<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
-                        with cr2:
-                            if escut_path and os.path.exists(escut_path):
-                                st.image(escut_path, width=38)
-                            else:
-                                st.write("🛡️")
+                        with col_right:
+                            cg1, cg2 = st.columns([3, 1])
+                            with cg1:
+                                st.markdown("<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                            with cg2:
+                                try:
+                                    st.image("logo.png", width=38)
+                                except:
+                                    st.write("⚽")
+                    
+                    # Si juguem a CASA: el Ginesta a l'esquerra i el rival a la dreta
+                    else:
+                        with col_left:
+                            cg1, cg2 = st.columns([1, 3])
+                            with cg1:
+                                try:
+                                    st.image("logo.png", width=38)
+                                except:
+                                    st.write("⚽")
+                            with cg2:
+                                st.markdown("<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                        
+                        with col_vs:
+                            color_lloc = "#5c2d73"
+                            st.markdown(f"""
+                                <div style="text-align: center; padding-top: 5px;">
+                                    <span style="font-size: 14px; font-weight: bold; color: #888;">VS</span><br>
+                                    <span style="color: white; background-color: {color_lloc}; padding: 2px 8px; border-radius: 5px; font-size: 11px;"><b>{lloc}</b></span>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                        with col_right:
+                            cr1, cr2 = st.columns([3, 1])
+                            with cr1:
+                                st.markdown(f"<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                            with cr2:
+                                if escut_path and os.path.exists(escut_path):
+                                    st.image(escut_path, width=38)
+                                else:
+                                    st.write("🛡️")
+
                 st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================
@@ -430,7 +484,7 @@ def main():
                     else:
                         st.warning("⚠️ Omple almenys el títol i l'enllaç del vídeo.")
 
-            # --- SUBPANELL 2: CREAR CALENDARI (Amb ID automàtic corregit) ---
+            # --- SUBPANELL 2: CREAR CALENDARI ---
             with tab_adm_calendari:
                 st.markdown("#### 📅 Programar Partit al Calendari Oficial")
                 
@@ -456,7 +510,7 @@ def main():
                                     f.write(cal_escut.getbuffer())
 
                             supabase.table("calendari").insert({
-                                "id": int(time.time()),  # Solució de l'ID automàtic
+                                "id": int(time.time()),
                                 "jornada": int(cal_jornada),
                                 "data": str(cal_data),
                                 "hora": cal_hora,
