@@ -272,7 +272,7 @@ def main():
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració i Gestió")
             
-            tab_adm_partits, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Partits", "📊 Mètriques & Golejadores", "⏱️ Gols per Minuts (8 Blocs)"])
+            tab_adm_partits, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Partits", "📊 Mètriques & Golejadores", "⏱️ Gols per Minuts (+ / -)"])
 
             # --- SUBPANELL 1: PARTITS ---
             with tab_adm_partits:
@@ -368,37 +368,74 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-            # --- SUBPANELL 3: GOLS PER MINUTS ---
+            # --- SUBPANELL 3: GOLS PER MINUTS INTERACTIU (+ / -) ---
             with tab_adm_trams:
-                st.markdown("#### ⏱️ Actualitzar Gols per Minuts de Partit")
-                st.markdown("Modifica directament els gols a favor i en contra segons els minuts del partit (8 blocs de 10 min).")
+                st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
+                st.markdown("Llegeix directament de la base de dades i permet sumar o restar gols a cada tram amb un sol clic.")
                 
-                with st.form("form_trams_tots"):
-                    nous_valors_trams = {}
-                    
-                    for tram in trams_llista:
-                        st.markdown(f"**Minuts {tram}**")
-                        c1, c2 = st.columns(2)
-                        with c1:
-                            gf = st.number_input(f"Favor (Min {tram})", min_value=0, value=dict_trams[tram]["gols_favor"], key=f"fav_{tram}")
-                        with c2:
-                            gc = st.number_input(f"Contra (Min {tram})", min_value=0, value=dict_trams[tram]["gols_contra"], key=f"con_{tram}")
-                        
-                        nous_valors_trams[tram] = {"gols_favor": gf, "gols_contra": gc}
-                        st.markdown("---")
-                        
-                    if st.form_submit_button("Guardar Tots els Minuts"):
+                # Seleccionar el tram que vols modificar ràpidament
+                tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista)
+                
+                # Agafar valors actuals del tram escollit
+                actual_fav = dict_trams[tram_coll]["gols_favor"]
+                actual_con = dict_trams[tram_coll]["gols_contra"]
+                
+                st.info(f"📊 **Bloc seleccionat: Minuts {tram_coll}** — Gols a Favor: **{actual_fav}** ⚽ | Gols en Contra: **{actual_con}** 🛡️")
+                
+                st.markdown("##### ⚽ Gols a Favor (Marcats en aquest tram)")
+                c_f1, c_f2 = st.columns(2)
+                with c_f1:
+                    if st.button(f"➕ Sumar Favor ({tram_coll})"):
                         try:
-                            for tram, valors in nous_valors_trams.items():
-                                supabase.table("trams_gols").upsert({
-                                    "tram": tram,
-                                    "gols_favor": valors["gols_favor"],
-                                    "gols_contra": valors["gols_contra"]
-                                }, on_conflict="tram").execute()
-                            st.success("✅ Dades per minuts actualitzades correctament a Supabase!")
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav + 1,
+                                "gols_contra": actual_con
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol a favor sumat al bloc {tram_coll}!")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"❌ Error al guardar: {e}")
+                            st.error(f"❌ Error: {e}")
+                with c_f2:
+                    if st.button(f"➖ Restar Favor ({tram_coll})") and actual_fav > 0:
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav - 1,
+                                "gols_contra": actual_con
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol a favor restat al bloc {tram_coll}.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+
+                st.markdown("---")
+                st.markdown("##### 🛡️ Gols en Contra (Encaixats en aquest tram)")
+                c_c1, c_c2 = st.columns(2)
+                with c_c1:
+                    if st.button(f"➕ Sumar Contra ({tram_coll})"):
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav,
+                                "gols_contra": actual_con + 1
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol en contra sumat al bloc {tram_coll}!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+                with c_c2:
+                    if st.button(f"➖ Restar Contra ({tram_coll})") and actual_con > 0:
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav,
+                                "gols_contra": actual_con - 1
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol en contra restat al bloc {tram_coll}.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
 
 # Executar aplicació
 if check_access():
