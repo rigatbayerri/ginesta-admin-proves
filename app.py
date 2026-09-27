@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ESTIL I COLORS CORPORATIUS (REVISAT I FORÇAT AL 100%) ---
+# --- ESTIL I COLORS CORPORATIUS (CORREGIT I REVISAT) ---
 st.markdown("""
     <style>
     .stApp {
@@ -20,12 +20,12 @@ st.markdown("""
         color: #2b1b3d;
     }
     
-    /* Títols, subtítols, paràgrafs i etiquetes completament corporatius */
-    h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown {
+    /* Títols, subtítols, paràgrafs i etiquetes corporatius */
+    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
         color: #2b1b3d !important;
     }
     
-    /* Botons normals i de formulari de manera uniforme */
+    /* Botons normals i de formulari */
     .stButton>button, .stButton>button *, div.stFormSubmitButton>button, div.stFormSubmitButton>button * {
         color: white !important;
         background-color: #5c2d73 !important;
@@ -46,16 +46,24 @@ st.markdown("""
         border-radius: 8px !important;
     }
 
-    /* Forçar estil corporatiu als Selectbox (Desplegables) */
+    /* Estil corporatiu exclusiu per als Selectbox (Desplegables) */
     div[data-baseweb="select"] > div {
         background-color: #5c2d73 !important;
-        color: white !important;
         border-color: #4a2858 !important;
         border-radius: 8px !important;
     }
     div[data-baseweb="select"] span, div[data-baseweb="select"] svg {
         color: white !important;
         fill: white !important;
+    }
+    
+    /* Opcions desplegades del selectbox amb fons blanc i text fosc per llegir-les perfectament */
+    div[data-baseweb="popover"] div[role="option"] {
+        background-color: white !important;
+        color: #2b1b3d !important;
+    }
+    div[data-baseweb="popover"] div[role="option"] * {
+        color: #2b1b3d !important;
     }
     
     /* Eliminar el fons verd dels deltes de les mètriques i fer-los corporatius */
