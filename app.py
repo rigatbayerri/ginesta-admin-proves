@@ -379,7 +379,7 @@ def main():
     # PESTANYA 3: ESTADÍSTIQUES I GOLEJADORES
     # ==========================================
     with tab_stats:
-        st.subheader("📊 Resum i Estadístiques de l'Equip (2x40 min)")
+        st.subheader("📊 Resum i Estadístiques de l'Equip")
         
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
         trams_data_db = []
@@ -432,7 +432,7 @@ def main():
 
         st.markdown("---")
 
-        st.markdown("### ⏱️ Anàlisi Tàctica per Minuts de Partit (8 blocs de 10 min)")
+        st.markdown("### ⏱️ Distribució de Gols per Minuts")
         
         df_trams = pd.DataFrame([
             {"Minuts": t, "Gols Favor": d["gols_favor"], "Gols Contra": d["gols_contra"]}
