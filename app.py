@@ -186,13 +186,13 @@ def main():
 
     if not golejadores_data:
         golejadores_data = [
-            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0},
-            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0},
-            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0, "gols_encaixats": 0},
-            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0},
-            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0},
-            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0},
-            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5}
+            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 10, "minuts_jugats": 720},
+            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 9, "minuts_jugats": 680},
+            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0, "gols_encaixats": 0, "titularitats": 11, "minuts_jugats": 750},
+            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 8, "minuts_jugats": 590},
+            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 7, "minuts_jugats": 520},
+            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 8, "minuts_jugats": 610},
+            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5, "titularitats": 12, "minuts_jugats": 840}
         ]
 
     try:
@@ -339,7 +339,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (ESCUTS MÉS GROSSOS)
+    # PESTANYA 2: CALENDARI
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -377,7 +377,7 @@ def main():
                             cr1, cr2 = st.columns([1, 3])
                             with cr1:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=42) # Escut més gran
+                                    st.image(escut_path, width=42)
                                 else:
                                     st.write("🛡️")
                             with cr2:
@@ -395,12 +395,12 @@ def main():
                             with cg1:
                                 st.markdown("<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                             with cg2:
-                                st.image(LOGO_URL, width=42) # Logo més gran
+                                st.image(LOGO_URL, width=42)
                     else:
                         with col_left:
                             cg1, cg2 = st.columns([1, 3])
                             with cg1:
-                                st.image(LOGO_URL, width=42) # Logo més gran
+                                st.image(LOGO_URL, width=42)
                             with cg2:
                                 st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                         
@@ -417,13 +417,13 @@ def main():
                                 st.markdown(f"<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
                             with cr2:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=42) # Escut més gran
+                                    st.image(escut_path, width=42)
                                 else:
                                     st.write("🛡️")
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES + FITXES DE JUGADORES CLICKABLES I GRÀFIQUES
+    # PESTANYA 3: ESTADÍSTIQUES + TARGETA VISIBLE + FITXA DETALLADA (TITULARITATS I MINUTS REAL DE SUPABASE)
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -509,7 +509,7 @@ def main():
             st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
-        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Clica a sobre per veure la fitxa i gràfiques)*")
+        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Clica a la targeta per veure la fitxa detallada de l'acta)*")
         
         cols = st.columns(2)
         for i, jugadora in enumerate(golejadores_data):
@@ -518,6 +518,11 @@ def main():
             vermelles_val = jugadora.get('vermelles', 0)
             dorsal_val = jugadora.get('dorsal', '-')
             nom_jugadora = jugadora.get('nom', '').upper()
+            
+            # Llegim de Supabase
+            titularitats_val = int(jugadora.get('titularitats', 0) or 0)
+            minuts_val = int(jugadora.get('minuts_jugats', 0) or 0)
+            mitjana_min_val = int(minuts_val / n_partits) if n_partits > 0 else 0
             
             if rol == "Portera":
                 gols_encaixats_val = jugadora.get('gols_encaixats', 0)
@@ -528,29 +533,41 @@ def main():
             
             with cols[i % 2]:
                 with st.expander(f"#{dorsal_val} — {nom_jugadora} ({rol})"):
-                    st.markdown(f"#### 👤 Fitxa Tècnica: {nom_jugadora}")
-                    c_f1, c_f2, c_f3 = st.columns(3)
-                    c_f1.metric("Dorsal", f"#{dorsal_val}")
-                    c_f2.metric("Rol", rol)
-                    if rol == "Portera":
-                        c_f3.metric("Gols Encaixats", gols_encaixats_val)
-                    else:
-                        c_f3.metric("Gols Marcats", gols_realitzats_val)
+                    # Targeta original visible a l'interior
+                    st.markdown(f"""
+                        <div style="background-color: white; padding: 10px; border-radius: 8px; border-left: 4px solid #5c2d73; margin-bottom: 10px; box-shadow: 1px 1px 4px rgba(0,0,0,0.03);">
+                            <div style="display: flex; align-items: center;">
+                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 35px; height: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0;">
+                                    <span style="font-weight: 800; font-size: 14px; line-height: 1;">{dorsal_val}</span>
+                                </div>
+                                <div style="flex-grow: 1;">
+                                    <h4 style="margin: 0; color: #5c2d73; font-size: 14px; font-weight: 900; text-transform: uppercase;">{nom_jugadora}</h4>
+                                    <p style="margin: 0; font-size: 11px; color: #666;">Rol: {rol}</p>
+                                </div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    st.markdown("📋 **Dades de l'Acta Oficial:**")
+                    col_act1, col_act2, col_act3 = st.columns(3)
+                    col_act1.metric("Titularitats", f"{titularitats_val}/{n_partits}")
+                    col_act2.metric("Minuts Jugats", f"{minuts_val}'")
+                    col_act3.metric("Mitjana / Partit", f"{mitjana_min_val}'")
 
                     st.markdown(f"🟨 **Targetes Grogues:** {grogues_val} &nbsp;|&nbsp; 🟥 **Targetes Vermelles:** {vermelles_val}")
                     
-                    # Gràfica individual personalitzada per a la jugadora
-                    st.markdown("##### 📈 Estadístiques Individuals")
+                    # Gràfica individual
+                    st.markdown("##### 📈 Gràfica de Participació i Gols")
                     if rol == "Portera":
                         df_ind = pd.DataFrame({
-                            "Concepte": ["Porteries a Zero", "Gols Encaixats"],
-                            "Valor": [porteries_zero, int(gols_encaixats_val)]
+                            "Concepte": ["Partits Jugats", "Titularitats", "Porteries a Zero"],
+                            "Valor": [n_partits, titularitats_val, porteries_zero]
                         })
                         fig_ind = px.bar(df_ind, x="Concepte", y="Valor", color_discrete_sequence=["#5c2d73"])
                     else:
                         df_ind = pd.DataFrame({
-                            "Concepte": ["Gols de la Jugadora", "Gols totals equip"],
-                            "Valor": [int(gols_realitzats_val), g_favor_total]
+                            "Concepte": ["Partits Jugats", "Titularitats", "Gols Marcats"],
+                            "Valor": [n_partits, titularitats_val, int(gols_realitzats_val)]
                         })
                         fig_ind = px.bar(df_ind, x="Concepte", y="Valor", color_discrete_sequence=["#5c2d73"])
 
@@ -559,11 +576,11 @@ def main():
                         plot_bgcolor="rgba(0,0,0,0)",
                         font=dict(color="#2b1b3d", size=11),
                         margin=dict(t=10, b=0, l=0, r=0), 
-                        height=180
+                        height=160
                     )
-                    st.plotly_chart(fig_ind, use_container_width=True, key=f"graf_{nom_jugadora}_{i}")
+                    st.plotly_chart(fig_ind, use_container_width=True, key=f"graf_ind_{nom_jugadora}_{i}")
 
-    # PESTANYA 4: ADMIN (COMPLETA AL 100%)
+    # PESTANYA 4: ADMIN
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
@@ -776,7 +793,7 @@ def main():
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes, Eliminar)")
+                st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Titularitats, Minuts, Targetes)")
                 noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom').upper()}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
@@ -787,9 +804,11 @@ def main():
                     nou_dorsal = st.number_input("Dorsal:", min_value=1, max_value=99, value=12)
                     nou_rol = st.selectbox("Rol al camp:", ["Jugadora", "Portera"])
                     gols_inicials = st.number_input("Gols inicials:", min_value=0, value=0)
-                    grogues_inicials = st.number_input("Targetes grogues inicials:", min_value=0, value=0)
-                    vermelles_inicials = st.number_input("Targetes vermelles inicials:", min_value=0, value=0)
-                    gols_encaixats_inicials = st.number_input("Gols encaixats inicials (si és portera):", min_value=0, value=0)
+                    titularitats_inicials = st.number_input("Titularitats:", min_value=0, value=0)
+                    minuts_inicials = st.number_input("Minuts jugats:", min_value=0, value=0)
+                    grogues_inicials = st.number_input("Targetes grogues:", min_value=0, value=0)
+                    vermelles_inicials = st.number_input("Targetes vermelles:", min_value=0, value=0)
+                    gols_encaixats_inicials = st.number_input("Gols encaixats (si portera):", min_value=0, value=0)
                     
                     if st.button("Crear Jugadora"):
                         if nova_jugadora_nom:
@@ -801,7 +820,9 @@ def main():
                                     "rol": nou_rol,
                                     "grogues": int(grogues_inicials),
                                     "vermelles": int(vermelles_inicials),
-                                    "gols_encaixats": int(gols_encaixats_inicials)
+                                    "gols_encaixats": int(gols_encaixats_inicials),
+                                    "titularitats": int(titularitats_inicials),
+                                    "minuts_jugats": int(minuts_inicials)
                                 }, on_conflict="nom").execute()
                                 
                                 sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
@@ -819,32 +840,39 @@ def main():
                     grogues_actuals = int(j_actual.get('grogues', 0) or 0)
                     vermelles_actuals = int(j_actual.get('vermelles', 0) or 0)
                     gols_encaixats_actuals = int(j_actual.get('gols_encaixats', 0) or 0)
+                    titularitats_actuals = int(j_actual.get('titularitats', 0) or 0)
+                    minuts_actuals = int(j_actual.get('minuts_jugats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{nom_real.upper()}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | Grogues: **{grogues_actuals}** | Vermelles: **{vermelles_actuals}**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual}) | Titularitats: **{titularitats_actuals}** | Minuts: **{minuts_actuals}'**")
                     
-                    c_ed1, c_ed2 = st.columns(2)
+                    c_ed1, c_ed2, c_ed3 = st.columns(3)
                     with c_ed1:
                         nou_dorsal_input = st.number_input("Modificar Dorsal:", min_value=1, max_value=99, value=dorsal_actual if dorsal_actual > 0 else 1)
                     with c_ed2:
                         nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Portera"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
+                    with c_ed3:
+                        noves_titularitats = st.number_input("Titularitats totals:", min_value=0, value=titularitats_actuals, key="edit_titulars")
+
+                    nous_minuts = st.number_input("Minuts totals jugats:", min_value=0, value=minuts_actuals, key="edit_minuts")
                     
-                    if nou_dorsal_input != dorsal_actual or nou_canvi_rol != rol_actual:
-                        if st.button("Actualitzar Dades Bàsiques"):
-                            try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": nom_real,
-                                    "dorsal": int(nou_dorsal_input),
-                                    "gols": gols_actuals,
-                                    "rol": nou_canvi_rol,
-                                    "grogues": grogues_actuals,
-                                    "vermelles": vermelles_actuals,
-                                    "gols_encaixats": gols_encaixats_actuals
-                                }, on_conflict="nom").execute()
-                                st.success("Dades actualitzades!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                    if st.button("Actualitzar Dades i Acta de la Jugadora"):
+                        try:
+                            supabase.table("golejadores").upsert({
+                                "nom": nom_real,
+                                "dorsal": int(nou_dorsal_input),
+                                "gols": gols_actuals,
+                                "rol": nou_canvi_rol,
+                                "grogues": grogues_actuals,
+                                "vermelles": vermelles_actuals,
+                                "gols_encaixats": gols_encaixats_actuals,
+                                "titularitats": int(noves_titularitats),
+                                "minuts_jugats": int(nous_minuts)
+                            }, on_conflict="nom").execute()
+                            st.success("✅ Dades de l'acta actualitzades correctament!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
 
                     st.markdown("##### Sumar / Restar Gols i Targetes")
                     
@@ -860,7 +888,9 @@ def main():
                                         "rol": rol_actual,
                                         "grogues": grogues_actuals,
                                         "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals + 1
+                                        "gols_encaixats": gols_encaixats_actuals + 1,
+                                        "titularitats": titularitats_actuals,
+                                        "minuts_jugats": minuts_actuals
                                     }, on_conflict="nom").execute()
                                     st.success("Gol encaixat sumat!")
                                     st.rerun()
@@ -875,7 +905,9 @@ def main():
                                         "rol": rol_actual,
                                         "grogues": grogues_actuals,
                                         "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals - 1
+                                        "gols_encaixats": gols_encaixats_actuals - 1,
+                                        "titularitats": titularitats_actuals,
+                                        "minuts_jugats": minuts_actuals
                                     }, on_conflict="nom").execute()
                                     st.success("Gol encaixat restat.")
                                     st.rerun()
@@ -893,7 +925,9 @@ def main():
                                         "rol": rol_actual,
                                         "grogues": grogues_actuals,
                                         "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals
+                                        "gols_encaixats": gols_encaixats_actuals,
+                                        "titularitats": titularitats_actuals,
+                                        "minuts_jugats": minuts_actuals
                                     }, on_conflict="nom").execute()
                                     
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
@@ -910,7 +944,9 @@ def main():
                                         "rol": rol_actual,
                                         "grogues": grogues_actuals,
                                         "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals
+                                        "gols_encaixats": gols_encaixats_actuals,
+                                        "titularitats": titularitats_actuals,
+                                        "minuts_jugats": minuts_actuals
                                     }, on_conflict="nom").execute()
                                     
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
@@ -929,7 +965,9 @@ def main():
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals + 1,
                                     "vermelles": vermelles_actuals,
-                                    "gols_encaixats": gols_encaixats_actuals
+                                    "gols_encaixats": gols_encaixats_actuals,
+                                    "titularitats": titularitats_actuals,
+                                    "minuts_jugats": minuts_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Groga sumada!")
                                 st.rerun()
@@ -944,7 +982,9 @@ def main():
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals - 1,
                                     "vermelles": vermelles_actuals,
-                                    "gols_encaixats": gols_encaixats_actuals
+                                    "gols_encaixats": gols_encaixats_actuals,
+                                    "titularitats": titularitats_actuals,
+                                    "minuts_jugats": minuts_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Groga restada.")
                                 st.rerun()
@@ -961,7 +1001,9 @@ def main():
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals + 1,
-                                    "gols_encaixats": gols_encaixats_actuals
+                                    "gols_encaixats": gols_encaixats_actuals,
+                                    "titularitats": titularitats_actuals,
+                                    "minuts_jugats": minuts_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Vermella sumada!")
                                 st.rerun()
@@ -976,7 +1018,9 @@ def main():
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals - 1,
-                                    "gols_encaixats": gols_encaixats_actuals
+                                    "gols_encaixats": gols_encaixats_actuals,
+                                    "titularitats": titularitats_actuals,
+                                    "minuts_jugats": minuts_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Vermella restada.")
                                 st.rerun()
