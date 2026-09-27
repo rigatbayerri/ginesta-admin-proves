@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ESTIL I COLORS PERSONALITZATS ---
+# --- ESTIL I COLORS CORPORATIUS (REVISAT I POLIT) ---
 st.markdown("""
     <style>
     .stApp {
@@ -22,17 +22,20 @@ st.markdown("""
     h1, h2, h3, h4, h5, h6, p, label {
         color: #2b1b3d !important;
     }
-    .stButton>button, .stButton>button * {
+    
+    /* Tots els botons normals i de formulari de manera uniforme */
+    .stButton>button, .stButton>button *, div.stFormSubmitButton>button, div.stFormSubmitButton>button * {
         color: white !important;
-        background-color: #5c2d73;
-        border-radius: 8px;
-        border: none;
-        font-weight: bold;
-        padding: 0.5rem 1rem;
+        background-color: #5c2d73 !important;
+        border-radius: 8px !important;
+        border: none !important;
+        font-weight: bold !important;
+        padding: 0.5rem 1rem !important;
     }
-    .stButton>button:hover {
-        background-color: #4a2858;
+    .stButton>button:hover, div.stFormSubmitButton>button:hover {
+        background-color: #4a2858 !important;
     }
+    
     .stTextInput>div>div>input, .stNumberInput>div>div>input {
         background-color: white !important;
         color: #2b1b3d !important;
