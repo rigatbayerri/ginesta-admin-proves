@@ -17,26 +17,34 @@ st.set_page_config(
 ONESIGNAL_APP_ID = "44139709-03c9-4f36-a545-54a0e5cd3397"
 ONESIGNAL_REST_API_KEY = "os_v2_app_iqjzocidzfhtnjkfksqoltjts53k2iznoupebn4mwr75pzvtj5aozsmyojbp2d5uslvfxu4ese7ly3jnd3bocdm534vm6trpiqocnza"
 
-# Injectar script d'OneSignal + Etiquetes completes d'Apple Touch Icon per a iPhone
-st.markdown(f"""
+# Injectar manifest web i etiquetes d'Apple per forçar la icona oficial a l'iPhone
+st.markdown("""
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{
+      'name': 'C.F. Ginesta Cadet F11',
+      'short_name': 'Ginesta',
+      'start_url': '.',
+      'display': 'standalone',
+      'background_color': '#f7f5fa',
+      'theme_color': '#5c2d73',
+      'icons': [{'src': 'logo.png', 'sizes': '512x512', 'type': 'image/png'}]
+    }">
     <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
     <link rel="apple-touch-icon-precomposed" href="logo.png">
-    <link rel="shortcut icon" href="logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {{
-        await OneSignal.init({{
-          appId: "{ONESIGNAL_APP_ID}",
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "44139709-03c9-4f36-a545-54a0e5cd3397",
           safari_web_id: "web.onesignal.auto.00000000-0000-0000-0000-000000000000",
-          notifyButton: {{
+          notifyButton: {
             enable: true,
-          }},
-        }});
-      }});
+          },
+        });
+      });
     </script>
 """, unsafe_allow_html=True)
 
