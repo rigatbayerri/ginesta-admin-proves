@@ -306,7 +306,9 @@ def main():
                             st.write("🛡️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
-            st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
+            jornada_mostra = partit_actual.get('jornada')
+            jornada_txt_mostra = str(jornada_mostra) if jornada_mostra is not None and str(jornada_mostra).strip() != "" else "-"
+            st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {jornada_txt_mostra}")
             
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
             if video_url and str(video_url).startswith("http"):
@@ -544,7 +546,7 @@ def main():
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
-                    nova_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1, key="j_nou")
+                    nova_jornada = st.text_input("Jornada (Ex: 1, Amistós, etc.)", value="1", key="j_nou")
                     nova_data = st.date_input("Data", key="d_nou")
                     nom_rival = st.text_input("Nom Rival", key="r_nou")
                     resultat_partit = st.text_input("Resultat Final (Ex: 3-1)", key="res_nou")
@@ -573,7 +575,7 @@ def main():
 
                                 supabase.table("partits").insert({
                                     "titol": nou_titol,
-                                    "jornada": int(nova_jornada),
+                                    "jornada": nova_jornada.strip(),
                                     "data": str(nova_data),
                                     "rival": nom_rival,
                                     "resultat": resultat_partit,
@@ -610,14 +612,11 @@ def main():
                         sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p")
                         p_edit = dict_edit_partits[sel_partit_str]
 
-                        try:
-                            val_jornada = int(p_edit.get('jornada') or 1)
-                        except:
-                            val_jornada = 1
+                        val_jornada_text = str(p_edit.get('jornada') or "1")
 
                         edit_id = p_edit.get('id')
                         edit_titol = st.text_input("Títol", value=p_edit.get('titol', ''), key="ed_t")
-                        edit_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=val_jornada, key="ed_j")
+                        edit_jornada = st.text_input("Jornada", value=val_jornada_text, key="ed_j")
                         edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key="ed_r")
                         edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key="ed_res")
                         edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key="ed_ll")
@@ -632,7 +631,7 @@ def main():
                             try:
                                 update_data = {
                                     "titol": edit_titol,
-                                    "jornada": int(edit_jornada),
+                                    "jornada": edit_jornada.strip(),
                                     "rival": edit_rival,
                                     "resultat": edit_resultat,
                                     "lloc": edit_lloc,
