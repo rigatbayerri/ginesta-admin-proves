@@ -87,21 +87,24 @@ st.markdown("""
         padding: 0 !important;
     }
     @media (max-width: 768px) {
-        .element-container {
+        .element-container, .stColumn {
             width: 100% !important;
+            flex: 100% !important;
+            max-width: 100% !important;
         }
         h1 {
-            font-size: 1.6rem !important;
+            font-size: 1.5rem !important;
         }
         h2 {
-            font-size: 1.3rem !important;
+            font-size: 1.2rem !important;
         }
         h3 {
-            font-size: 1.1rem !important;
+            font-size: 1.05rem !important;
         }
         .block-container {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            padding-top: 1rem !important;
         }
     }
     </style>
@@ -119,6 +122,8 @@ supabase = init_supabase()
 
 if not os.path.exists("escuts"):
     os.makedirs("escuts")
+if not os.path.exists("fotos_partits"):
+    os.makedirs("fotos_partits")
 
 # --- SISTEMA DE DOBLE CLAU D'ACCÉS ---
 def check_access():
@@ -129,7 +134,7 @@ def check_access():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             try:
-                st.image(LOGO_URL, width=140)
+                st.image(LOGO_URL, width=130)
             except:
                 pass
                 
@@ -164,7 +169,7 @@ def main():
     col1, col2 = st.columns([1, 4])
     with col1:
         try:
-            st.image(LOGO_URL, width=80)
+            st.image(LOGO_URL, width=70)
         except:
             st.write("⚽")
     with col2:
@@ -229,9 +234,9 @@ def main():
     else:
         tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS
+    # PESTANYA 1: VÍDEOS I FOTOS
     with tab_videos:
-        st.subheader("📺 Partits Gravats i Resultats")
+        st.subheader("📺 Partits Gravats, Resultats i Fotos")
         partits = []
         try:
             response = supabase.table("partits").select("*").order("data", desc=True).execute()
@@ -250,6 +255,7 @@ def main():
             resultat = partit_actual.get('resultat', ' - ')
             lloc = partit_actual.get('lloc', 'Casa')
             escut_path = partit_actual.get('escut_rival_url') 
+            foto_path = partit_actual.get('foto_partit_url')
             
             st.markdown("---")
             col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
@@ -258,38 +264,38 @@ def main():
                 with col_res1:
                     c_r1, c_r2 = st.columns([2, 1])
                     with c_r1:
-                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px; font-size: 14px;'>{rival}</h4>", unsafe_allow_html=True)
                     with c_r2:
                         if escut_path and os.path.exists(escut_path):
-                            st.image(escut_path, width=40)
+                            st.image(escut_path, width=35)
                         else:
                             st.write("🛡️")
                 with col_res2:
-                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='text-align: center; font-size: 13px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
                 with col_res3:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
-                        st.image(LOGO_URL, width=40)
+                        st.image(LOGO_URL, width=35)
                     with c_g2:
-                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px; font-size: 14px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
             else:
                 with col_res1:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
-                        st.image(LOGO_URL, width=40)
+                        st.image(LOGO_URL, width=35)
                     with c_g2:
-                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px; font-size: 14px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
                 with col_res2:
-                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='text-align: center; font-size: 13px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
                 with col_res3:
                     c_r1, c_r2 = st.columns([2, 1])
                     with c_r1:
-                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px; font-size: 14px;'>{rival}</h4>", unsafe_allow_html=True)
                     with c_r2:
                         if escut_path and os.path.exists(escut_path):
-                            st.image(escut_path, width=40)
+                            st.image(escut_path, width=35)
                         else:
                             st.write("🛡️")
 
@@ -301,6 +307,11 @@ def main():
                 st.video(video_url)
             else:
                 st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
+
+            if foto_path and os.path.exists(foto_path):
+                st.markdown("---")
+                st.markdown("### 📸 Foto del Partit / Celebració")
+                st.image(foto_path, use_container_width=True)
 
     # PESTANYA 2: CALENDARI
     with tab_calendari:
@@ -340,11 +351,11 @@ def main():
                             cr1, cr2 = st.columns([1, 3])
                             with cr1:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=32)
+                                    st.image(escut_path, width=28)
                                 else:
                                     st.write("🛡️")
                             with cr2:
-                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             st.markdown(f"""
@@ -356,16 +367,16 @@ def main():
                         with col_right:
                             cg1, cg2 = st.columns([3, 1])
                             with cg1:
-                                st.markdown("<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown("<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                             with cg2:
-                                st.image(LOGO_URL, width=32)
+                                st.image(LOGO_URL, width=28)
                     else:
                         with col_left:
                             cg1, cg2 = st.columns([1, 3])
                             with cg1:
-                                st.image(LOGO_URL, width=32)
+                                st.image(LOGO_URL, width=28)
                             with cg2:
-                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             st.markdown(f"""
@@ -377,16 +388,16 @@ def main():
                         with col_right:
                             cr1, cr2 = st.columns([3, 1])
                             with cr1:
-                                st.markdown(f"<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
                             with cr2:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=32)
+                                    st.image(escut_path, width=28)
                                 else:
                                     st.write("🛡️")
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES (AMB PARTITS JUGATS INCLÒSOS)
+    # PESTANYA 3: ESTADÍSTIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -406,15 +417,15 @@ def main():
 
         col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
         with col_m1:
-            st.metric(label="Partits Jugats", value=n_partits)
+            st.metric(label="Partits", value=n_partits)
         with col_m2:
-            st.metric(label="Gols a Favor", value=g_favor_total)
+            st.metric(label="Favor", value=g_favor_total)
         with col_m3:
-            st.metric(label="Gols en Contra", value=gols_contra_total)
+            st.metric(label="Contra", value=gols_contra_total)
         with col_m4:
-            st.metric(label="Porteries a Zero", value=porteries_zero)
+            st.metric(label="P. Zero", value=porteries_zero)
         with col_m5:
-            st.metric(label="Targetes", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
+            st.metric(label="Targetes", value=f"🟨{total_grogues}|🟥{total_vermelles}")
 
         st.markdown("---")
 
@@ -431,10 +442,10 @@ def main():
             fig_clean_sheets.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d", size=14, family="sans-serif"),
+                font=dict(color="#2b1b3d", size=13),
                 legend=dict(font=dict(color="#2b1b3d")),
                 margin=dict(t=0, b=0, l=0, r=0), 
-                height=240
+                height=220
             )
             st.plotly_chart(fig_clean_sheets, use_container_width=True)
 
@@ -448,37 +459,33 @@ def main():
 
         col_gols_favor, col_gols_contra = st.columns(2)
         with col_gols_favor:
-            st.markdown("##### ⚽ Gols a Favor (Marcats)")
+            st.markdown("##### ⚽ Gols a Favor")
             fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", color_discrete_sequence=["#5c2d73"])
             fig_favor.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d", size=13),
-                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
-                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                font=dict(color="#2b1b3d", size=11),
                 margin=dict(t=10, b=0, l=0, r=0), 
-                height=250
+                height=220
             )
             st.plotly_chart(fig_favor, use_container_width=True)
 
         with col_gols_contra:
-            st.markdown("##### 🛡️ Gols en Contra (Encaixats)")
+            st.markdown("##### 🛡️ Gols en Contra")
             fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", color_discrete_sequence=["#a569bd"])
             fig_contra.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d", size=13),
-                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
-                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                font=dict(color="#2b1b3d", size=11),
                 margin=dict(t=10, b=0, l=0, r=0), 
-                height=250
+                height=220
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
         st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta")
         
-        cols = st.columns(4)
+        cols = st.columns(2)
         for i, jugadora in enumerate(golejadores_data):
             rol = jugadora.get('rol', 'Jugadora')
             grogues_val = jugadora.get('grogues', 0)
@@ -493,19 +500,19 @@ def main():
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
             
-            with cols[i % 4]:
+            with cols[i % 2]:
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 14px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05);">
-                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05); flex-shrink: 0;">
-                                <span style="font-weight: 800; font-size: 19px; line-height: 1;">{dorsal_val}</span>
-                                <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase; margin-top: 2px;">{rol}</span>
+                    <div style="background-color: white; padding: 12px; border-radius: 10px; border-left: 4px solid #5c2d73; margin-bottom: 10px; box-shadow: 1px 1px 6px rgba(0,0,0,0.04);">
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
+                                <span style="font-weight: 800; font-size: 16px; line-height: 1;">{dorsal_val}</span>
+                                <span style="font-size: 6px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
                             </div>
-                            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 48px;">
-                                <h3 style="margin: 0; color: #5c2d73; font-size: 22px; font-weight: 900; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">{nom_jugadora}</h3>
+                            <div style="flex-grow: 1; overflow: hidden;">
+                                <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
                             </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 8px; font-size: 12px; color: #2b1b3d;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 6px; font-size: 11px; color: #2b1b3d;">
                             <div>{estat_text}</div>
                             <div>🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></div>
                         </div>
@@ -516,17 +523,19 @@ def main():
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
-            tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
+            tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos & Fotos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
 
             with tab_adm_partits:
-                st.markdown("#### ➕ Pujar Partit")
+                st.markdown("#### ➕ Pujar Partit, Vídeo i Foto de Celebració")
                 nou_titol = st.text_input("Títol del Partit")
                 nova_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1)
                 nova_data = st.date_input("Data")
                 nom_rival = st.text_input("Nom Rival")
                 resultat_partit = st.text_input("Resultat Final (Ex: 3-1)")
                 condicio_lloc = st.selectbox("Lloc", ["Casa", "Fora"])
+                
                 arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
+                arxiu_foto = st.file_uploader("📸 Foto del Partit o Celebració (Opcional)", type=["png", "jpg", "jpeg"], key="foto_partit")
                 nou_video_url = st.text_input("Enllaç Vídeo")
                 
                 if st.button("Guardar Partit"):
@@ -538,6 +547,12 @@ def main():
                                 with open(escut_path_saved, "wb") as f:
                                     f.write(arxiu_escut.getbuffer())
 
+                            foto_path_saved = ""
+                            if arxiu_foto is not None:
+                                foto_path_saved = os.path.join("fotos_partits", arxiu_foto.name)
+                                with open(foto_path_saved, "wb") as f:
+                                    f.write(arxiu_foto.getbuffer())
+
                             supabase.table("partits").insert({
                                 "titol": nou_titol,
                                 "jornada": int(nova_jornada),
@@ -546,9 +561,10 @@ def main():
                                 "resultat": resultat_partit,
                                 "lloc": condicio_lloc,
                                 "escut_rival_url": escut_path_saved,
+                                "foto_partit_url": foto_path_saved,
                                 "video_url": nou_video_url
                             }).execute()
-                            st.success("🎉 Partit guardat!")
+                            st.success("🎉 Partit guardat amb foto i vídeo!")
                             time.sleep(1)
                             st.rerun()
                         except Exception as e:
