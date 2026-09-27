@@ -195,6 +195,9 @@ def main():
             {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5, "titularitats": 12, "minuts_jugats": 840}
         ]
 
+    # Ordenar estrictament per dorsal de menor a major
+    golejadores_data = sorted(golejadores_data, key=lambda x: int(x.get('dorsal', 0) or 0))
+
     try:
         res_extra = supabase.table("estadistiques_generals").select("*").execute()
         if res_extra.data:
@@ -423,7 +426,7 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES + TARGETA CORPORATIVA + FITXA DETALLADA AMB GRÀFICA DE DONUT DE MINUTS
+    # PESTANYA 3: ESTADÍSTIQUES + TARGETES FIXES COMPLETES PER A CADA JUGADORA
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -509,7 +512,7 @@ def main():
             st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
-        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Clica a sobre de qualsevol jugadora per obrir la seva fitxa de l'acta)*")
+        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Fitxes Completes per Dorsal)*")
         
         cols = st.columns(2)
         for i, jugadora in enumerate(golejadores_data):
@@ -527,45 +530,44 @@ def main():
                 gols_encaixats_val = jugadora.get('gols_encaixats', 0)
                 estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
                 mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
+                etiqueta_mitjana = "⚽ Mitjana gols encaixats/partit:"
             else:
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
                 mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
+                etiqueta_mitjana = "⚽ Mitjana gols/partit:"
             
             with cols[i % 2]:
-                with st.expander(f"#{dorsal_val} — {nom_jugadora} ({rol})"):
-                    # Targeta corporativa neta a l'interior
+                # TARGETA FIXA AMB TOTES LES DADES VISIBLES DIRECTAMENT
+                with st.container():
                     st.markdown(f"""
-                        <div style="background-color: white; padding: 12px; border-radius: 10px; border-left: 4px solid #5c2d73; margin-bottom: 10px; box-shadow: 1px 1px 6px rgba(0,0,0,0.04);">
-                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
-                                    <span style="font-weight: 800; font-size: 16px; line-height: 1;">{dorsal_val}</span>
-                                    <span style="font-size: 6px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
+                        <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 16px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                    <span style="font-weight: 900; font-size: 18px; line-height: 1;">{dorsal_val}</span>
+                                    <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
                                 </div>
                                 <div style="flex-grow: 1; overflow: hidden;">
-                                    <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
+                                    <h4 style="margin: 0; color: #5c2d73; font-size: 16px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
+                                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
                                 </div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 6px; font-size: 11px; color: #2b1b3d;">
-                                <div>{estat_text}</div>
-                                <div>🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></div>
+                            
+                            <div style="background-color: #f7f5fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px;">
+                                <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #2b1b3d;">
+                                    <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
+                                    <span>Minuts: <b>{minuts_val}'</b></span>
+                                    <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
+                                </div>
+                                <div style="margin-top: 4px; font-size: 11px; color: #2b1b3d;">
+                                    {etiqueta_mitjana} <b>{mitjana_gols_val}</b>
+                                </div>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
 
-                    st.markdown("📋 **Dades de l'Acta Oficial:**")
-                    col_act1, col_act2, col_act3 = st.columns(3)
-                    col_act1.metric("Titularitats", f"{titularitats_val}/{n_partits}")
-                    col_act2.metric("Minuts Jugats", f"{minuts_val}'")
-                    col_act3.metric("Mitjana / Partit", f"{mitjana_min_val}'")
-
-                    if rol == "Portera":
-                        st.markdown(f"🟨 **Targetes:** 🟨{grogues_val} | 🟥{vermelles_val} &nbsp;|&nbsp; ⚽ **Mitjana gols encaixats/partit:** **{mitjana_gols_val}**")
-                    else:
-                        st.markdown(f"🟨 **Targetes:** 🟨{grogues_val} | 🟥{vermelles_val} &nbsp;|&nbsp; ⚽ **Mitjana gols/partit:** **{mitjana_gols_val}**")
-                    
-                    # Gràfica de Donut per als minuts jugats (80 minuts per partit total de temporada)
-                    st.markdown("##### ⏱️ Proporció de Minuts Jugats (80 min/partit)")
+                    # Gràfica de Donut per als minuts jugats
                     total_minuts_possibles = n_partits * 80
                     minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
                     minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
@@ -586,10 +588,11 @@ def main():
                         plot_bgcolor="rgba(0,0,0,0)",
                         font=dict(color="#2b1b3d", size=11),
                         legend=dict(font=dict(color="#2b1b3d"), orientation="h", y=-0.2),
-                        margin=dict(t=10, b=10, l=0, r=0), 
-                        height=200
+                        margin=dict(t=5, b=5, l=0, r=0), 
+                        height=180
                     )
                     st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_{nom_jugadora}_{i}")
+                    st.markdown("---")
 
     # PESTANYA 4: ADMIN
     if st.session_state["auth_level"] == "admin":
