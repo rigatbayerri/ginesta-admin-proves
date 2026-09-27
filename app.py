@@ -354,6 +354,68 @@ def main():
                             <p style="margin: 0; font-size: 13px; color: #5c2d73; font-weight: bold;">Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}</p>
                         </div>
                     """, unsafe_allow_html=True)
+
+                    col_left, col_vs, col_right = st.columns([3, 1, 3])
+                    
+                    if lloc == "Fora":
+                        with col_left:
+                            cr1, cr2 = st.columns([1, 3])
+                            with cr1:
+                                if escut_path and os.path.exists(escut_path):
+                                    st.image(escut_path, width=38)
+                                else:
+                                    st.write("🛡️")
+                            with cr2:
+                                st.markdown(f"<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                        
+                        with col_vs:
+                            color_lloc = "#a569bd"
+                            st.markdown(f"""
+                                <div style="text-align: center; padding-top: 5px;">
+                                    <span style="font-size: 14px; font-weight: bold; color: #888;">VS</span><br>
+                                    <span style="color: white; background-color: {color_lloc}; padding: 2px 8px; border-radius: 5px; font-size: 11px;"><b>{lloc}</b></span>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                        with col_right:
+                            cg1, cg2 = st.columns([3, 1])
+                            with cg1:
+                                st.markdown("<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                            with cg2:
+                                try:
+                                    st.image("logo.png", width=38)
+                                except:
+                                    st.write("⚽")
+                    else:
+                        with col_left:
+                            cg1, cg2 = st.columns([1, 3])
+                            with cg1:
+                                try:
+                                    st.image("logo.png", width=38)
+                                except:
+                                    st.write("⚽")
+                            with cg2:
+                                st.markdown(f"<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                        
+                        with col_vs:
+                            color_lloc = "#5c2d73"
+                            st.markdown(f"""
+                                <div style="text-align: center; padding-top: 5px;">
+                                    <span style="font-size: 14px; font-weight: bold; color: #888;">VS</span><br>
+                                    <span style="color: white; background-color: {color_lloc}; padding: 2px 8px; border-radius: 5px; font-size: 11px;"><b>{lloc}</b></span>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                        with col_right:
+                            cr1, cr2 = st.columns([3, 1])
+                            with cr1:
+                                st.markdown(f"<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                            with cr2:
+                                if escut_path and os.path.exists(escut_path):
+                                    st.image(escut_path, width=38)
+                                else:
+                                    st.write("🛡️")
+
                 st.markdown("<br>", unsafe_allow_html=True)
 
     # PESTANYA 3: ESTADÍSTIQUES
@@ -383,6 +445,65 @@ def main():
             st.metric(label="Porteries a Zero", value=porteries_zero)
         with col_m4:
             st.metric(label="Targetes Equip", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
+
+        st.markdown("---")
+
+        st.markdown("### 🧤 Rendiment de Porteria (Clean Sheets)")
+        col_porteria, _ = st.columns([1, 1])
+        with col_porteria:
+            partits_amb_gols = max(0, n_partits - porteries_zero)
+            fig_clean_sheets = px.pie(
+                names=["Porteries a Zero", "Partits amb Gols Encaixats"],
+                values=[porteries_zero, partits_amb_gols],
+                hole=0.6,
+                color_discrete_sequence=["#5c2d73", "#d7bde2"]
+            )
+            fig_clean_sheets.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d", size=14, family="sans-serif"),
+                legend=dict(font=dict(color="#2b1b3d")),
+                margin=dict(t=0, b=0, l=0, r=0), 
+                height=240
+            )
+            st.plotly_chart(fig_clean_sheets, use_container_width=True)
+
+        st.markdown("---")
+
+        st.markdown("### ⏱️ Distribució de Gols per Minuts")
+        df_trams = pd.DataFrame([
+            {"Minuts": t, "Gols Favor": d["gols_favor"], "Gols Contra": d["gols_contra"]}
+            for t, d in dict_trams.items()
+        ])
+
+        col_gols_favor, col_gols_contra = st.columns(2)
+        with col_gols_favor:
+            st.markdown("##### ⚽ Gols a Favor (Marcats)")
+            fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", color_discrete_sequence=["#5c2d73"])
+            fig_favor.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d", size=13),
+                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                margin=dict(t=10, b=0, l=0, r=0), 
+                height=250
+            )
+            st.plotly_chart(fig_favor, use_container_width=True)
+
+        with col_gols_contra:
+            st.markdown("##### 🛡️ Gols en Contra (Encaixats)")
+            fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", color_discrete_sequence=["#a569bd"])
+            fig_contra.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d", size=13),
+                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                margin=dict(t=10, b=0, l=0, r=0), 
+                height=250
+            )
+            st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
         st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta")
@@ -586,6 +707,195 @@ def main():
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
                     st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{nom_real.upper()}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | Grogues: **{grogues_actuals}** | Vermelles: **{vermelles_actuals}**")
+                    
+                    c_ed1, c_ed2 = st.columns(2)
+                    with c_ed1:
+                        nou_dorsal_input = st.number_input("Modificar Dorsal:", min_value=1, max_value=99, value=dorsal_actual if dorsal_actual > 0 else 1)
+                    with c_ed2:
+                        nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Portera"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
+                    
+                    if nou_dorsal_input != dorsal_actual or nou_canvi_rol != rol_actual:
+                        if st.button("Actualitzar Dades Bàsiques"):
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": nom_real,
+                                    "dorsal": int(nou_dorsal_input),
+                                    "gols": gols_actuals,
+                                    "rol": nou_canvi_rol,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals,
+                                    "gols_encaixats": gols_encaixats_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Dades actualitzades!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                    st.markdown("##### Sumar / Restar Gols i Targetes")
+                    
+                    if rol_actual == "Portera":
+                        c_bt1, c_bt2, c_bt3 = st.columns(3)
+                        with c_bt1:
+                            if st.button("➕ Sumar Gol Encaixat"):
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals + 1
+                                    }, on_conflict="nom").execute()
+                                    st.success("Gol encaixat sumat!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+                            if st.button("➖ Restar Gol Encaixat") and gols_encaixats_actuals > 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals - 1
+                                    }, on_conflict="nom").execute()
+                                    st.success("Gol encaixat restat.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+                    else:
+                        c_bt1, c_bt2, c_bt3 = st.columns(3)
+                        with c_bt1:
+                            if st.button("➕ Sumar 1 Gol"):
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals + 1,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals
+                                    }, on_conflict="nom").execute()
+                                    
+                                    sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                    st.success("Gol sumat i sincronitzat amb l'equip!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+                            if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals - 1,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals
+                                    }, on_conflict="nom").execute()
+                                    
+                                    sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                    st.success("Gol restat i sincronitzat.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+
+                    with c_bt2:
+                        if st.button("🟨 Sumar Groga"):
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": nom_real,
+                                    "dorsal": dorsal_actual,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals + 1,
+                                    "vermelles": vermelles_actuals,
+                                    "gols_encaixats": gols_encaixats_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Targeta groga sumada!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+                        if st.button("➖ Restar Groga") and grogues_actuals > 0:
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": nom_real,
+                                    "dorsal": dorsal_actual,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals - 1,
+                                    "vermelles": vermelles_actuals,
+                                    "gols_encaixats": gols_encaixats_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Groga restada.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                    with c_bt3:
+                        if st.button("🟥 Sumar Vermella"):
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": nom_real,
+                                    "dorsal": dorsal_actual,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals + 1,
+                                    "gols_encaixats": gols_encaixats_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Targeta vermella sumada!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+                        if st.button("➖ Restar Vermella") and vermelles_actuals > 0:
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": nom_real,
+                                    "dorsal": dorsal_actual,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals - 1,
+                                    "gols_encaixats": gols_encaixats_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Vermella restada.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                    st.markdown("---")
+                    st.markdown("##### 🗑️ Zona de Perill (Eliminar Jugadora)")
+                    
+                    confirm_key = f"confirm_del_{nom_real}"
+                    if confirm_key not in st.session_state:
+                        st.session_state[confirm_key] = False
+
+                    if not st.session_state[confirm_key]:
+                        if st.button(f"🗑️ Eliminar a {nom_real}", type="secondary"):
+                            st.session_state[confirm_key] = True
+                            st.rerun()
+                    else:
+                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        col_del1, col_del2 = st.columns(2)
+                        with col_del1:
+                            if st.button("Sí, eliminar", type="primary"):
+                                try:
+                                    supabase.table("golejadores").delete().eq("nom", nom_real).execute()
+                                    sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                    st.session_state[confirm_key] = False
+                                    st.success(f"🗑️ S'ha eliminat correctament a {nom_real}.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error en eliminar: {e}")
+                        with col_del2:
+                            if st.button("Cancel·lar"):
+                                st.session_state[confirm_key] = False
+                                st.rerun()
 
             # --- SUBPANELL 4: GOLS PER MINUTS ---
             with tab_adm_trams:
@@ -595,6 +905,61 @@ def main():
                 actual_con = dict_trams[tram_coll]["gols_contra"]
                 
                 st.info(f"📊 **Bloc seleccionat: Minuts {tram_coll}** — Gols a Favor: **{actual_fav}** ⚽ | Gols en Contra: **{actual_con}** 🛡️")
+                
+                st.markdown("##### ⚽ Gols a Favor (Marcats en aquest tram)")
+                c_f1, c_f2 = st.columns(2)
+                with c_f1:
+                    if st.button(f"➕ Sumar Favor ({tram_coll})", key="btn_sum_fav"):
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav + 1,
+                                "gols_contra": actual_con
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol a favor sumat al bloc {tram_coll}!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+                with c_f2:
+                    if st.button(f"➖ Restar Favor ({tram_coll})", key="btn_res_fav") and actual_fav > 0:
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav - 1,
+                                "gols_contra": actual_con
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol a favor restat al bloc {tram_coll}.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+
+                st.markdown("---")
+                st.markdown("##### 🛡️ Gols en Contra (Encaixats en aquest tram)")
+                c_c1, c_c2 = st.columns(2)
+                with c_c1:
+                    if st.button(f"➕ Sumar Contra ({tram_coll})", key="btn_sum_con"):
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav,
+                                "gols_contra": actual_con + 1
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol en contra sumat al bloc {tram_coll}!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+                with c_c2:
+                    if st.button(f"➖ Restar Contra ({tram_coll})", key="btn_res_con") and actual_con > 0:
+                        try:
+                            supabase.table("trams_gols").upsert({
+                                "tram": tram_coll,
+                                "gols_favor": actual_fav,
+                                "gols_contra": actual_con - 1
+                            }, on_conflict="tram").execute()
+                            st.success(f"Gol restat.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
 
 # Executar aplicació
 if check_access():
