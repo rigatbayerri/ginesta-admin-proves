@@ -175,12 +175,12 @@ def main():
         n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
 
     # Càlcul automàtic dels gols de les jugadores de camp
-    gols_jugadores_total = sum(j.get('gols', 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
+    gols_jugadores_total = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
     g_favor_total = gols_jugadores_total + gols_propia_porta
 
     # Targetes totals de l'equip
-    total_grogues = sum(j.get('grogues', 0) for j in golejadores_data)
-    total_vermelles = sum(j.get('vermelles', 0) for j in golejadores_data)
+    total_grogues = sum(int(j.get('grogues', 0) or 0) for j in golejadores_data)
+    total_vermelles = sum(int(j.get('vermelles', 0) or 0) for j in golejadores_data)
 
     # Funció auxiliar per sincronitzar automàticament els totals generals a Supabase
     def sincronitzar_estadistiques_generals(nous_partits, noves_p_zero, nous_propia, nous_contra):
@@ -617,7 +617,7 @@ def main():
                 st.markdown("---")
                 st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes)")
                 
-                noms_jugadores = [f"#{j.get('dorsal', '0')} - {j.get('nom')}" for j in golejadores_data]
+                noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom')}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
                 jugadora_seleccionada_str = st.selectbox("Selecciona una jugadora:", noms_jugadores)
@@ -649,22 +649,21 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
                 else:
-                    # Extreure el nom real de la selecció del selectbox
                     jugadora_seleccionada = jugadora_seleccionada_str.split(" - ")[1]
                     j_actual = next((j for j in golejadores_data if j.get('nom') == jugadora_seleccionada), {})
                     
-                    dorsal_actual = j_actual.get('dorsal', 0)
-                    gols_actuals = j_actual.get('gols', 0)
+                    dorsal_actual = int(j_actual.get('dorsal', 0) or 0)
+                    gols_actuals = int(j_actual.get('gols', 0) or 0)
                     rol_actual = j_actual.get('rol', 'Jugadora')
-                    grogues_actuals = j_actual.get('grogues', 0)
-                    vermelles_actuals = j_actual.get('vermelles', 0)
+                    grogues_actuals = int(j_actual.get('grogues', 0) or 0)
+                    vermelles_actuals = int(j_actual.get('vermelles', 0) or 0)
                     
                     st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{jugadora_seleccionada}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | 🟨 **{grogues_actuals}** | 🟥 **{vermelles_actuals}**")
                     
                     # Modificar dorsal o rol
                     c_ed1, c_ed2 = st.columns(2)
                     with c_ed1:
-                        nou_dorsal_input = st.number_input("Modificar Dorsal:", min_value=1, max_value=99, value=int(dorsal_actual))
+                        nou_dorsal_input = st.number_input("Modificar Dorsal:", min_value=1, max_value=99, value=dorsal_actual if dorsal_actual > 0 else 1)
                     with c_ed2:
                         nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Portera"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
                     
