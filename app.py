@@ -17,11 +17,14 @@ st.set_page_config(
 ONESIGNAL_APP_ID = "44139709-03c9-4f36-a545-54a0e5cd3397"
 ONESIGNAL_REST_API_KEY = "os_v2_app_iqjzocidzfhtnjkfksqoltjts53k2iznoupebn4mwr75pzvtj5aozsmyojbp2d5uslvfxu4ese7ly3jnd3bocdm534vm6trpiqocnza"
 
-# Injectar script d'OneSignal + Icona personalitzada per a iPhone (Apple Touch Icon)
+# Injectar script d'OneSignal + Etiquetes completes d'Apple Touch Icon per a iPhone
 st.markdown(f"""
-    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+    <link rel="apple-touch-icon-precomposed" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -961,6 +964,5 @@ def main():
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
-# Executar aplicació
 if check_access():
     main()
