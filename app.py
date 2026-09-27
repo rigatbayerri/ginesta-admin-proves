@@ -482,14 +482,14 @@ def main():
             
             with cols[i % 3]:
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h4 style="margin: 0; color: #5c2d73;">{jugadora.get('nom')} <span style="font-size: 11px; color: #888;">({rol_text})</span></h4>
-                            <p style="margin: 5px 0 0 0; font-size: 15px; color: #2b1b3d !important;">
+                            <h4 style="margin: 0 0 4px 0; color: #5c2d73; font-size: 16px;">{jugadora.get('nom')} <span style="font-size: 11px; color: #888;">({rol_text})</span></h4>
+                            <p style="margin: 0; font-size: 15px; color: #2b1b3d !important;">
                                 ⚽ <b>{jugadora.get('gols')}</b> gols &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
                             </p>
                         </div>
-                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; margin-left: 10px;">
+                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 10px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; margin-left: 12px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05);">
                             {dorsal_val}
                         </div>
                     </div>
