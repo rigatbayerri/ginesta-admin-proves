@@ -368,7 +368,7 @@ def main():
 
         st.markdown("---")
 
-        # Rendiment de Porteria (Clean Sheets) amb fons net i harmònic
+        # Rendiment de Porteria (Clean Sheets) amb text fosc/negre ben visible
         st.markdown("### 🧤 Rendiment de Porteria (Clean Sheets)")
         col_porteria, _ = st.columns([1, 1])
         with col_porteria:
@@ -379,11 +379,11 @@ def main():
                 hole=0.6,
                 color_discrete_sequence=["#5c2d73", "#d7bde2"]
             )
-            # Fons transparent i integrat
             fig_clean_sheets.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d"),
+                font=dict(color="#2b1b3d", size=14, family="sans-serif"),
+                legend=dict(font=dict(color="#2b1b3d")),
                 margin=dict(t=0, b=0, l=0, r=0), 
                 height=240
             )
@@ -403,13 +403,12 @@ def main():
         with col_gols_favor:
             st.markdown("##### ⚽ Gols a Favor (Marcats)")
             fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", color_discrete_sequence=["#5c2d73"])
-            # Fons net, línies suaus i color de text a joc
             fig_favor.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d"),
-                xaxis_title="Minuts del Partit",
-                yaxis_title="Gols",
+                font=dict(color="#2b1b3d", size=13),
+                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
                 margin=dict(t=10, b=0, l=0, r=0), 
                 height=250
             )
@@ -418,13 +417,12 @@ def main():
         with col_gols_contra:
             st.markdown("##### 🛡️ Gols en Contra (Encaixats)")
             fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", color_discrete_sequence=["#a569bd"])
-            # Fons net, línies suaus i color de text a joc
             fig_contra.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d"),
-                xaxis_title="Minuts del Partit",
-                yaxis_title="Gols",
+                font=dict(color="#2b1b3d", size=13),
+                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
                 margin=dict(t=10, b=0, l=0, r=0), 
                 height=250
             )
@@ -691,3 +689,4 @@ def main():
 # Executar aplicació
 if check_access():
     main()
+ 
