@@ -386,7 +386,7 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES (AMB LES GRÀFIQUES DE PLOTLY)
+    # PESTANYA 3: ESTADÍSTIQUES (AMB LES TARGETES DE PLANTILLA ORIGINALS)
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -476,7 +476,8 @@ def main():
         st.markdown("---")
         st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta")
         
-        for jugadora in golejadores_data:
+        cols = st.columns(4)
+        for i, jugadora in enumerate(golejadores_data):
             rol = jugadora.get('rol', 'Jugadora')
             grogues_val = jugadora.get('grogues', 0)
             vermelles_val = jugadora.get('vermelles', 0)
@@ -490,19 +491,24 @@ def main():
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
             
-            st.markdown(f"""
-                <div style="background-color: white; padding: 10px 12px; border-radius: 10px; border-left: 4px solid #5c2d73; margin-bottom: 8px; box-shadow: 1px 1px 4px rgba(0,0,0,0.03);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center;">
-                            <span style="background-color: #f7f5fa; border: 1px solid #5c2d73; color: #5c2d73; border-radius: 6px; padding: 4px 8px; font-weight: bold; font-size: 13px; margin-right: 10px;">#{dorsal_val}</span>
-                            <span style="font-weight: 800; font-size: 14px; color: #2b1b3d;">{nom_jugadora}</span>
+            with cols[i % 4]:
+                st.markdown(f"""
+                    <div style="background-color: white; padding: 14px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.05);">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                <span style="font-weight: 800; font-size: 19px; line-height: 1;">{dorsal_val}</span>
+                                <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase; margin-top: 2px;">{rol}</span>
+                            </div>
+                            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 48px;">
+                                <h3 style="margin: 0; color: #5c2d73; font-size: 22px; font-weight: 900; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">{nom_jugadora}</h3>
+                            </div>
                         </div>
-                        <div style="font-size: 11px; color: #2b1b3d; text-align: right;">
-                            {estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 8px; font-size: 12px; color: #2b1b3d;">
+                            <div>{estat_text}</div>
+                            <div>🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></div>
                         </div>
                     </div>
-                </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
     # PESTANYA 4: ADMIN (COMPLETA AL 100%)
     if st.session_state["auth_level"] == "admin":
