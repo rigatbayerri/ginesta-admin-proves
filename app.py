@@ -157,12 +157,10 @@ def main():
             {"nom": "Berta", "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
             {"nom": "Carla", "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
             {"nom": "Aina", "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Noa", "gols": 2, "rol": "Porteria", "grogues": 0, "vermelles": 0}
+            {"nom": "Noa", "gols": 0, "rol": "Porteria", "grogues": 0, "vermelles": 0}
         ]
 
-    # Calcular totals de gols de jugadores + pròpia porta
-    gols_jugadores_total = sum(j.get('gols', 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
-    
+    # Carregar estadístiques generals des de Supabase
     try:
         res_extra = supabase.table("estadistiques_generals").select("*").execute()
         if res_extra.data:
@@ -176,11 +174,27 @@ def main():
     except:
         n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
 
+    # Càlcul automàtic dels gols de les jugadores de camp
+    gols_jugadores_total = sum(j.get('gols', 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
     g_favor_total = gols_jugadores_total + gols_propia_porta
 
     # Targetes totals de l'equip
     total_grogues = sum(j.get('grogues', 0) for j in golejadores_data)
     total_vermelles = sum(j.get('vermelles', 0) for j in golejadores_data)
+
+    # Funció auxiliar per sincronitzar automàticament els totals generals a Supabase
+    def sincronitzar_estadistiques_generals(nous_partits, noves_p_zero, nous_propia, nous_contra):
+        try:
+            supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
+            supabase.table("estadistiques_generals").insert({
+                "partits_jugats": int(nous_partits),
+                "gols_favor": int(gols_jugadores_total + nous_propia),
+                "gols_contra": int(nous_contra),
+                "porteries_zero": int(noves_p_zero),
+                "gols_propia_porta": int(nous_propia)
+            }).execute()
+        except Exception as e:
+            st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
     # ==========================================
     # PESTANYA 1: VÍDEOS DELS PARTITS
@@ -382,7 +396,7 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        # 4 MÈTRIQUES SUPERIORS AMB TARGETES INCLOSES
+        # 4 MÈTRIQUES SUPERIORS
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
         with col_m1:
             st.metric(label="Gols a Favor", value=g_favor_total, delta=f"(Jugadores: {gols_jugadores_total} + Pròpia Porta: {gols_propia_porta})")
@@ -590,19 +604,9 @@ def main():
                         g_contra_input = st.number_input("Total Gols en Contra (Encaixats)", min_value=0, value=gols_contra_total)
                     
                     if st.form_submit_button("Actualitzar Mètriques Generals"):
-                        try:
-                            supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
-                            supabase.table("estadistiques_generals").insert({
-                                "partits_jugats": int(p_jugats),
-                                "gols_favor": int(g_favor_total),
-                                "gols_contra": int(g_contra_input),
-                                "porteries_zero": int(p_zero),
-                                "gols_propia_porta": int(g_propia)
-                            }).execute()
-                            st.success("✅ Mètriques generals actualitzades!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                        sincronitzar_estadistiques_generals(p_jugats, p_zero, g_propia, g_contra_input)
+                        st.success("✅ Mètriques generals actualitzades!")
+                        st.rerun()
 
                 st.markdown("---")
                 st.markdown("#### ⚽ Gestió de Jugadores (Rol, Gols, Targetes)")
@@ -629,6 +633,10 @@ def main():
                                     "grogues": int(grogues_inicials),
                                     "vermelles": int(vermelles_inicials)
                                 }, on_conflict="nom").execute()
+                                
+                                # Sincronitzar totals de l'equip automàticament
+                                sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                
                                 st.success(f"🎉 Jugadora {nova_jugadora_nom} afegida!")
                                 st.rerun()
                             except Exception as e:
@@ -671,7 +679,11 @@ def main():
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals
                                 }, on_conflict="nom").execute()
-                                st.success("Gol sumat!")
+                                
+                                # Sincronitzar automàticament els gols totals a l'equip
+                                sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                
+                                st.success("Gol sumat i sincronitzat amb l'equip!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
@@ -684,7 +696,11 @@ def main():
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals
                                 }, on_conflict="nom").execute()
-                                st.success("Gol restat.")
+                                
+                                # Sincronitzar automàticament els gols totals a l'equip
+                                sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                
+                                st.success("Gol restat i sincronitzat.")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
