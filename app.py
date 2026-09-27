@@ -407,10 +407,10 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        # 4 MÈTRIQUES SUPERIORS (Ara totes utilitzen l'estil natiu de mètriques amb el fons verd eliminat per CSS)
+        # 4 MÈTRIQUES SUPERIORS (Sense detallar origen dels gols a favor)
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
         with col_m1:
-            st.metric(label="Gols a Favor", value=g_favor_total, delta=f"Jugadores: {gols_jugadores_total} + Pròpia Porta: {gols_propia_porta}")
+            st.metric(label="Gols a Favor", value=g_favor_total)
         with col_m2:
             st.metric(label="Gols en Contra", value=gols_contra_total)
         with col_m3:
