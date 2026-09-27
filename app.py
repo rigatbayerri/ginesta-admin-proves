@@ -386,7 +386,7 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES (AMB LES TARGETES DE PLANTILLA ORIGINALS)
+    # PESTANYA 3: ESTADÍSTIQUES (AMB PARTITS JUGATS INCLÒSOS)
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -404,15 +404,17 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+        col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
         with col_m1:
-            st.metric(label="Gols a Favor", value=g_favor_total)
+            st.metric(label="Partits Jugats", value=n_partits)
         with col_m2:
-            st.metric(label="Gols en Contra", value=gols_contra_total)
+            st.metric(label="Gols a Favor", value=g_favor_total)
         with col_m3:
-            st.metric(label="Porteries a Zero", value=porteries_zero)
+            st.metric(label="Gols en Contra", value=gols_contra_total)
         with col_m4:
-            st.metric(label="Targetes Equip", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
+            st.metric(label="Porteries a Zero", value=porteries_zero)
+        with col_m5:
+            st.metric(label="Targetes", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
 
         st.markdown("---")
 
