@@ -246,7 +246,14 @@ def main():
         if not partits:
             st.warning("Encara no hi ha partits registrats.")
         else:
-            opcions_partits = {f"J.{p.get('jornada', '')} - {p.get('titol', 'Partit')} ({p.get('resultat', 'vs')})": p for p in partits}
+            opcions_partits = {}
+            for p in partits:
+                jornada_val = p.get('jornada')
+                j_str = f"J.{jornada_val}" if jornada_val is not None and str(jornada_val).strip() != "" else "J-"
+                titol_val = p.get('titol', 'Partit')
+                res_val = p.get('resultat', 'vs')
+                opcions_partits[f"{j_str} - {titol_val} ({res_val})"] = p
+
             partit_seleccionat_str = st.selectbox("Selecciona un partit:", list(opcions_partits.keys()))
             partit_actual = opcions_partits[partit_seleccionat_str]
             
@@ -592,13 +599,25 @@ def main():
                     if not partits_existents:
                         st.warning("No hi ha partits per editar.")
                     else:
-                        dict_edit_partits = {f"J.{p.get('jornada')} - {p.get('titol')} ({p.get('resultat')})": p for p in partits_existents}
+                        dict_edit_partits = {}
+                        for p in partits_existents:
+                            jornada_val = p.get('jornada')
+                            j_str = f"J.{jornada_val}" if jornada_val is not None and str(jornada_val).strip() != "" else "J-"
+                            titol_val = p.get('titol', 'Partit')
+                            res_val = p.get('resultat', '')
+                            dict_edit_partits[f"{j_str} - {titol_val} ({res_val})"] = p
+
                         sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p")
                         p_edit = dict_edit_partits[sel_partit_str]
 
+                        try:
+                            val_jornada = int(p_edit.get('jornada') or 1)
+                        except:
+                            val_jornada = 1
+
                         edit_id = p_edit.get('id')
                         edit_titol = st.text_input("Títol", value=p_edit.get('titol', ''), key="ed_t")
-                        edit_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=int(p_edit.get('jornada', 1)), key="ed_j")
+                        edit_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=val_jornada, key="ed_j")
                         edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key="ed_r")
                         edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key="ed_res")
                         edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key="ed_ll")
