@@ -33,15 +33,15 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
 """, unsafe_allow_html=True)
 
-# --- ESTIL I COLORS CORPORATIUS (OPTIMITZAT PER A MÒBIL) ---
+# --- ESTIL I COLORS CORPORATIUS ---
 st.markdown("""
     <style>
     .stApp {
         background-color: #f7f5fa;
-        color: #2b1b3d;
+        color: #1a1a1a;
     }
-    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
-        color: #2b1b3d !important;
+    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, span {
+        color: #1a1a1a !important;
     }
     .stButton>button, .stButton>button *, div.stFormSubmitButton>button, div.stFormSubmitButton>button * {
         color: white !important;
@@ -56,7 +56,7 @@ st.markdown("""
     }
     .stTextInput>div>div>input, .stNumberInput>div>div>input, .stDateInput>div>div>input {
         background-color: white !important;
-        color: #2b1b3d !important;
+        color: #1a1a1a !important;
         border: 2px solid #5c2d73 !important;
         border-radius: 8px !important;
     }
@@ -71,10 +71,10 @@ st.markdown("""
     }
     div[data-baseweb="popover"] div[role="option"] {
         background-color: white !important;
-        color: #2b1b3d !important;
+        color: #1a1a1a !important;
     }
     div[data-baseweb="popover"] div[role="option"] * {
-        color: #2b1b3d !important;
+        color: #1a1a1a !important;
     }
     [data-testid="stMetricDelta"] svg {
         display: none !important;
@@ -291,8 +291,8 @@ def main():
                         else:
                             st.write("🛡️")
                 with col_res2:
-                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                    st.markdown(f"<h2 style='text-align: center; color: #1a1a1a; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #555;'>({lloc})</p>", unsafe_allow_html=True)
                 with col_res3:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
@@ -307,8 +307,8 @@ def main():
                     with c_g2:
                         st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px; font-size: 14px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
                 with col_res2:
-                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                    st.markdown(f"<h2 style='text-align: center; color: #1a1a1a; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #555;'>({lloc})</p>", unsafe_allow_html=True)
                 with col_res3:
                     c_r1, c_r2 = st.columns([2, 1])
                     with c_r1:
@@ -384,7 +384,7 @@ def main():
                                 else:
                                     st.write("🛡️")
                             with cr2:
-                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             st.markdown(f"""
@@ -396,7 +396,7 @@ def main():
                         with col_right:
                             cg1, cg2 = st.columns([3, 1])
                             with cg1:
-                                st.markdown("<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown("<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                             with cg2:
                                 st.image(LOGO_URL, width=42)
                     else:
@@ -405,7 +405,7 @@ def main():
                             with cg1:
                                 st.image(LOGO_URL, width=42)
                             with cg2:
-                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             st.markdown(f"""
@@ -417,7 +417,7 @@ def main():
                         with col_right:
                             cr1, cr2 = st.columns([3, 1])
                             with cr1:
-                                st.markdown(f"<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
                             with cr2:
                                 if escut_path and os.path.exists(escut_path):
                                     st.image(escut_path, width=42)
@@ -426,7 +426,7 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA (REDISSENY FUNCIONAL I MODERN EN GRAELLA)
+    # PESTANYA 3: PLANTILLA (REDISSENY Natiu i Textos Negres)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
         st.markdown("Fitxes individuals i percentatge de participació de cada jugadora.")
@@ -448,68 +448,59 @@ def main():
                 gols_encaixats_val = jugadora.get('gols_encaixats', 0)
                 estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
                 mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit:"
+                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit"
             else:
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
                 mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols/partit:"
+                text_etiqueta_gol = "⚽ Mitjana gols/partit"
 
             with cols[i % 2]:
                 with st.container():
                     st.markdown(f"""
-                        <div style="background-color: white; padding: 14px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
-                                    <span style="font-weight: 900; font-size: 18px; line-height: 1;">{dorsal_val}</span>
-                                    <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
-                                </div>
-                                <div style="flex-grow: 1; overflow: hidden;">
-                                    <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
-                                    <p style="margin: 2px 0 0 0; font-size: 11px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
-                                </div>
-                            </div>
-                            
-                            <div style="background-color: #f7f5fa; padding: 8px 10px; border-radius: 8px;">
-                                <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
-                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #2b1b3d; margin-bottom: 2px;">
-                                    <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
-                                    <span>Minuts: <b>{minuts_val}'</b></span>
-                                    <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
-                                </div>
-                                <div style="font-size: 11px; color: #2b1b3d;">
-                                    {text_etiqueta_gol} <b>{mitjana_gols_val}</b>
-                                </div>
-                            </div>
+                    <div style="background-color: white; padding: 15px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                        <div style="font-size: 18px; font-weight: 900; color: #5c2d73; text-transform: uppercase;">
+                            #{dorsal_val} — {nom_jugadora} <span style="font-size: 11px; background-color: #f7f5fa; padding: 2px 6px; border-radius: 4px; color: #333; border: 1px solid #ddd;">{rol}</span>
                         </div>
+                        <div style="font-size: 13px; color: #1a1a1a; margin-top: 6px; font-weight: 600;">
+                            {estat_text} &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
+                        </div>
+                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
+                        <div style="font-size: 11px; color: #1a1a1a;">
+                            <b>📋 Dades de l'Acta Oficial:</b><br>
+                            Titularitats: <b>{titularitats_val}/{n_partits}</b> &nbsp;|&nbsp; Minuts: <b>{minuts_val}'</b> &nbsp;|&nbsp; Mitjana: <b>{mitjana_min_val}'/p.</b><br>
+                            {text_etiqueta_gol}: <b>{mitjana_gols_val}</b>
+                        </div>
+                    </div>
                     """, unsafe_allow_html=True)
 
-                    # Gràfica de Donut per als minuts jugats
-                    total_minuts_possibles = n_partits * 80
-                    minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
-                    minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
+                    with st.expander(f"📊 Veure gràfica de minuts de #{dorsal_val} {nom_jugadora}"):
+                        total_minuts_possibles = n_partits * 80
+                        minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
+                        minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
 
-                    df_donut = pd.DataFrame({
-                        "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
-                        "Minuts": [minuts_jugats_efectius, minuts_restants]
-                    })
-                    fig_donut = px.pie(
-                        df_donut, 
-                        names="Estat", 
-                        values="Minuts", 
-                        hole=0.6,
-                        color_discrete_sequence=["#5c2d73", "#e0d8e8"]
-                    )
-                    fig_donut.update_layout(
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font=dict(color="#2b1b3d", size=11),
-                        legend=dict(font=dict(color="#2b1b3d"), orientation="h", y=-0.2),
-                        margin=dict(t=0, b=10, l=0, r=0), 
-                        height=160
-                    )
-                    st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_plantilla_{nom_jugadora}_{i}")
-                    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+                        df_donut = pd.DataFrame({
+                            "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
+                            "Minuts": [minuts_jugats_efectius, minuts_restants]
+                        })
+                        fig_donut = px.pie(
+                            df_donut, 
+                            names="Estat", 
+                            values="Minuts", 
+                            hole=0.6,
+                            color_discrete_sequence=["#5c2d73", "#e0d8e8"]
+                        )
+                        fig_donut.update_layout(
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            font=dict(color="#1a1a1a", size=11, family="sans-serif"),
+                            legend=dict(font=dict(color="#1a1a1a"), orientation="h", y=-0.2),
+                            margin=dict(t=0, b=10, l=0, r=0), 
+                            height=180
+                        )
+                        st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_plantilla_{nom_jugadora}_{i}")
+
+                    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
@@ -556,8 +547,8 @@ def main():
             fig_clean_sheets.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d", size=13),
-                legend=dict(font=dict(color="#2b1b3d")),
+                font=dict(color="#1a1a1a", size=13),
+                legend=dict(font=dict(color="#1a1a1a")),
                 margin=dict(t=0, b=0, l=0, r=0), 
                 height=220
             )
@@ -575,13 +566,13 @@ def main():
         with col_gols_favor:
             st.markdown("##### ⚽ Gols a Favor")
             fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", text="Gols Favor", color_discrete_sequence=["#5c2d73"])
-            # Textos en blanc i visibles damunt de les barres
-            fig_favor.update_traces(textposition='inside', textfont=dict(color='white', size=13, weight='bold'))
+            # Números en negre damunt de les barres clares o a fora ben visibles
+            fig_favor.update_traces(textposition='outside', textfont=dict(color='#1a1a1a', size=13, weight='bold'))
             fig_favor.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d", size=11),
-                margin=dict(t=20, b=0, l=0, r=0), 
+                font=dict(color="#1a1a1a", size=11),
+                margin=dict(t=25, b=0, l=0, r=0), 
                 height=240,
                 yaxis=dict(showgrid=True, gridcolor='#e0d8e8')
             )
@@ -590,13 +581,13 @@ def main():
         with col_gols_contra:
             st.markdown("##### 🛡️ Gols en Contra")
             fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", text="Gols Contra", color_discrete_sequence=["#a569bd"])
-            # Textos en blanc i visibles damunt de les barres
-            fig_contra.update_traces(textposition='inside', textfont=dict(color='white', size=13, weight='bold'))
+            # Números en negre ben visibles
+            fig_contra.update_traces(textposition='outside', textfont=dict(color='#1a1a1a', size=13, weight='bold'))
             fig_contra.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#2b1b3d", size=11),
-                margin=dict(t=20, b=0, l=0, r=0), 
+                font=dict(color="#1a1a1a", size=11),
+                margin=dict(t=25, b=0, l=0, r=0), 
                 height=240,
                 yaxis=dict(showgrid=True, gridcolor='#e0d8e8')
             )
