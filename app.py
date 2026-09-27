@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.express as px
 import os
 import time
-import requests
 
 # --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
@@ -12,10 +11,6 @@ st.set_page_config(
     page_icon="https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png",
     layout="wide"
 )
-
-# --- CONFIGURACIÓ D'ONESIGNAL (INTEGRADA DIRECTAMENT) ---
-ONESIGNAL_APP_ID = "44139709-03c9-4f36-a545-54a0e5cd3397"
-ONESIGNAL_REST_API_KEY = "os_v2_app_iqjzocidzfhtnjkfksqoltjts53k2iznoupebn4mwr75pzvtj5aozsmyojbp2d5uslvfxu4ese7ly3jnd3bocdm534vm6trpiqocnza"
 
 # URL directa de l'escut oficial del C.F. Ginesta per a l'iPhone i navegadors
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
@@ -37,19 +32,6 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {{
-        await OneSignal.init({{
-          appId: "{ONESIGNAL_APP_ID}",
-          safari_web_id: "web.onesignal.auto.00000000-0000-0000-0000-000000000000",
-          notifyButton: {{
-            enable: true,
-          }},
-        }});
-      }});
-    </script>
 """, unsafe_allow_html=True)
 
 # --- ESTIL I COLORS CORPORATIUS ---
@@ -133,25 +115,6 @@ supabase = init_supabase()
 
 if not os.path.exists("escuts"):
     os.makedirs("escuts")
-
-# --- FUNCIÓ PER ENVIAR LA NOTIFICACIÓ PUSH AMB ONESIGNAL ---
-def enviar_notificacio_onesignal(titol_partit):
-    url = "https://onesignal.com/api/v1/notifications"
-    headers = {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": f"Basic {ONESIGNAL_REST_API_KEY}"
-    }
-    payload = {
-        "app_id": ONESIGNAL_APP_ID,
-        "included_segments": ["All"],
-        "headings": {"en": "⚽ C.F. Ginesta - Nou Partit!"},
-        "contents": {"en": f"🎬 Ja està disponible el vídeo de: {titol_partit}"}
-    }
-    try:
-        response = requests.post(url, json=payload, headers=headers)
-        return response.status_code == 200
-    except:
-        return False
 
 # --- SISTEMA DE DOBLE CLAU D'ACCÉS ---
 def check_access():
@@ -552,7 +515,7 @@ def main():
             tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Videoteca", "📅 Gestionar Calendari", "📊 Mètriques & Jugadores", "⏱️ Gols per Minuts"])
 
             with tab_adm_partits:
-                st.markdown("#### ➕ Pujar Vídeo i Resultat de Partit (Amb Notificació Push)")
+                st.markdown("#### ➕ Pujar Vídeo i Resultat de Partit")
                 nou_titol = st.text_input("Títol del Partit (Ex: C.F. Ginesta vs CE Manresa)")
                 nova_jornada = st.number_input("Número de Jornada", min_value=1, max_value=38, value=1)
                 nova_data = st.date_input("Data del Partit")
@@ -571,7 +534,7 @@ def main():
 
                 nou_video_url = st.text_input("Enllaç del Vídeo (YouTube, Drive, etc.)")
                 
-                if st.button("Guardar Partit i Enviar Notificació"):
+                if st.button("Guardar Partit"):
                     if nou_titol and nou_video_url:
                         try:
                             escut_path_saved = ""
@@ -591,12 +554,7 @@ def main():
                                 "video_url": nou_video_url
                             }).execute()
 
-                            notif_enviada = enviar_notificacio_onesignal(nou_titol)
-                            if notif_enviada:
-                                st.success("🎉 Partit guardat i notificació push enviada a tothom!")
-                            else:
-                                st.warning("⚠️ Partit guardat, però hi ha hagut un petit error al disparar la notificació d'OneSignal.")
-                            
+                            st.success("🎉 Partit guardat correctament a Supabase!")
                             time.sleep(1.5)
                             st.rerun()
                         except Exception as e:
