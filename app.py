@@ -12,10 +12,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# URL directa de l'escut oficial del C.F. Ginesta per a l'iPhone i navegadors
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
 
-# Injectar manifest web i etiquetes d'Apple apuntant directament a l'escut oficial
 st.markdown(f"""
     <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{{
       'name': 'C.F. Ginesta Cadet F11',
@@ -227,7 +225,7 @@ def main():
                 "gols_propia_porta": int(nous_propia)
             }).execute()
         except Exception as e:
-            st.error(f"❌ Error en sincronitzar estadístiques: {e}")
+            st.error(f"❌ Error: {e}")
 
     if st.session_state["auth_level"] == "admin":
         tab_videos, tab_calendari, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques", "⚙️ Admin"])
@@ -302,13 +300,16 @@ def main():
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
             
+            # Reproductors de vídeo protegits contra FileNotFoundError
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
-            if video_url:
-                st.video(video_url)
+            if video_url and isinstance(video_url, str) and (video_url.startswith("http://") or video_url.startswith("https://")):
+                try:
+                    st.video(video_url)
+                except Exception:
+                    st.warning("⚠️ No s'ha pogut carregar el reproductor amb aquest enllaç.")
             else:
-                st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
+                st.warning("⚠️ L'enllaç del vídeo d'aquest partit no és vàlid o no està disponible.")
 
-            # Mostrar múltiples fotos de celebració si n'hi ha
             if fotos_str:
                 lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
                 if lletres_fotos:
@@ -524,7 +525,7 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 4: ADMIN (COMPLETA AL 100%)
+    # PESTANYA 4: ADMIN
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
@@ -541,7 +542,7 @@ def main():
                 
                 arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
                 arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
-                nou_video_url = st.text_input("Enllaç Vídeo")
+                nou_video_url = st.text_input("Enllaç Vídeo (URL web)")
                 
                 if st.button("Guardar Partit"):
                     if nou_titol and nou_video_url:
@@ -554,7 +555,7 @@ def main():
 
                             rutes_fotos = []
                             if arxius_fotos:
-                                for foto in arxius_fotos[:5]:  # Limitar a 5 màxim
+                                for foto in arxius_fotos[:5]:
                                     f_path = os.path.join("fotos_partits", foto.name)
                                     with open(f_path, "wb") as f:
                                         f.write(foto.getbuffer())
