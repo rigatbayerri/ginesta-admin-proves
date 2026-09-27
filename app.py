@@ -628,7 +628,7 @@ def main():
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes)")
+                st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes, Eliminar)")
                 
                 noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom').upper()}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
@@ -839,6 +839,36 @@ def main():
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
+
+                    st.markdown("---")
+                    st.markdown("##### 🗑️ Zona de Perill (Eliminar Jugadora)")
+                    
+                    # Control per a mostrar el botó de confirmació d'eliminació
+                    confirm_key = f"confirm_del_{nom_real}"
+                    if confirm_key not in st.session_state:
+                        st.session_state[confirm_key] = False
+
+                    if not st.session_state[confirm_key]:
+                        if st.button(f"🗑️ Eliminar a {nom_real}", type="secondary"):
+                            st.session_state[confirm_key] = True
+                            st.rerun()
+                    else:
+                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        col_del1, col_del2 = st.columns(2)
+                        with col_del1:
+                            if st.button("Sí, eliminar", type="primary"):
+                                try:
+                                    supabase.table("golejadores").delete().eq("nom", nom_real).execute()
+                                    sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                    st.session_state[confirm_key] = False
+                                    st.success(f"🗑️ S'ha eliminat correctament a {nom_real}.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error en eliminar: {e}")
+                        with col_del2:
+                            if st.button("Cancel·lar"):
+                                st.session_state[confirm_key] = False
+                                st.rerun()
 
             # --- SUBPANELL 4: GOLS PER MINUTS INTERACTIU (+ / -) ---
             with tab_adm_trams:
