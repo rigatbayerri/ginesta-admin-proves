@@ -6,10 +6,10 @@ import os
 import time
 import requests
 
-# --- CONFIGURACIÓ DE LA PÀGINA ---
+# --- CONFIGURACIÓ DE LA PÀGINA (Amb el favicon directe del logo) ---
 st.set_page_config(
     page_title="Videoteca & Estadístiques - C.F. Ginesta",
-    page_icon="⚽",
+    page_icon="logo.png",
     layout="wide"
 )
 
@@ -30,6 +30,7 @@ st.markdown("""
     }">
     <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
     <link rel="apple-touch-icon-precomposed" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
