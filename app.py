@@ -146,7 +146,7 @@ def main():
 
     st.divider()
 
-    # --- CARREGA DE DADES GLOBAL PER A TOTA LA PÀGINA (S'executa primer) ---
+    # --- CARREGA DE DADES GLOBAL PER A TOTA LA PÀGINA ---
     golejadores_data = []
     try:
         res_gol = supabase.table("golejadores").select("*").order("dorsal", desc=False).execute()
@@ -687,7 +687,7 @@ def main():
                     gols_encaixats_actuals = int(j_actual.get('gols_encaixats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{nom_real.upper()}** | Rol: **{rol_actual}**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{nom_real.upper()}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | Grogues: **{grogues_actuals}** | Vermelles: **{vermelles_actuals}**")
                     
                     # Modificar dorsal o rol
                     c_ed1, c_ed2 = st.columns(2)
