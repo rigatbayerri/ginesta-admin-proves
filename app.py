@@ -396,10 +396,16 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        # 4 MÈTRIQUES SUPERIORS
+        # 4 MÈTRIQUES SUPERIORS (Substituït st.metric per una targeta corporativa neta sense fons verd)
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
         with col_m1:
-            st.metric(label="Gols a Favor", value=g_favor_total, delta=f"(Jugadores: {gols_jugadores_total} + Pròpia Porta: {gols_propia_porta})")
+            st.markdown(f"""
+                <div style="background-color: white; padding: 16px; border-radius: 10px; border: 1px solid #e0d8e8; box-shadow: 2px 2px 5px rgba(0,0,0,0.03);">
+                    <p style="margin: 0; font-size: 13px; color: #666; font-weight: bold; text-transform: uppercase;">Gols a Favor</p>
+                    <h2 style="margin: 5px 0 3px 0; color: #5c2d73; font-size: 30px; font-weight: 800;">{g_favor_total}</h2>
+                    <p style="margin: 0; font-size: 12px; color: #5c2d73; font-weight: 650;">Jugadores: {gols_jugadores_total} + Pròpia Porta: {gols_propia_porta}</p>
+                </div>
+            """, unsafe_allow_html=True)
         with col_m2:
             st.metric(label="Gols en Contra", value=gols_contra_total)
         with col_m3:
