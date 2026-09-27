@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ESTIL I COLORS PERSONALITZATS (RESPONSIVE PER PC I TAULETA) ---
+# --- ESTIL I COLORS PERSONALITZATS ---
 st.markdown("""
     <style>
     .stApp {
@@ -355,16 +355,20 @@ def main():
         g_favor_total = sum(d["gols_favor"] for d in dict_trams.values())
         g_contra_total = sum(d["gols_contra"] for d in dict_trams.values())
 
-        col_a, col_b, col_c = st.columns(3)
+        # 4 MÈTRIQUES SUPERIORS
+        col_a, col_b, col_c, col_d = st.columns(4)
         with col_a:
             st.metric(label="Partits Jugats", value=n_partits)
         with col_b:
-            st.metric(label="Gols a Favor (Total)", value=g_favor_total)
+            st.metric(label="Gols a Favor", value=g_favor_total)
         with col_c:
-            st.metric(label="Gols en Contra (Total)", value=g_contra_total)
+            st.metric(label="Gols en Contra", value=g_contra_total)
+        with col_d:
+            st.metric(label="Porteries a Zero", value=porteries_zero)
 
         st.markdown("---")
 
+        # Rendiment de Porteria (Clean Sheets) amb fons net i harmònic
         st.markdown("### 🧤 Rendiment de Porteria (Clean Sheets)")
         col_porteria, _ = st.columns([1, 1])
         with col_porteria:
@@ -375,7 +379,14 @@ def main():
                 hole=0.6,
                 color_discrete_sequence=["#5c2d73", "#d7bde2"]
             )
-            fig_clean_sheets.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=240)
+            # Fons transparent i integrat
+            fig_clean_sheets.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d"),
+                margin=dict(t=0, b=0, l=0, r=0), 
+                height=240
+            )
             st.plotly_chart(fig_clean_sheets, use_container_width=True)
 
         st.markdown("---")
@@ -392,7 +403,11 @@ def main():
         with col_gols_favor:
             st.markdown("##### ⚽ Gols a Favor (Marcats)")
             fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", color_discrete_sequence=["#5c2d73"])
+            # Fons net, línies suaus i color de text a joc
             fig_favor.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d"),
                 xaxis_title="Minuts del Partit",
                 yaxis_title="Gols",
                 margin=dict(t=10, b=0, l=0, r=0), 
@@ -403,7 +418,11 @@ def main():
         with col_gols_contra:
             st.markdown("##### 🛡️ Gols en Contra (Encaixats)")
             fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", color_discrete_sequence=["#a569bd"])
+            # Fons net, línies suaus i color de text a joc
             fig_contra.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d"),
                 xaxis_title="Minuts del Partit",
                 yaxis_title="Gols",
                 margin=dict(t=10, b=0, l=0, r=0), 
