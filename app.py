@@ -301,7 +301,6 @@ def main():
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
             
-            # --- PROTECCIÓ SEGURA PER AL VÍDEO ---
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
             if video_url and str(video_url).startswith("http"):
                 try:
@@ -534,7 +533,7 @@ def main():
 
             with tab_adm_partits:
                 st.markdown("#### 🎬 Gestió de Partits (Nou o Editar)")
-                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou", "✏️ Editar Partit Existent"])
+                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou", "✏️ Editar / Esborrar Partit Existent"])
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
@@ -594,7 +593,7 @@ def main():
                         st.warning("No hi ha partits per editar.")
                     else:
                         dict_edit_partits = {f"J.{p.get('jornada')} - {p.get('titol')} ({p.get('resultat')})": p for p in partits_existents}
-                        sel_partit_str = st.selectbox("Selecciona el partit a modificar:", list(dict_edit_partits.keys()), key="sel_ed_p")
+                        sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p")
                         p_edit = dict_edit_partits[sel_partit_str]
 
                         edit_id = p_edit.get('id')
@@ -607,6 +606,8 @@ def main():
                         
                         edit_arxiu_escut = st.file_uploader("Canviar Escut Rival", type=["png", "jpg"], key="ed_esc")
                         edit_arxius_fotos = st.file_uploader("Afegir/Canviar Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="ed_fotos")
+
+                        esborrar_fotos_check = st.checkbox("🗑️ Esborrar totes les fotos d'aquest partit", key="chk_del_fotos")
 
                         if st.button("Actualitzar Partit Canviat"):
                             try:
@@ -624,7 +625,9 @@ def main():
                                         f.write(edit_arxiu_escut.getbuffer())
                                     update_data["escut_rival_url"] = escut_path_saved
 
-                                if edit_arxius_fotos:
+                                if esborrar_fotos_check:
+                                    update_data["fotos_partit_urls"] = ""
+                                elif edit_arxius_fotos:
                                     rutes_fotos = []
                                     for foto in edit_arxius_fotos[:5]:
                                         f_path = os.path.join("fotos_partits", foto.name)
@@ -639,6 +642,35 @@ def main():
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error al actualitzar: {e}")
+
+                        st.markdown("---")
+                        st.markdown("##### 🗑️ Zona de Perill (Esborrar Partit Sencer)")
+                        
+                        confirm_key_p = f"confirm_del_partit_{edit_id}"
+                        if confirm_key_p not in st.session_state:
+                            st.session_state[confirm_key_p] = False
+
+                        if not st.session_state[confirm_key_p]:
+                            if st.button("🗑️ Eliminar aquest partit completament", type="secondary", key="btn_init_del_p"):
+                                st.session_state[confirm_key_p] = True
+                                st.rerun()
+                        else:
+                            st.warning(f"⚠️ Estàs segur que vols eliminar permanentment el partit **{edit_titol}**?")
+                            col_dp1, col_dp2 = st.columns(2)
+                            with col_dp1:
+                                if st.button("Sí, eliminar partit", type="primary", key="btn_confirm_del_p"):
+                                    try:
+                                        supabase.table("partits").delete().eq("id", edit_id).execute()
+                                        st.session_state[confirm_key_p] = False
+                                        st.success("🗑️ Partit eliminat correctament.")
+                                        time.sleep(1)
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"❌ Error al eliminar: {e}")
+                            with col_dp2:
+                                if st.button("Cancel·lar", key="btn_cancel_del_p"):
+                                    st.session_state[confirm_key_p] = False
+                                    st.rerun()
 
             with tab_adm_calendari:
                 st.markdown("#### 📅 Afegir Calendari")
