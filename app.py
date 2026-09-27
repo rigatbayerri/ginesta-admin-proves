@@ -232,9 +232,9 @@ def main():
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
     if st.session_state["auth_level"] == "admin":
-        tab_videos, tab_calendari, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques", "⚙️ Admin"])
+        tab_videos, tab_calendari, tab_plantilla, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
     else:
-        tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
+        tab_videos, tab_calendari, tab_plantilla, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "👥 Plantilla", "📊 Estadístiques"])
 
     # PESTANYA 1: VÍDEOS I GALERIA DE FOTOS
     with tab_videos:
@@ -426,7 +426,92 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES + SLIDER DE JUGADORES + GRÀFIQUES AMB NÚMEROS
+    # PESTANYA 3: PLANTILLA (NOVA PESTANYA DEDICADA)
+    with tab_plantilla:
+        st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
+        st.markdown("Consulta les fitxes detallades, minuts, titularitats i estadístiques individuals de cada jugadora.")
+        st.markdown("---")
+
+        cols = st.columns(2)
+        for i, jugadora in enumerate(golejadores_data):
+            rol = jugadora.get('rol', 'Jugadora')
+            grogues_val = jugadora.get('grogues', 0)
+            vermelles_val = jugadora.get('vermelles', 0)
+            dorsal_val = jugadora.get('dorsal', '-')
+            nom_jugadora = jugadora.get('nom', '').upper()
+            
+            titularitats_val = int(jugadora.get('titularitats', 0) or 0)
+            minuts_val = int(jugadora.get('minuts_jugats', 0) or 0)
+            mitjana_min_val = int(minuts_val / n_partits) if n_partits > 0 else 0
+            
+            if rol == "Portera":
+                gols_encaixats_val = jugadora.get('gols_encaixats', 0)
+                estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
+                mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
+                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit:"
+            else:
+                gols_realitzats_val = jugadora.get('gols', 0)
+                estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
+                mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
+                text_etiqueta_gol = "⚽ Mitjana gols/partit:"
+            
+            with cols[i % 2]:
+                with st.container():
+                    st.markdown(f"""
+                        <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                    <span style="font-weight: 900; font-size: 18px; line-height: 1;">{dorsal_val}</span>
+                                    <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
+                                </div>
+                                <div style="flex-grow: 1; overflow: hidden;">
+                                    <h4 style="margin: 0; color: #5c2d73; font-size: 16px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
+                                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #f7f5fa; padding: 10px 12px; border-radius: 8px;">
+                                <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #2b1b3d; margin-bottom: 4px;">
+                                    <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
+                                    <span>Minuts: <b>{minuts_val}'</b></span>
+                                    <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
+                                </div>
+                                <div style="font-size: 11px; color: #2b1b3d;">
+                                    {text_etiqueta_gol} <b>{mitjana_gols_val}</b>
+                                </div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    # Gràfica de Donut per als minuts jugats
+                    total_minuts_possibles = n_partits * 80
+                    minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
+                    minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
+
+                    df_donut = pd.DataFrame({
+                        "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
+                        "Minuts": [minuts_jugats_efectius, minuts_restants]
+                    })
+                    fig_donut = px.pie(
+                        df_donut, 
+                        names="Estat", 
+                        values="Minuts", 
+                        hole=0.6,
+                        color_discrete_sequence=["#5c2d73", "#e0d8e8"]
+                    )
+                    fig_donut.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#2b1b3d", size=11),
+                        legend=dict(font=dict(color="#2b1b3d"), orientation="h", y=-0.2),
+                        margin=dict(t=0, b=10, l=0, r=0), 
+                        height=180
+                    )
+                    st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_plantilla_{nom_jugadora}_{i}")
+                    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+
+    # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -480,7 +565,7 @@ def main():
 
         st.markdown("---")
 
-        st.markdown("### ⏱️ Distribució de Gols per Minuts (Amb referències numèriques)")
+        st.markdown("### ⏱️ Distribució de Gols per Minuts")
         df_trams = pd.DataFrame([
             {"Minuts": t, "Gols Favor": d["gols_favor"], "Gols Contra": d["gols_contra"]}
             for t, d in dict_trams.items()
@@ -515,98 +600,7 @@ def main():
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
-        st.markdown("---")
-        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Selecció per Carrusel / Slider)*")
-        
-        # SLIDER PER SELECCIONAR LA JUGADORA VISUALMENT
-        noms_llista_slider = [f"#{j.get('dorsal', 0)} - {j.get('nom', '').upper()}" for j in golejadores_data]
-        
-        if noms_llista_slider:
-            # Slider o selector lliscant per triar la jugadora de manera molt visual
-            jugadora_index = st.select_slider(
-                "Fes lliscar per veure les fitxes de les jugadores:",
-                options=range(len(noms_llista_slider)),
-                format_func=lambda x: noms_llista_slider[x]
-            )
-            
-            jugadora = golejadores_data[jugadora_index]
-            rol = jugadora.get('rol', 'Jugadora')
-            grogues_val = jugadora.get('grogues', 0)
-            vermelles_val = jugadora.get('vermelles', 0)
-            dorsal_val = jugadora.get('dorsal', '-')
-            nom_jugadora = jugadora.get('nom', '').upper()
-            
-            titularitats_val = int(jugadora.get('titularitats', 0) or 0)
-            minuts_val = int(jugadora.get('minuts_jugats', 0) or 0)
-            mitjana_min_val = int(minuts_val / n_partits) if n_partits > 0 else 0
-            
-            if rol == "Portera":
-                gols_encaixats_val = jugadora.get('gols_encaixats', 0)
-                estat_text = f"🧤 Encaixats: **{gols_encaixats_val}**"
-                mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit"
-            else:
-                gols_realitzats_val = jugadora.get('gols', 0)
-                estat_text = f"⚽ Gols: **{gols_realitzats_val}**"
-                mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols/partit"
-
-            col_fitxa_1, col_fitxa_2 = st.columns([1, 1])
-            with col_fitxa_1:
-                st.markdown(f"""
-                <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
-                            <span style="font-weight: 900; font-size: 18px; line-height: 1;">{dorsal_val}</span>
-                            <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
-                        </div>
-                        <div style="flex-grow: 1; overflow: hidden;">
-                            <h3 style="margin: 0; color: #5c2d73; font-size: 18px; font-weight: 900; text-transform: uppercase;">{nom_jugadora}</h3>
-                            <p style="margin: 2px 0 0 0; font-size: 13px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
-                        </div>
-                    </div>
-                    
-                    <div style="background-color: #f7f5fa; padding: 10px 12px; border-radius: 8px;">
-                        <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
-                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #2b1b3d; margin-bottom: 4px;">
-                            <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
-                            <span>Minuts: <b>{minuts_val}'</b></span>
-                            <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
-                        </div>
-                        <div style="font-size: 12px; color: #2b1b3d;">
-                            {text_etiqueta_gol}: <b>{mitjana_gols_val}</b>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            with col_fitxa_2:
-                total_minuts_possibles = n_partits * 80
-                minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
-                minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
-
-                df_donut = pd.DataFrame({
-                    "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
-                    "Minuts": [minuts_jugats_efectius, minuts_restants]
-                })
-                fig_donut = px.pie(
-                    df_donut, 
-                    names="Estat", 
-                    values="Minuts", 
-                    hole=0.6,
-                    color_discrete_sequence=["#5c2d73", "#e0d8e8"]
-                )
-                fig_donut.update_layout(
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#2b1b3d", size=11),
-                    legend=dict(font=dict(color="#2b1b3d"), orientation="h", y=-0.2),
-                    margin=dict(t=0, b=10, l=0, r=0), 
-                    height=200
-                )
-                st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_slider_{nom_jugadora}")
-
-    # PESTANYA 4: ADMIN
+    # PESTANYA 5: ADMIN
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
