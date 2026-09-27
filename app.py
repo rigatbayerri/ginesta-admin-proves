@@ -141,6 +141,47 @@ def main():
     else:
         tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
 
+    # Carregar dades de golejadores / jugadores
+    golejadores_data = []
+    try:
+        res_gol = supabase.table("golejadores").select("*").order("gols", desc=True).execute()
+        golejadores_data = res_gol.data
+    except:
+        pass
+
+    if not golejadores_data:
+        golejadores_data = [
+            {"nom": "Clàudia", "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
+            {"nom": "Júlia", "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
+            {"nom": "Martina", "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0},
+            {"nom": "Berta", "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
+            {"nom": "Carla", "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
+            {"nom": "Aina", "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
+            {"nom": "Noa", "gols": 2, "rol": "Porteria", "grogues": 0, "vermelles": 0}
+        ]
+
+    # Calcular totals de gols de jugadores + pròpia porta
+    gols_jugadores_total = sum(j.get('gols', 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
+    
+    try:
+        res_extra = supabase.table("estadistiques_generals").select("*").execute()
+        if res_extra.data:
+            st_data = res_extra.data[0]
+            n_partits = st_data.get("partits_jugats", 12)
+            porteries_zero = st_data.get("porteries_zero", 7)
+            gols_propia_porta = st_data.get("gols_propia_porta", 0)
+            gols_contra_total = st_data.get("gols_contra", 5)
+        else:
+            n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
+    except:
+        n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
+
+    g_favor_total = gols_jugadores_total + gols_propia_porta
+
+    # Targetes totals de l'equip
+    total_grogues = sum(j.get('grogues', 0) for j in golejadores_data)
+    total_vermelles = sum(j.get('vermelles', 0) for j in golejadores_data)
+
     # ==========================================
     # PESTANYA 1: VÍDEOS DELS PARTITS
     # ==========================================
@@ -326,17 +367,6 @@ def main():
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip (2x40 min)")
         
-        try:
-            res_stats = supabase.table("estadistiques_generals").select("*").execute()
-            if res_stats.data:
-                st_data = res_stats.data[0]
-                n_partits = st_data.get("partits_jugats", 12)
-                porteries_zero = st_data.get("porteries_zero", 7)
-            else:
-                n_partits, porteries_zero = 12, 7
-        except:
-            n_partits, porteries_zero = 12, 7
-
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
         trams_data_db = []
         try:
@@ -352,23 +382,20 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        g_favor_total = sum(d["gols_favor"] for d in dict_trams.values())
-        g_contra_total = sum(d["gols_contra"] for d in dict_trams.values())
-
-        # 4 MÈTRIQUES SUPERIORS
-        col_a, col_b, col_c, col_d = st.columns(4)
-        with col_a:
-            st.metric(label="Partits Jugats", value=n_partits)
-        with col_b:
-            st.metric(label="Gols a Favor", value=g_favor_total)
-        with col_c:
-            st.metric(label="Gols en Contra", value=g_contra_total)
-        with col_d:
+        # 4 MÈTRIQUES SUPERIORS AMB TARGETES INCLOSES
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+        with col_m1:
+            st.metric(label="Gols a Favor", value=g_favor_total, delta=f"(Jugadores: {gols_jugadores_total} + Pròpia Porta: {gols_propia_porta})")
+        with col_m2:
+            st.metric(label="Gols en Contra", value=gols_contra_total)
+        with col_m3:
             st.metric(label="Porteries a Zero", value=porteries_zero)
+        with col_m4:
+            st.metric(label="Targetes Equip", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
 
         st.markdown("---")
 
-        # Rendiment de Porteria (Clean Sheets) amb text fosc/negre ben visible
+        # Rendiment de Porteria (Clean Sheets)
         st.markdown("### 🧤 Rendiment de Porteria (Clean Sheets)")
         col_porteria, _ = st.columns([1, 1])
         with col_porteria:
@@ -430,29 +457,21 @@ def main():
 
         st.markdown("---")
 
-        st.markdown("### ⚽ Golejadores de l'Equip (Llista No Competitiva)")
+        st.markdown("### ⚽ Plantilla, Gols i Targetes")
         
-        golejadores_data = []
-        try:
-            res_gol = supabase.table("golejadores").select("*").order("gols", desc=True).execute()
-            golejadores_data = res_gol.data
-        except:
-            pass
-
-        if not golejadores_data:
-            golejadores_data = [
-                {"nom": "Clàudia", "gols": 8}, {"nom": "Júlia", "gols": 6},
-                {"nom": "Martina", "gols": 5}, {"nom": "Berta", "gols": 4},
-                {"nom": "Carla", "gols": 4}, {"nom": "Aina", "gols": 3}, {"nom": "Noa", "gols": 2}
-            ]
-
         cols = st.columns(3)
         for i, jugadora in enumerate(golejadores_data):
+            rol_text = "🧤 Porteria" if jugadora.get('rol') == "Porteria" else "⚽ Jugadora"
+            grogues_val = jugadora.get('grogues', 0)
+            vermelles_val = jugadora.get('vermelles', 0)
+            
             with cols[i % 3]:
                 st.markdown(f"""
                     <div style="background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
-                        <h4 style="margin: 0; color: #5c2d73;">{jugadora.get('nom')}</h4>
-                        <p style="margin: 5px 0 0 0; font-size: 16px; color: #2b1b3d !important;">⚽ <b>{jugadora.get('gols')}</b> gols</p>
+                        <h4 style="margin: 0; color: #5c2d73;">{jugadora.get('nom')} <span style="font-size: 11px; color: #888;">({rol_text})</span></h4>
+                        <p style="margin: 5px 0 0 0; font-size: 15px; color: #2b1b3d !important;">
+                            ⚽ <b>{jugadora.get('gols')}</b> gols &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
+                        </p>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -463,7 +482,7 @@ def main():
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració i Gestió")
             
-            tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Videoteca", "📅 Gestionar Calendari", "📊 Mètriques & Golejadores", "⏱️ Gols per Minuts"])
+            tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Videoteca", "📅 Gestionar Calendari", "📊 Mètriques & Jugadores", "⏱️ Gols per Minuts"])
 
             # --- SUBPANELL 1: VÍDEOS DE PARTITS ---
             with tab_adm_partits:
@@ -554,67 +573,174 @@ def main():
                     else:
                         st.warning("⚠️ Introdueix el nom del rival.")
 
-            # --- SUBPANELL 3: MÈTRIQUES I GOLEJADORES ---
+            # --- SUBPANELL 3: MÈTRIQUES, JUGADORES, TARGETES I PRÒPIA PORTA ---
             with tab_adm_stats:
-                st.markdown("#### 📈 Mètriques Generals")
+                st.markdown("#### 📈 Mètriques Generals i Pròpia Porta")
                 with st.form("form_metriques"):
-                    col_m1, col_m4 = st.columns(2)
+                    col_m1, col_m2, col_m3 = st.columns(3)
                     with col_m1:
                         p_jugats = st.number_input("Partits Jugats", min_value=0, value=n_partits)
-                    with col_m4:
+                    with col_m2:
                         p_zero = st.number_input("Porteries a Zero", min_value=0, value=porteries_zero)
+                    with col_m3:
+                        g_propia = st.number_input("Gols en Contra Rivals (Pròpia Porta)", min_value=0, value=gols_propia_porta)
+
+                    col_m4, col_m5 = st.columns(2)
+                    with col_m4:
+                        g_contra_input = st.number_input("Total Gols en Contra (Encaixats)", min_value=0, value=gols_contra_total)
                     
-                    if st.form_submit_button("Actualitzar Partits i Porteries"):
+                    if st.form_submit_button("Actualitzar Mètriques Generals"):
                         try:
                             supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
                             supabase.table("estadistiques_generals").insert({
                                 "partits_jugats": int(p_jugats),
                                 "gols_favor": int(g_favor_total),
-                                "gols_contra": int(g_contra_total),
-                                "porteries_zero": int(p_zero)
+                                "gols_contra": int(g_contra_input),
+                                "porteries_zero": int(p_zero),
+                                "gols_propia_porta": int(g_propia)
                             }).execute()
-                            st.success("✅ Mètriques actualitzades!")
+                            st.success("✅ Mètriques generals actualitzades!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Gols de les Jugadores (+ / -)")
+                st.markdown("#### ⚽ Gestió de Jugadores (Rol, Gols, Targetes)")
                 
-                noms_jugadores = [j.get('nom') for j in golejadores_data] if golejadores_data else ["Clàudia", "Júlia", "Martina", "Berta", "Carla", "Aina", "Noa"]
+                noms_jugadores = [j.get('nom') for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
                 jugadora_seleccionada = st.selectbox("Selecciona una jugadora:", noms_jugadores)
                 
                 if jugadora_seleccionada == "➕ Afegir nova jugadora...":
                     nova_jugadora_nom = st.text_input("Nom de la nova jugadora:")
+                    nou_rol = st.selectbox("Rol al camp:", ["Jugadora", "Porteria"])
                     gols_inicials = st.number_input("Gols inicials:", min_value=0, value=0)
+                    grogues_inicials = st.number_input("Targetes grogues inicials:", min_value=0, value=0)
+                    vermelles_inicials = st.number_input("Targetes vermelles inicials:", min_value=0, value=0)
+                    
                     if st.button("Crear Jugadora"):
                         if nova_jugadora_nom:
                             try:
-                                supabase.table("golejadores").upsert({"nom": nova_jugadora_nom.strip(), "gols": int(gols_inicials)}, on_conflict="nom").execute()
+                                supabase.table("golejadores").upsert({
+                                    "nom": nova_jugadora_nom.strip(),
+                                    "gols": int(gols_inicials),
+                                    "rol": nou_rol,
+                                    "grogues": int(grogues_inicials),
+                                    "vermelles": int(vermelles_inicials)
+                                }, on_conflict="nom").execute()
                                 st.success(f"🎉 Jugadora {nova_jugadora_nom} afegida!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
                 else:
-                    gols_actuals = next((j.get('gols') for j in golejadores_data if j.get('nom') == jugadora_seleccionada), 0)
-                    st.info(f"Jugadora: **{jugadora_seleccionada}** - Gols: **{gols_actuals}** ⚽")
+                    j_actual = next((j for j in golejadores_data if j.get('nom') == jugadora_seleccionada), {})
+                    gols_actuals = j_actual.get('gols', 0)
+                    rol_actual = j_actual.get('rol', 'Jugadora')
+                    grogues_actuals = j_actual.get('grogues', 0)
+                    vermelles_actuals = j_actual.get('vermelles', 0)
                     
-                    col_bt1, col_bt2 = st.columns(2)
-                    with col_bt1:
-                        if st.button("➕ Sumar 1 Gol"):
+                    st.info(f"Jugadora: **{jugadora_seleccionada}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | 🟨 **{grogues_actuals}** | 🟥 **{vermelles_actuals}**")
+                    
+                    # Canvi de rol ràpid
+                    nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Porteria"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
+                    if nou_canvi_rol != rol_actual:
+                        if st.button("Actualitzar Rol"):
                             try:
-                                supabase.table("golejadores").upsert({"nom": jugadora_seleccionada, "gols": gols_actuals + 1}, on_conflict="nom").execute()
-                                st.success(f"Gol sumat a {jugadora_seleccionada}!")
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals,
+                                    "rol": nou_canvi_rol,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Rol actualitzat!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
-                    with col_bt2:
+
+                    st.markdown("##### Sumar / Restar Gols i Targetes")
+                    c_bt1, c_bt2, c_bt3 = st.columns(3)
+                    with c_bt1:
+                        if st.button("➕ Sumar 1 Gol"):
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals + 1,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Gol sumat!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
                         if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
                             try:
-                                supabase.table("golejadores").upsert({"nom": jugadora_seleccionada, "gols": gols_actuals - 1}, on_conflict="nom").execute()
-                                st.success(f"Gol restat a {jugadora_seleccionada}.")
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals - 1,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Gol restat.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                    with c_bt2:
+                        if st.button("🟨 Sumar Groga"):
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals + 1,
+                                    "vermelles": vermelles_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Targeta groga sumada!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+                        if st.button("➖ Restar Groga") and grogues_actuals > 0:
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals - 1,
+                                    "vermelles": vermelles_actuals
+                                }, on_conflict="nom").execute()
+                                st.success("Groga restada.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                    with c_bt3:
+                        if st.button("🟥 Sumar Vermella"):
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals + 1
+                                }, on_conflict="nom").execute()
+                                st.success("Targeta vermella sumada!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+                        if st.button("➖ Restar Vermella") and vermelles_actuals > 0:
+                            try:
+                                supabase.table("golejadores").upsert({
+                                    "nom": jugadora_seleccionada,
+                                    "gols": gols_actuals,
+                                    "rol": rol_actual,
+                                    "grogues": grogues_actuals,
+                                    "vermelles": vermelles_actuals - 1
+                                }, on_conflict="nom").execute()
+                                st.success("Vermella restada.")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
@@ -622,8 +748,6 @@ def main():
             # --- SUBPANELL 4: GOLS PER MINUTS INTERACTIU (+ / -) ---
             with tab_adm_trams:
                 st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
-                st.markdown("Llegeix directament de la base de dades i permet sumar o restar gols a cada tram amb un sol clic.")
-                
                 tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
@@ -689,4 +813,3 @@ def main():
 # Executar aplicació
 if check_access():
     main()
- 
