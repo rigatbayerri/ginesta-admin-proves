@@ -6,10 +6,10 @@ import os
 import time
 import requests
 
-# --- CONFIGURACIÓ DE LA PÀGINA (Amb el favicon directe del logo) ---
+# --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
     page_title="Videoteca & Estadístiques - C.F. Ginesta",
-    page_icon="logo.png",
+    page_icon="https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png",
     layout="wide"
 )
 
@@ -17,35 +17,38 @@ st.set_page_config(
 ONESIGNAL_APP_ID = "44139709-03c9-4f36-a545-54a0e5cd3397"
 ONESIGNAL_REST_API_KEY = "os_v2_app_iqjzocidzfhtnjkfksqoltjts53k2iznoupebn4mwr75pzvtj5aozsmyojbp2d5uslvfxu4ese7ly3jnd3bocdm534vm6trpiqocnza"
 
-# Injectar manifest web i etiquetes d'Apple per forçar la icona oficial a l'iPhone
-st.markdown("""
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{
+# URL directa de l'escut oficial del C.F. Ginesta per a l'iPhone i navegadors
+LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
+
+# Injectar manifest web i etiquetes d'Apple apuntant directament a l'escut oficial
+st.markdown(f"""
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{{
       'name': 'C.F. Ginesta Cadet F11',
       'short_name': 'Ginesta',
       'start_url': '.',
       'display': 'standalone',
       'background_color': '#f7f5fa',
       'theme_color': '#5c2d73',
-      'icons': [{'src': 'logo.png', 'sizes': '512x512', 'type': 'image/png'}]
-    }">
-    <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
-    <link rel="apple-touch-icon-precomposed" href="logo.png">
-    <link rel="shortcut icon" href="logo.png">
+      'icons': [{{'src': '{LOGO_URL}', 'sizes': '512x512', 'type': 'image/png'}}]
+    }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{LOGO_URL}">
+    <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}">
+    <link rel="shortcut icon" href="{LOGO_URL}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "44139709-03c9-4f36-a545-54a0e5cd3397",
+      window.OneSignalDeferred.push(async function(OneSignal) {{
+        await OneSignal.init({{
+          appId: "{ONESIGNAL_APP_ID}",
           safari_web_id: "web.onesignal.auto.00000000-0000-0000-0000-000000000000",
-          notifyButton: {
+          notifyButton: {{
             enable: true,
-          },
-        });
-      });
+          }},
+        }});
+      }});
     </script>
 """, unsafe_allow_html=True)
 
@@ -159,7 +162,7 @@ def check_access():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             try:
-                st.image("logo.png", width=160)
+                st.image(LOGO_URL, width=160)
             except:
                 pass
                 
@@ -194,7 +197,7 @@ def main():
     col1, col2 = st.columns([1, 4])
     with col1:
         try:
-            st.image("logo.png", width=100)
+            st.image(LOGO_URL, width=100)
         except:
             st.write("⚽")
     with col2:
@@ -300,20 +303,14 @@ def main():
                 with col_res3:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
-                        try:
-                            st.image("logo.png", width=45)
-                        except:
-                            pass
+                        st.image(LOGO_URL, width=45)
                     with c_g2:
                         st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
             else:
                 with col_res1:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
-                        try:
-                            st.image("logo.png", width=45)
-                        except:
-                            pass
+                        st.image(LOGO_URL, width=45)
                     with c_g2:
                         st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
                 with col_res2:
@@ -394,18 +391,12 @@ def main():
                             with cg1:
                                 st.markdown("<p style='text-align: right; margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                             with cg2:
-                                try:
-                                    st.image("logo.png", width=38)
-                                except:
-                                    st.write("⚽")
+                                st.image(LOGO_URL, width=38)
                     else:
                         with col_left:
                             cg1, cg2 = st.columns([1, 3])
                             with cg1:
-                                try:
-                                    st.image("logo.png", width=38)
-                                except:
-                                    st.write("⚽")
+                                st.image(LOGO_URL, width=38)
                             with cg2:
                                 st.markdown(f"<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                         
