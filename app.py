@@ -423,7 +423,7 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES + TARGETA VISIBLE + FITXA DETALLADA (TITULARITATS I MINUTS REAL DE SUPABASE)
+    # PESTANYA 3: ESTADÍSTIQUES + TARGETA CORPORATIVA + FITXA DETALLADA AMB GRÀFICA DE DONUT DE MINUTS
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -509,7 +509,7 @@ def main():
             st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
-        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Clica a la targeta per veure la fitxa detallada de l'acta)*")
+        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Clica a sobre de qualsevol jugadora per obrir la seva fitxa de l'acta)*")
         
         cols = st.columns(2)
         for i, jugadora in enumerate(golejadores_data):
@@ -519,7 +519,6 @@ def main():
             dorsal_val = jugadora.get('dorsal', '-')
             nom_jugadora = jugadora.get('nom', '').upper()
             
-            # Llegim de Supabase
             titularitats_val = int(jugadora.get('titularitats', 0) or 0)
             minuts_val = int(jugadora.get('minuts_jugats', 0) or 0)
             mitjana_min_val = int(minuts_val / n_partits) if n_partits > 0 else 0
@@ -527,23 +526,29 @@ def main():
             if rol == "Portera":
                 gols_encaixats_val = jugadora.get('gols_encaixats', 0)
                 estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
+                mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
             else:
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
+                mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
             
             with cols[i % 2]:
                 with st.expander(f"#{dorsal_val} — {nom_jugadora} ({rol})"):
-                    # Targeta original visible a l'interior
+                    # Targeta corporativa neta a l'interior
                     st.markdown(f"""
-                        <div style="background-color: white; padding: 10px; border-radius: 8px; border-left: 4px solid #5c2d73; margin-bottom: 10px; box-shadow: 1px 1px 4px rgba(0,0,0,0.03);">
-                            <div style="display: flex; align-items: center;">
-                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 35px; height: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0;">
-                                    <span style="font-weight: 800; font-size: 14px; line-height: 1;">{dorsal_val}</span>
+                        <div style="background-color: white; padding: 12px; border-radius: 10px; border-left: 4px solid #5c2d73; margin-bottom: 10px; box-shadow: 1px 1px 6px rgba(0,0,0,0.04);">
+                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
+                                    <span style="font-weight: 800; font-size: 16px; line-height: 1;">{dorsal_val}</span>
+                                    <span style="font-size: 6px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
                                 </div>
-                                <div style="flex-grow: 1;">
-                                    <h4 style="margin: 0; color: #5c2d73; font-size: 14px; font-weight: 900; text-transform: uppercase;">{nom_jugadora}</h4>
-                                    <p style="margin: 0; font-size: 11px; color: #666;">Rol: {rol}</p>
+                                <div style="flex-grow: 1; overflow: hidden;">
+                                    <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
                                 </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 6px; font-size: 11px; color: #2b1b3d;">
+                                <div>{estat_text}</div>
+                                <div>🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></div>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -554,31 +559,37 @@ def main():
                     col_act2.metric("Minuts Jugats", f"{minuts_val}'")
                     col_act3.metric("Mitjana / Partit", f"{mitjana_min_val}'")
 
-                    st.markdown(f"🟨 **Targetes Grogues:** {grogues_val} &nbsp;|&nbsp; 🟥 **Targetes Vermelles:** {vermelles_val}")
-                    
-                    # Gràfica individual
-                    st.markdown("##### 📈 Gràfica de Participació i Gols")
                     if rol == "Portera":
-                        df_ind = pd.DataFrame({
-                            "Concepte": ["Partits Jugats", "Titularitats", "Porteries a Zero"],
-                            "Valor": [n_partits, titularitats_val, porteries_zero]
-                        })
-                        fig_ind = px.bar(df_ind, x="Concepte", y="Valor", color_discrete_sequence=["#5c2d73"])
+                        st.markdown(f"🟨 **Targetes:** 🟨{grogues_val} | 🟥{vermelles_val} &nbsp;|&nbsp; ⚽ **Mitjana gols encaixats/partit:** **{mitjana_gols_val}**")
                     else:
-                        df_ind = pd.DataFrame({
-                            "Concepte": ["Partits Jugats", "Titularitats", "Gols Marcats"],
-                            "Valor": [n_partits, titularitats_val, int(gols_realitzats_val)]
-                        })
-                        fig_ind = px.bar(df_ind, x="Concepte", y="Valor", color_discrete_sequence=["#5c2d73"])
+                        st.markdown(f"🟨 **Targetes:** 🟨{grogues_val} | 🟥{vermelles_val} &nbsp;|&nbsp; ⚽ **Mitjana gols/partit:** **{mitjana_gols_val}**")
+                    
+                    # Gràfica de Donut per als minuts jugats (80 minuts per partit total de temporada)
+                    st.markdown("##### ⏱️ Proporció de Minuts Jugats (80 min/partit)")
+                    total_minuts_possibles = n_partits * 80
+                    minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
+                    minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
 
-                    fig_ind.update_layout(
+                    df_donut = pd.DataFrame({
+                        "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
+                        "Minuts": [minuts_jugats_efectius, minuts_restants]
+                    })
+                    fig_donut = px.pie(
+                        df_donut, 
+                        names="Estat", 
+                        values="Minuts", 
+                        hole=0.6,
+                        color_discrete_sequence=["#5c2d73", "#e0d8e8"]
+                    )
+                    fig_donut.update_layout(
                         paper_bgcolor="rgba(0,0,0,0)",
                         plot_bgcolor="rgba(0,0,0,0)",
                         font=dict(color="#2b1b3d", size=11),
-                        margin=dict(t=10, b=0, l=0, r=0), 
-                        height=160
+                        legend=dict(font=dict(color="#2b1b3d"), orientation="h", y=-0.2),
+                        margin=dict(t=10, b=10, l=0, r=0), 
+                        height=200
                     )
-                    st.plotly_chart(fig_ind, use_container_width=True, key=f"graf_ind_{nom_jugadora}_{i}")
+                    st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_{nom_jugadora}_{i}")
 
     # PESTANYA 4: ADMIN
     if st.session_state["auth_level"] == "admin":
