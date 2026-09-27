@@ -229,7 +229,7 @@ def main():
     else:
         tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS (Amb escuts reals)
+    # PESTANYA 1: VÍDEOS
     with tab_videos:
         st.subheader("📺 Partits Gravats i Resultats")
         partits = []
@@ -302,7 +302,7 @@ def main():
             else:
                 st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
 
-    # PESTANYA 2: CALENDARI (Amb escuts i disseny fluid)
+    # PESTANYA 2: CALENDARI
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -386,9 +386,9 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES
+    # PESTANYA 3: ESTADÍSTIQUES (AMB LES GRÀFIQUES DE PLOTLY)
     with tab_stats:
-        st.subheader("📊 Resum i Estadístiques")
+        st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
         trams_data_db = []
         try:
@@ -404,13 +404,74 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        col_m1, col_m2 = st.columns(2)
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
         with col_m1:
             st.metric(label="Gols a Favor", value=g_favor_total)
-            st.metric(label="Porteries a Zero", value=porteries_zero)
         with col_m2:
             st.metric(label="Gols en Contra", value=gols_contra_total)
-            st.metric(label="Targetes", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
+        with col_m3:
+            st.metric(label="Porteries a Zero", value=porteries_zero)
+        with col_m4:
+            st.metric(label="Targetes Equip", value=f"🟨 {total_grogues} | 🟥 {total_vermelles}")
+
+        st.markdown("---")
+
+        st.markdown("### 🧤 Rendiment de Porteria (Clean Sheets)")
+        col_porteria, _ = st.columns([1, 1])
+        with col_porteria:
+            partits_amb_gols = max(0, n_partits - porteries_zero)
+            fig_clean_sheets = px.pie(
+                names=["Porteries a Zero", "Partits amb Gols Encaixats"],
+                values=[porteries_zero, partits_amb_gols],
+                hole=0.6,
+                color_discrete_sequence=["#5c2d73", "#d7bde2"]
+            )
+            fig_clean_sheets.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d", size=14, family="sans-serif"),
+                legend=dict(font=dict(color="#2b1b3d")),
+                margin=dict(t=0, b=0, l=0, r=0), 
+                height=240
+            )
+            st.plotly_chart(fig_clean_sheets, use_container_width=True)
+
+        st.markdown("---")
+
+        st.markdown("### ⏱️ Distribució de Gols per Minuts")
+        df_trams = pd.DataFrame([
+            {"Minuts": t, "Gols Favor": d["gols_favor"], "Gols Contra": d["gols_contra"]}
+            for t, d in dict_trams.items()
+        ])
+
+        col_gols_favor, col_gols_contra = st.columns(2)
+        with col_gols_favor:
+            st.markdown("##### ⚽ Gols a Favor (Marcats)")
+            fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", color_discrete_sequence=["#5c2d73"])
+            fig_favor.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d", size=13),
+                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                margin=dict(t=10, b=0, l=0, r=0), 
+                height=250
+            )
+            st.plotly_chart(fig_favor, use_container_width=True)
+
+        with col_gols_contra:
+            st.markdown("##### 🛡️ Gols en Contra (Encaixats)")
+            fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", color_discrete_sequence=["#a569bd"])
+            fig_contra.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#2b1b3d", size=13),
+                xaxis=dict(title="Minuts del Partit", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                yaxis=dict(title="Gols", title_font=dict(color="#2b1b3d"), tickfont=dict(color="#2b1b3d")),
+                margin=dict(t=10, b=0, l=0, r=0), 
+                height=250
+            )
+            st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
         st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta")
@@ -443,7 +504,7 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
 
-    # PESTANYA 4: ADMIN (COMPLETA AL 100% AMB ESCUTS, JUGADORES I TRAMS)
+    # PESTANYA 4: ADMIN (COMPLETA AL 100%)
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
