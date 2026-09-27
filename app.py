@@ -234,9 +234,9 @@ def main():
     else:
         tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS I FOTOS
+    # PESTANYA 1: VÍDEOS I GALERIA DE FOTOS
     with tab_videos:
-        st.subheader("📺 Partits Gravats, Resultats i Fotos")
+        st.subheader("📺 Partits Gravats, Resultats i Galeria")
         partits = []
         try:
             response = supabase.table("partits").select("*").order("data", desc=True).execute()
@@ -255,7 +255,7 @@ def main():
             resultat = partit_actual.get('resultat', ' - ')
             lloc = partit_actual.get('lloc', 'Casa')
             escut_path = partit_actual.get('escut_rival_url') 
-            foto_path = partit_actual.get('foto_partit_url')
+            fotos_str = partit_actual.get('fotos_partit_urls', '')
             
             st.markdown("---")
             col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
@@ -308,10 +308,15 @@ def main():
             else:
                 st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
 
-            if foto_path and os.path.exists(foto_path):
-                st.markdown("---")
-                st.markdown("### 📸 Foto del Partit / Celebració")
-                st.image(foto_path, use_container_width=True)
+            # Mostrar múltiples fotos de celebració si n'hi ha
+            if fotos_str:
+                lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
+                if lletres_fotos:
+                    st.markdown("---")
+                    st.markdown("### 📸 Galeria de Fotos del Partit")
+                    for f_path in lletres_fotos:
+                        if os.path.exists(f_path):
+                            st.image(f_path, use_container_width=True)
 
     # PESTANYA 2: CALENDARI
     with tab_calendari:
@@ -526,7 +531,7 @@ def main():
             tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos & Fotos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
 
             with tab_adm_partits:
-                st.markdown("#### ➕ Pujar Partit, Vídeo i Foto de Celebració")
+                st.markdown("#### ➕ Pujar Partit, Vídeo i Fins a 5 Fotos")
                 nou_titol = st.text_input("Títol del Partit")
                 nova_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1)
                 nova_data = st.date_input("Data")
@@ -535,7 +540,7 @@ def main():
                 condicio_lloc = st.selectbox("Lloc", ["Casa", "Fora"])
                 
                 arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
-                arxiu_foto = st.file_uploader("📸 Foto del Partit o Celebració (Opcional)", type=["png", "jpg", "jpeg"], key="foto_partit")
+                arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
                 nou_video_url = st.text_input("Enllaç Vídeo")
                 
                 if st.button("Guardar Partit"):
@@ -547,11 +552,13 @@ def main():
                                 with open(escut_path_saved, "wb") as f:
                                     f.write(arxiu_escut.getbuffer())
 
-                            foto_path_saved = ""
-                            if arxiu_foto is not None:
-                                foto_path_saved = os.path.join("fotos_partits", arxiu_foto.name)
-                                with open(foto_path_saved, "wb") as f:
-                                    f.write(arxiu_foto.getbuffer())
+                            rutes_fotos = []
+                            if arxius_fotos:
+                                for foto in arxius_fotos[:5]:  # Limitar a 5 màxim
+                                    f_path = os.path.join("fotos_partits", foto.name)
+                                    with open(f_path, "wb") as f:
+                                        f.write(foto.getbuffer())
+                                    rutes_fotos.append(f_path)
 
                             supabase.table("partits").insert({
                                 "titol": nou_titol,
@@ -561,10 +568,10 @@ def main():
                                 "resultat": resultat_partit,
                                 "lloc": condicio_lloc,
                                 "escut_rival_url": escut_path_saved,
-                                "foto_partit_url": foto_path_saved,
+                                "fotos_partit_urls": ",".join(rutes_fotos),
                                 "video_url": nou_video_url
                             }).execute()
-                            st.success("🎉 Partit guardat amb foto i vídeo!")
+                            st.success("🎉 Partit guardat amb vídeo i galeria de fotos!")
                             time.sleep(1)
                             st.rerun()
                         except Exception as e:
