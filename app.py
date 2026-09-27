@@ -538,7 +538,6 @@ def main():
                 etiqueta_mitjana = "⚽ Mitjana gols/partit:"
             
             with cols[i % 2]:
-                # TARGETA FIXA AMB TOTES LES DADES VISIBLES DIRECTAMENT
                 with st.container():
                     st.markdown(f"""
                         <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 16px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
@@ -567,7 +566,6 @@ def main():
                         </div>
                     """, unsafe_allow_html=True)
 
-                    # Gràfica de Donut per als minuts jugats
                     total_minuts_possibles = n_partits * 80
                     minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
                     minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
