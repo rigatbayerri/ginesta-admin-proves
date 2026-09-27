@@ -528,44 +528,39 @@ def main():
             
             if rol == "Portera":
                 gols_encaixats_val = jugadora.get('gols_encaixats', 0)
-                estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
+                estat_text = f"🧤 Encaixats: **{gols_encaixats_val}**"
                 mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit:"
+                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit"
             else:
                 gols_realitzats_val = jugadora.get('gols', 0)
-                estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
+                estat_text = f"⚽ Gols: **{gols_realitzats_val}**"
                 mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols/partit:"
+                text_etiqueta_gol = "⚽ Mitjana gols/partit"
             
             with cols[i % 2]:
-                # Targeta completa HTML unificada sense salts problemàtics
-                targeta_html = f"""
-                <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
-                            <span style="font-weight: 900; font-size: 18px; line-height: 1;">{dorsal_val}</span>
-                            <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
+                # Targeta neta utilitzant Markdown natiu de Streamlit
+                st.markdown(f"""
+                <div style="background-color: white; padding: 14px; border-radius: 10px; border-left: 5px solid #5c2d73; margin-bottom: 8px; box-shadow: 1px 1px 6px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
+                            <span style="font-weight: 900; font-size: 16px; line-height: 1;">{dorsal_val}</span>
+                            <span style="font-size: 6px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
                         </div>
                         <div style="flex-grow: 1; overflow: hidden;">
-                            <h4 style="margin: 0; color: #5c2d73; font-size: 16px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
-                            <p style="margin: 2px 0 0 0; font-size: 12px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
-                        </div>
-                    </div>
-                    
-                    <div style="background-color: #f7f5fa; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px;">
-                        <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #2b1b3d; margin-bottom: 4px;">
-                            <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
-                            <span>Minuts: <b>{minuts_val}'</b></span>
-                            <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
-                        </div>
-                        <div style="font-size: 11px; color: #2b1b3d;">
-                            {text_etiqueta_gol} <b>{mitjana_gols_val}</b>
+                            <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
+                            <p style="margin: 2px 0 0 0; font-size: 11px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
                         </div>
                     </div>
                 </div>
-                """
-                st.markdown(targeta_html, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+
+                # Bloc d'acta oficial amb Markdown natiu
+                with st.container():
+                    st.markdown(f"""
+                    **📋 Dades de l'Acta Oficial:**  
+                    Titularitats: **{titularitats_val}/{n_partits}** &nbsp;|&nbsp; Minuts: **{minuts_val}'** &nbsp;|&nbsp; Mitjana: **{mitjana_min_val}'/p.**  
+                    {text_etiqueta_gol}: **{mitjana_gols_val}**
+                    """)
 
                 # Gràfica de Donut per als minuts jugats
                 total_minuts_possibles = n_partits * 80
