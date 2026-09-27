@@ -171,7 +171,7 @@ def main():
             {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5}
         ]
 
-    # Carregar estadístiques generals des de Supabase (partits, porteries zero, gols pròpia porta, gols contra)
+    # Carregar estadístiques generals des de Supabase
     try:
         res_extra = supabase.table("estadistiques_generals").select("*").execute()
         if res_extra.data:
@@ -185,9 +185,9 @@ def main():
     except:
         n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
 
-    # Càlcul automàtic exacte i en directe dels gols a favor
+    # Càlcul robust: suma els gols de totes les jugadores (filtrant si tenen el camp 'gols') + gols de pròpia porta
     gols_jugadores_total = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
-    g_favor_total = gols_jugadores_total + gols_propia_porta
+    g_favor_total = gols_jugadores_total + int(gols_propia_porta)
 
     # Targetes totals de l'equip
     total_grogues = sum(int(j.get('grogues', 0) or 0) for j in golejadores_data)
@@ -200,7 +200,7 @@ def main():
             supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
             supabase.table("estadistiques_generals").insert({
                 "partits_jugats": int(nous_partits),
-                "gols_favor": int(actual_gols_jugadores + nous_propia),
+                "gols_favor": int(actual_gols_jugadores + int(nous_propia)),
                 "gols_contra": int(nous_contra),
                 "porteries_zero": int(noves_p_zero),
                 "gols_propia_porta": int(nous_propia)
