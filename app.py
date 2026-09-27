@@ -146,7 +146,7 @@ def main():
 
     st.divider()
 
-    # --- CARREGA DE DADES GLOBAL PER A TOTA LA PÀGINA ---
+    # --- CARREGA DE DADES GLOBAL PER A TOTA LA PÀGINA (S'executa primer) ---
     golejadores_data = []
     try:
         res_gol = supabase.table("golejadores").select("*").order("dorsal", desc=False).execute()
@@ -642,21 +642,10 @@ def main():
                 st.markdown("---")
                 st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes, Eliminar)")
                 
-                # --- TAULA RESUM DE LA PLANTILLA PER VEURE-HO TOT ABANS D'EDITAR ---
-                if golejadores_data:
-                    st.markdown("##### 📋 Estat Actual de la Plantilla")
-                    df_plantilla = pd.DataFrame(golejadores_data)
-                    # Reordenar columnes o mostrar una taula neta si existeixen les columnes
-                    cols_mostrar = ['dorsal', 'nom', 'rol', 'gols', 'grogues', 'vermelles', 'gols_encaixats']
-                    cols_existents = [c for c in cols_mostrar if c in df_plantilla.columns]
-                    st.dataframe(df_plantilla[cols_existents], use_container_width=True, hide_index=True)
-                
-                st.markdown("---")
-                
                 noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom').upper()}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
-                jugadora_seleccionada_str = st.selectbox("Selecciona una jugadora per modificar:", noms_jugadores)
+                jugadora_seleccionada_str = st.selectbox("Selecciona una jugadora:", noms_jugadores)
                 
                 if jugadora_seleccionada_str == "➕ Afegir nova jugadora...":
                     nova_jugadora_nom = st.text_input("Nom de la nova jugadora:")
@@ -698,7 +687,7 @@ def main():
                     gols_encaixats_actuals = int(j_actual.get('gols_encaixats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{nom_real.upper()}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | Grogues: **{grogues_actuals}** | Vermelles: **{vermelles_actuals}**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{nom_real.upper()}** | Rol: **{rol_actual}**")
                     
                     # Modificar dorsal o rol
                     c_ed1, c_ed2 = st.columns(2)
