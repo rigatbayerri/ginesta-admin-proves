@@ -251,14 +251,12 @@ def main():
                 jornada_val = p.get('jornada')
                 if jornada_val is not None and str(jornada_val).strip() != "":
                     j_str = str(jornada_val)
-                    # Si és un número pur, li posem "J." al davant. Si és text (Pretemporada, Amistós), el deixem tal qual.
                     if j_str.isdigit():
                         j_str = f"J.{j_str}"
                 else:
                     j_str = "J-"
 
                 titol_val = p.get('titol', 'Partit')
-                
                 res_val = p.get('resultat')
                 if res_val is None or str(res_val).strip() == "" or str(res_val).lower() == "none":
                     res_str = "vs"
@@ -341,7 +339,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI
+    # PESTANYA 2: CALENDARI (ESCUTS MÉS GROSSOS)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -366,8 +364,8 @@ def main():
 
                 with st.container():
                     st.markdown(f"""
-                        <div style="background-color: white; padding: 10px 12px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 8px; box-shadow: 1px 1px 4px rgba(0,0,0,0.03);">
-                            <div style="font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 6px; border-bottom: 1px solid #f0e8f5; padding-bottom: 4px;">
+                        <div style="background-color: white; padding: 12px 14px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 1px 1px 5px rgba(0,0,0,0.04);">
+                            <div style="font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #f0e8f5; padding-bottom: 4px;">
                                 Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}
                             </div>
                     """, unsafe_allow_html=True)
@@ -379,53 +377,53 @@ def main():
                             cr1, cr2 = st.columns([1, 3])
                             with cr1:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=28)
+                                    st.image(escut_path, width=42) # Escut més gran
                                 else:
                                     st.write("🛡️")
                             with cr2:
-                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             st.markdown(f"""
-                                <div style="text-align: center; padding-top: 2px;">
-                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">{lloc}</span>
+                                <div style="text-align: center; padding-top: 6px;">
+                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">{lloc}</span>
                                 </div>
                             """, unsafe_allow_html=True)
 
                         with col_right:
                             cg1, cg2 = st.columns([3, 1])
                             with cg1:
-                                st.markdown("<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown("<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                             with cg2:
-                                st.image(LOGO_URL, width=28)
+                                st.image(LOGO_URL, width=42) # Logo més gran
                     else:
                         with col_left:
                             cg1, cg2 = st.columns([1, 3])
                             with cg1:
-                                st.image(LOGO_URL, width=28)
+                                st.image(LOGO_URL, width=42) # Logo més gran
                             with cg2:
-                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             st.markdown(f"""
-                                <div style="text-align: center; padding-top: 2px;">
-                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">{lloc}</span>
+                                <div style="text-align: center; padding-top: 6px;">
+                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">{lloc}</span>
                                 </div>
                             """, unsafe_allow_html=True)
 
                         with col_right:
                             cr1, cr2 = st.columns([3, 1])
                             with cr1:
-                                st.markdown(f"<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 11px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
                             with cr2:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=28)
+                                    st.image(escut_path, width=42) # Escut més gran
                                 else:
                                     st.write("🛡️")
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: ESTADÍSTIQUES
+    # PESTANYA 3: ESTADÍSTIQUES + FITXES DE JUGADORES CLICKABLES I GRÀFIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -511,7 +509,7 @@ def main():
             st.plotly_chart(fig_contra, use_container_width=True)
 
         st.markdown("---")
-        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta")
+        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta *(Clica a sobre per veure la fitxa i gràfiques)*")
         
         cols = st.columns(2)
         for i, jugadora in enumerate(golejadores_data):
@@ -529,23 +527,41 @@ def main():
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
             
             with cols[i % 2]:
-                st.markdown(f"""
-                    <div style="background-color: white; padding: 12px; border-radius: 10px; border-left: 4px solid #5c2d73; margin-bottom: 10px; box-shadow: 1px 1px 6px rgba(0,0,0,0.04);">
-                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 6px; width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0;">
-                                <span style="font-weight: 800; font-size: 16px; line-height: 1;">{dorsal_val}</span>
-                                <span style="font-size: 6px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
-                            </div>
-                            <div style="flex-grow: 1; overflow: hidden;">
-                                <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 6px; font-size: 11px; color: #2b1b3d;">
-                            <div>{estat_text}</div>
-                            <div>🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></div>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+                with st.expander(f"#{dorsal_val} — {nom_jugadora} ({rol})"):
+                    st.markdown(f"#### 👤 Fitxa Tècnica: {nom_jugadora}")
+                    c_f1, c_f2, c_f3 = st.columns(3)
+                    c_f1.metric("Dorsal", f"#{dorsal_val}")
+                    c_f2.metric("Rol", rol)
+                    if rol == "Portera":
+                        c_f3.metric("Gols Encaixats", gols_encaixats_val)
+                    else:
+                        c_f3.metric("Gols Marcats", gols_realitzats_val)
+
+                    st.markdown(f"🟨 **Targetes Grogues:** {grogues_val} &nbsp;|&nbsp; 🟥 **Targetes Vermelles:** {vermelles_val}")
+                    
+                    # Gràfica individual personalitzada per a la jugadora
+                    st.markdown("##### 📈 Estadístiques Individuals")
+                    if rol == "Portera":
+                        df_ind = pd.DataFrame({
+                            "Concepte": ["Porteries a Zero", "Gols Encaixats"],
+                            "Valor": [porteries_zero, int(gols_encaixats_val)]
+                        })
+                        fig_ind = px.bar(df_ind, x="Concepte", y="Valor", color_discrete_sequence=["#5c2d73"])
+                    else:
+                        df_ind = pd.DataFrame({
+                            "Concepte": ["Gols de la Jugadora", "Gols totals equip"],
+                            "Valor": [int(gols_realitzats_val), g_favor_total]
+                        })
+                        fig_ind = px.bar(df_ind, x="Concepte", y="Valor", color_discrete_sequence=["#5c2d73"])
+
+                    fig_ind.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#2b1b3d", size=11),
+                        margin=dict(t=10, b=0, l=0, r=0), 
+                        height=180
+                    )
+                    st.plotly_chart(fig_ind, use_container_width=True, key=f"graf_{nom_jugadora}_{i}")
 
     # PESTANYA 4: ADMIN (COMPLETA AL 100%)
     if st.session_state["auth_level"] == "admin":
@@ -625,7 +641,6 @@ def main():
                                 j_str = "J-"
 
                             titol_val = p.get('titol', 'Partit')
-                            
                             res_val = p.get('resultat')
                             if res_val is None or str(res_val).strip() == "" or str(res_val).lower() == "none":
                                 res_str = "vs"
