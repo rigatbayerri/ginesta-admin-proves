@@ -249,10 +249,23 @@ def main():
             opcions_partits = {}
             for p in partits:
                 jornada_val = p.get('jornada')
-                j_str = f"J.{jornada_val}" if jornada_val is not None and str(jornada_val).strip() != "" else "J-"
+                if jornada_val is not None and str(jornada_val).strip() != "":
+                    j_str = str(jornada_val)
+                    # Si és un número pur, li posem "J." al davant. Si és text (Pretemporada, Amistós), el deixem tal qual.
+                    if j_str.isdigit():
+                        j_str = f"J.{j_str}"
+                else:
+                    j_str = "J-"
+
                 titol_val = p.get('titol', 'Partit')
-                res_val = p.get('resultat', 'vs')
-                opcions_partits[f"{j_str} - {titol_val} ({res_val})"] = p
+                
+                res_val = p.get('resultat')
+                if res_val is None or str(res_val).strip() == "" or str(res_val).lower() == "none":
+                    res_str = "vs"
+                else:
+                    res_str = str(res_val)
+
+                opcions_partits[f"{j_str} - {titol_val} ({res_str})"] = p
 
             partit_seleccionat_str = st.selectbox("Selecciona un partit:", list(opcions_partits.keys()))
             partit_actual = opcions_partits[partit_seleccionat_str]
@@ -546,7 +559,7 @@ def main():
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
-                    nova_jornada = st.text_input("Jornada (Ex: 1, Amistós, etc.)", value="1", key="j_nou")
+                    nova_jornada = st.text_input("Jornada (Ex: 1, Pretemporada, etc.)", value="1", key="j_nou")
                     nova_data = st.date_input("Data", key="d_nou")
                     nom_rival = st.text_input("Nom Rival", key="r_nou")
                     resultat_partit = st.text_input("Resultat Final (Ex: 3-1)", key="res_nou")
@@ -604,10 +617,22 @@ def main():
                         dict_edit_partits = {}
                         for p in partits_existents:
                             jornada_val = p.get('jornada')
-                            j_str = f"J.{jornada_val}" if jornada_val is not None and str(jornada_val).strip() != "" else "J-"
+                            if jornada_val is not None and str(jornada_val).strip() != "":
+                                j_str = str(jornada_val)
+                                if j_str.isdigit():
+                                    j_str = f"J.{j_str}"
+                            else:
+                                j_str = "J-"
+
                             titol_val = p.get('titol', 'Partit')
-                            res_val = p.get('resultat', '')
-                            dict_edit_partits[f"{j_str} - {titol_val} ({res_val})"] = p
+                            
+                            res_val = p.get('resultat')
+                            if res_val is None or str(res_val).strip() == "" or str(res_val).lower() == "none":
+                                res_str = "vs"
+                            else:
+                                res_str = str(res_val)
+
+                            dict_edit_partits[f"{j_str} - {titol_val} ({res_str})"] = p
 
                         sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p")
                         p_edit = dict_edit_partits[sel_partit_str]
