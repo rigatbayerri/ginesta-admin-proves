@@ -171,7 +171,7 @@ def main():
             {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5}
         ]
 
-    # Carregar estadístiques generals des de Supabase
+    # Carregar estadístiques generals des de Supabase (partits, porteries zero, gols pròpia porta, gols contra)
     try:
         res_extra = supabase.table("estadistiques_generals").select("*").execute()
         if res_extra.data:
@@ -185,7 +185,7 @@ def main():
     except:
         n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
 
-    # Càlcul automàtic dels gols de les jugadores de camp
+    # Càlcul automàtic exacte i en directe dels gols a favor
     gols_jugadores_total = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
     g_favor_total = gols_jugadores_total + gols_propia_porta
 
@@ -196,7 +196,6 @@ def main():
     # Funció auxiliar per sincronitzar automàticament els totals generals a Supabase
     def sincronitzar_estadistiques_generals(nous_partits, noves_p_zero, nous_propia, nous_contra):
         try:
-            # Recalcular interiorment amb les dades actuals de la sessió
             actual_gols_jugadores = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
             supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
             supabase.table("estadistiques_generals").insert({
