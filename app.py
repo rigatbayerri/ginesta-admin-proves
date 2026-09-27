@@ -151,13 +151,13 @@ def main():
 
     if not golejadores_data:
         golejadores_data = [
-            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
-            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0},
-            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
-            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0}
+            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0},
+            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0},
+            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0, "gols_encaixats": 0},
+            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0},
+            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0},
+            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0},
+            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5}
         ]
 
     # Carregar estadístiques generals des de Supabase
@@ -471,26 +471,39 @@ def main():
 
         st.markdown("---")
 
-        st.markdown("### ⚽ Plantilla, Dorsals, Gols i Targetes")
+        st.markdown("### ⚽ Plantilla Oficial - C.F. Ginesta")
         
         cols = st.columns(3)
         for i, jugadora in enumerate(golejadores_data):
-            rol_text = "🧤 Portera" if jugadora.get('rol') == "Portera" else "⚽ Jugadora"
+            rol = jugadora.get('rol', 'Jugadora')
+            rol_text = "🧤 Portera" if rol == "Portera" else "⚽ Jugadora"
             grogues_val = jugadora.get('grogues', 0)
             vermelles_val = jugadora.get('vermelles', 0)
             dorsal_val = jugadora.get('dorsal', '-')
             
+            # Estadística segons posició
+            if rol == "Portera":
+                gols_encaixats_val = jugadora.get('gols_encaixats', 0)
+                estat_text = f"🧤 Gols encaixats: <b>{gols_encaixats_val}</b>"
+            else:
+                gols_realitzats_val = jugadora.get('gols', 0)
+                estat_text = f"⚽ Gols realitzats: <b>{gols_realitzats_val}</b>"
+            
             with cols[i % 3]:
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 16px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h4 style="margin: 0 0 4px 0; color: #5c2d73; font-size: 16px;">{jugadora.get('nom')} <span style="font-size: 11px; color: #888;">({rol_text})</span></h4>
-                            <p style="margin: 0; font-size: 15px; color: #2b1b3d !important;">
-                                ⚽ <b>{jugadora.get('gols')}</b> gols &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
-                            </p>
+                    <div style="background-color: white; padding: 18px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                        <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 10px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; margin-right: 14px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                {dorsal_val}
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; color: #5c2d73; font-size: 18px; font-weight: 700; line-height: 1.2;">{jugadora.get('nom')}</h4>
+                                <span style="font-size: 12px; color: #666; font-weight: 600;">{rol_text}</span>
+                            </div>
                         </div>
-                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 10px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; margin-left: 12px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05);">
-                            {dorsal_val}
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 10px; font-size: 14px; color: #2b1b3d;">
+                            <div>{estat_text}</div>
+                            <div>🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b></div>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -629,6 +642,7 @@ def main():
                     gols_inicials = st.number_input("Gols inicials:", min_value=0, value=0)
                     grogues_inicials = st.number_input("Targetes grogues inicials:", min_value=0, value=0)
                     vermelles_inicials = st.number_input("Targetes vermelles inicials:", min_value=0, value=0)
+                    gols_encaixats_inicials = st.number_input("Gols encaixats inicials (si és portera):", min_value=0, value=0)
                     
                     if st.button("Crear Jugadora"):
                         if nova_jugadora_nom:
@@ -639,7 +653,8 @@ def main():
                                     "gols": int(gols_inicials),
                                     "rol": nou_rol,
                                     "grogues": int(grogues_inicials),
-                                    "vermelles": int(vermelles_inicials)
+                                    "vermelles": int(vermelles_inicials),
+                                    "gols_encaixats": int(gols_encaixats_inicials)
                                 }, on_conflict="nom").execute()
                                 
                                 sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
@@ -657,8 +672,9 @@ def main():
                     rol_actual = j_actual.get('rol', 'Jugadora')
                     grogues_actuals = int(j_actual.get('grogues', 0) or 0)
                     vermelles_actuals = int(j_actual.get('vermelles', 0) or 0)
+                    gols_encaixats_actuals = int(j_actual.get('gols_encaixats', 0) or 0)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{jugadora_seleccionada}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | 🟨 **{grogues_actuals}** | 🟥 **{vermelles_actuals}**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{jugadora_seleccionada}** | Rol: **{rol_actual}**")
                     
                     # Modificar dorsal o rol
                     c_ed1, c_ed2 = st.columns(2)
@@ -676,7 +692,8 @@ def main():
                                     "gols": gols_actuals,
                                     "rol": nou_canvi_rol,
                                     "grogues": grogues_actuals,
-                                    "vermelles": vermelles_actuals
+                                    "vermelles": vermelles_actuals,
+                                    "gols_encaixats": gols_encaixats_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Dades actualitzades!")
                                 st.rerun()
@@ -684,42 +701,79 @@ def main():
                                 st.error(f"❌ Error: {e}")
 
                     st.markdown("##### Sumar / Restar Gols i Targetes")
-                    c_bt1, c_bt2, c_bt3 = st.columns(3)
-                    with c_bt1:
-                        if st.button("➕ Sumar 1 Gol"):
-                            try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": jugadora_seleccionada,
-                                    "dorsal": dorsal_actual,
-                                    "gols": gols_actuals + 1,
-                                    "rol": rol_actual,
-                                    "grogues": grogues_actuals,
-                                    "vermelles": vermelles_actuals
-                                }, on_conflict="nom").execute()
-                                
-                                sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
-                                
-                                st.success("Gol sumat i sincronitzat amb l'equip!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
-                        if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
-                            try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": jugadora_seleccionada,
-                                    "dorsal": dorsal_actual,
-                                    "gols": gols_actuals - 1,
-                                    "rol": rol_actual,
-                                    "grogues": grogues_actuals,
-                                    "vermelles": vermelles_actuals
-                                }, on_conflict="nom").execute()
-                                
-                                sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
-                                
-                                st.success("Gol restat i sincronitzat.")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                    
+                    if rol_actual == "Portera":
+                        c_bt1, c_bt2, c_bt3 = st.columns(3)
+                        with c_bt1:
+                            if st.button("➕ Sumar Gol Encaixat"):
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": jugadora_seleccionada,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals + 1
+                                    }, on_conflict="nom").execute()
+                                    st.success("Gol encaixat sumat!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+                            if st.button("➖ Restar Gol Encaixat") and gols_encaixats_actuals > 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": jugadora_seleccionada,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals - 1
+                                    }, on_conflict="nom").execute()
+                                    st.success("Gol encaixat restat.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+                    else:
+                        c_bt1, c_bt2, c_bt3 = st.columns(3)
+                        with c_bt1:
+                            if st.button("➕ Sumar 1 Gol"):
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": jugadora_seleccionada,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals + 1,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals
+                                    }, on_conflict="nom").execute()
+                                    
+                                    sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                    
+                                    st.success("Gol sumat i sincronitzat amb l'equip!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+                            if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": jugadora_seleccionada,
+                                        "dorsal": dorsal_actual,
+                                        "gols": gols_actuals - 1,
+                                        "rol": rol_actual,
+                                        "grogues": grogues_actuals,
+                                        "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals
+                                    }, on_conflict="nom").execute()
+                                    
+                                    sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
+                                    
+                                    st.success("Gol restat i sincronitzat.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
 
                     with c_bt2:
                         if st.button("🟨 Sumar Groga"):
@@ -730,7 +784,8 @@ def main():
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals + 1,
-                                    "vermelles": vermelles_actuals
+                                    "vermelles": vermelles_actuals,
+                                    "gols_encaixats": gols_encaixats_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Targeta groga sumada!")
                                 st.rerun()
@@ -744,7 +799,8 @@ def main():
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals - 1,
-                                    "vermelles": vermelles_actuals
+                                    "vermelles": vermelles_actuals,
+                                    "gols_encaixats": gols_encaixats_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Groga restada.")
                                 st.rerun()
@@ -760,7 +816,8 @@ def main():
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
-                                    "vermelles": vermelles_actuals + 1
+                                    "vermelles": vermelles_actuals + 1,
+                                    "gols_encaixats": gols_encaixats_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Targeta vermella sumada!")
                                 st.rerun()
@@ -774,7 +831,8 @@ def main():
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
-                                    "vermelles": vermelles_actuals - 1
+                                    "vermelles": vermelles_actuals - 1,
+                                    "gols_encaixats": gols_encaixats_actuals
                                 }, on_conflict="nom").execute()
                                 st.success("Vermella restada.")
                                 st.rerun()
