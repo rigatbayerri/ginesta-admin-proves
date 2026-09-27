@@ -229,7 +229,7 @@ def main():
     else:
         tab_videos, tab_calendari, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS
+    # PESTANYA 1: VÍDEOS (Amb escuts reals)
     with tab_videos:
         st.subheader("📺 Partits Gravats i Resultats")
         partits = []
@@ -252,23 +252,46 @@ def main():
             escut_path = partit_actual.get('escut_rival_url') 
             
             st.markdown("---")
+            col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
             
-            st.markdown(f"""
-                <div style="background-color: white; padding: 15px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 15px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="text-align: center; width: 38%;">
-                            <span style="font-size: 13px; font-weight: bold; color: #5c2d73; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{'C.F. Ginesta' if lloc == 'Casa' else rival}</span>
-                        </div>
-                        <div style="text-align: center; width: 24%;">
-                            <span style="font-size: 20px; font-weight: 900; color: #2b1b3d; background-color: #f7f5fa; padding: 4px 10px; border-radius: 6px; border: 1px solid #e0d8e8;">{resultat}</span>
-                            <span style="font-size: 10px; color: #666; display: block; margin-top: 3px; text-transform: uppercase;"><b>{lloc}</b></span>
-                        </div>
-                        <div style="text-align: center; width: 38%;">
-                            <span style="font-size: 13px; font-weight: bold; color: #5c2d73; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{rival if lloc == 'Casa' else 'C.F. Ginesta'}</span>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            if lloc == "Fora":
+                with col_res1:
+                    c_r1, c_r2 = st.columns([2, 1])
+                    with c_r1:
+                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                    with c_r2:
+                        if escut_path and os.path.exists(escut_path):
+                            st.image(escut_path, width=40)
+                        else:
+                            st.write("🛡️")
+                with col_res2:
+                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 13px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                with col_res3:
+                    c_g1, c_g2 = st.columns([1, 2])
+                    with c_g1:
+                        st.image(LOGO_URL, width=40)
+                    with c_g2:
+                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+            else:
+                with col_res1:
+                    c_g1, c_g2 = st.columns([1, 2])
+                    with c_g1:
+                        st.image(LOGO_URL, width=40)
+                    with c_g2:
+                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                with col_res2:
+                    st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='text-align: center; font-size: 13px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
+                with col_res3:
+                    c_r1, c_r2 = st.columns([2, 1])
+                    with c_r1:
+                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px;'>{rival}</h4>", unsafe_allow_html=True)
+                    with c_r2:
+                        if escut_path and os.path.exists(escut_path):
+                            st.image(escut_path, width=40)
+                        else:
+                            st.write("🛡️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
@@ -279,7 +302,7 @@ def main():
             else:
                 st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
 
-    # PESTANYA 2: CALENDARI
+    # PESTANYA 2: CALENDARI (Amb escuts i disseny fluid)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -298,29 +321,70 @@ def main():
                 hora = partit.get('hora', '-')
                 rival = partit.get('rival', '-')
                 lloc = partit.get('lloc', 'Casa')
+                escut_path = partit.get('escut_rival_url', '')
 
-                equip_esquerra = "C.F. Ginesta" if lloc == "Casa" else rival
-                equip_dreta = rival if lloc == "Casa" else "C.F. Ginesta"
                 color_bg_lloc = "#5c2d73" if lloc == "Casa" else "#a569bd"
 
-                st.markdown(f"""
-                    <div style="background-color: white; padding: 12px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.03);">
-                        <div style="font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 6px; border-bottom: 1px solid #f0e8f5; padding-bottom: 4px;">
-                            Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="width: 42%; text-align: left; font-weight: bold; font-size: 13px; color: #2b1b3d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                {equip_esquerra}
+                with st.container():
+                    st.markdown(f"""
+                        <div style="background-color: white; padding: 10px 12px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 8px; box-shadow: 1px 1px 4px rgba(0,0,0,0.03);">
+                            <div style="font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 6px; border-bottom: 1px solid #f0e8f5; padding-bottom: 4px;">
+                                Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}
                             </div>
-                            <div style="width: 16%; text-align: center;">
-                                <span style="color: white; background-color: {color_bg_lloc}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">{lloc}</span>
-                            </div>
-                            <div style="width: 42%; text-align: right; font-weight: bold; font-size: 13px; color: #2b1b3d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                {equip_dreta}
-                            </div>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+
+                    col_left, col_vs, col_right = st.columns([3, 1, 3])
+                    
+                    if lloc == "Fora":
+                        with col_left:
+                            cr1, cr2 = st.columns([1, 3])
+                            with cr1:
+                                if escut_path and os.path.exists(escut_path):
+                                    st.image(escut_path, width=32)
+                                else:
+                                    st.write("🛡️")
+                            with cr2:
+                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                        
+                        with col_vs:
+                            st.markdown(f"""
+                                <div style="text-align: center; padding-top: 2px;">
+                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">{lloc}</span>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                        with col_right:
+                            cg1, cg2 = st.columns([3, 1])
+                            with cg1:
+                                st.markdown("<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                            with cg2:
+                                st.image(LOGO_URL, width=32)
+                    else:
+                        with col_left:
+                            cg1, cg2 = st.columns([1, 3])
+                            with cg1:
+                                st.image(LOGO_URL, width=32)
+                            with cg2:
+                                st.markdown(f"<p style='margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                        
+                        with col_vs:
+                            st.markdown(f"""
+                                <div style="text-align: center; padding-top: 2px;">
+                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">{lloc}</span>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                        with col_right:
+                            cr1, cr2 = st.columns([3, 1])
+                            with cr1:
+                                st.markdown(f"<p style='text-align: right; margin-top: 4px; font-weight: bold; font-size: 12px; color: #2b1b3d;'>{rival}</p>", unsafe_allow_html=True)
+                            with cr2:
+                                if escut_path and os.path.exists(escut_path):
+                                    st.image(escut_path, width=32)
+                                else:
+                                    st.write("🛡️")
+
+                    st.markdown("</div>", unsafe_allow_html=True)
 
     # PESTANYA 3: ESTADÍSTIQUES
     with tab_stats:
@@ -379,7 +443,7 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
 
-    # PESTANYA 4: ADMIN (COMPLETA AL 100%)
+    # PESTANYA 4: ADMIN (COMPLETA AL 100% AMB ESCUTS, JUGADORES I TRAMS)
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
@@ -428,10 +492,17 @@ def main():
                 cal_hora = st.text_input("Hora", value="10:30")
                 cal_rival = st.text_input("Rival", key="cr")
                 cal_lloc = st.selectbox("Lloc", ["Casa", "Fora"], key="cl")
+                cal_escut = st.file_uploader("Escut del Rival per al Calendari (PNG)", type=["png", "jpg"], key="escut_cal")
                 
                 if st.button("Afegir al Calendari"):
                     if cal_rival:
                         try:
+                            escut_cal_path = ""
+                            if cal_escut is not None:
+                                escut_cal_path = os.path.join("escuts", cal_escut.name)
+                                with open(escut_cal_path, "wb") as f:
+                                    f.write(cal_escut.getbuffer())
+
                             supabase.table("calendari").insert({
                                 "id": int(time.time()),
                                 "jornada": int(cal_jornada),
@@ -439,9 +510,9 @@ def main():
                                 "hora": cal_hora,
                                 "rival": cal_rival,
                                 "lloc": cal_lloc,
-                                "escut_rival_url": ""
+                                "escut_rival_url": escut_cal_path
                             }).execute()
-                            st.success("✅ Afegit!")
+                            st.success("✅ Partit afegit al calendari!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
