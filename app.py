@@ -196,10 +196,12 @@ def main():
     # Funció auxiliar per sincronitzar automàticament els totals generals a Supabase
     def sincronitzar_estadistiques_generals(nous_partits, noves_p_zero, nous_propia, nous_contra):
         try:
+            # Recalcular interiorment amb les dades actuals de la sessió
+            actual_gols_jugadores = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
             supabase.table("estadistiques_generals").delete().neq("id", 0).execute()
             supabase.table("estadistiques_generals").insert({
                 "partits_jugats": int(nous_partits),
-                "gols_favor": int(gols_jugadores_total + nous_propia),
+                "gols_favor": int(actual_gols_jugadores + nous_propia),
                 "gols_contra": int(nous_contra),
                 "porteries_zero": int(noves_p_zero),
                 "gols_propia_porta": int(nous_propia)
@@ -407,7 +409,7 @@ def main():
                 dict_trams[t]["gols_favor"] = item.get("gols_favor", 0)
                 dict_trams[t]["gols_contra"] = item.get("gols_contra", 0)
 
-        # 4 MÈTRIQUES SUPERIORS (Sense detallar origen dels gols a favor)
+        # 4 MÈTRIQUES SUPERIORS
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
         with col_m1:
             st.metric(label="Gols a Favor", value=g_favor_total)
