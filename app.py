@@ -12,18 +12,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ESTIL I COLORS CORPORATIUS (REVISAT I POLIT) ---
+# --- ESTIL I COLORS CORPORATIUS (REVISAT I FORÇAT AL 100%) ---
 st.markdown("""
     <style>
     .stApp {
         background-color: #f7f5fa;
         color: #2b1b3d;
     }
-    h1, h2, h3, h4, h5, h6, p, label {
+    
+    /* Títols, subtítols, paràgrafs i etiquetes completament corporatius */
+    h1, h2, h3, h4, h5, h6, p, span, label, .stMarkdown {
         color: #2b1b3d !important;
     }
     
-    /* Tots els botons normals i de formulari de manera uniforme */
+    /* Botons normals i de formulari de manera uniforme */
     .stButton>button, .stButton>button *, div.stFormSubmitButton>button, div.stFormSubmitButton>button * {
         color: white !important;
         background-color: #5c2d73 !important;
@@ -36,17 +38,20 @@ st.markdown("""
         background-color: #4a2858 !important;
     }
     
-    .stTextInput>div>div>input, .stNumberInput>div>div>input {
+    /* Inputs de text, nombre i data */
+    .stTextInput>div>div>input, .stNumberInput>div>div>input, .stDateInput>div>div>input {
         background-color: white !important;
         color: #2b1b3d !important;
         border: 2px solid #5c2d73 !important;
         border-radius: 8px !important;
     }
+
+    /* Forçar estil corporatiu als Selectbox (Desplegables) */
     div[data-baseweb="select"] > div {
         background-color: #5c2d73 !important;
         color: white !important;
         border-color: #4a2858 !important;
-        border-radius: 8px;
+        border-radius: 8px !important;
     }
     div[data-baseweb="select"] span, div[data-baseweb="select"] svg {
         color: white !important;
