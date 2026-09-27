@@ -492,13 +492,13 @@ def main():
             with cols[i % 3]:
                 st.markdown(f"""
                     <div style="background-color: white; padding: 18px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
-                        <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 10px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; margin-right: 14px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
-                                {dorsal_val}
+                        <div style="display: flex; align-items: center; margin-bottom: 14px;">
+                            <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 10px; width: 55px; height: 55px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 14px; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                <span style="font-weight: 800; font-size: 22px; line-height: 1;">{dorsal_val}</span>
+                                <span style="font-size: 9px; color: #666; font-weight: 600; text-transform: uppercase; margin-top: 2px;">{rol}</span>
                             </div>
-                            <div>
-                                <h4 style="margin: 0; color: #5c2d73; font-size: 18px; font-weight: 700; line-height: 1.2;">{jugadora.get('nom')}</h4>
-                                <span style="font-size: 12px; color: #666; font-weight: 600;">{rol_text}</span>
+                            <div style="overflow: hidden;">
+                                <h3 style="margin: 0; color: #5c2d73; font-size: 22px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{jugadora.get('nom')}</h3>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0e8f5; padding-top: 10px; font-size: 14px; color: #2b1b3d;">
