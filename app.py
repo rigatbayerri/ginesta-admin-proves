@@ -541,7 +541,6 @@ def main():
 
                 st.markdown("---")
                 st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes, Eliminar)")
-                noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom').upper()}"| for j in golejadores_data] # type: ignore
                 noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom').upper()}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
