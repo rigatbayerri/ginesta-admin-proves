@@ -226,7 +226,7 @@ def main():
                 "gols_propia_porta": int(nous_propia)
             }).execute()
         except Exception as e:
-            st.error(f"❌ Error: {e}")
+            st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
     if st.session_state["auth_level"] == "admin":
         tab_videos, tab_calendari, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "📊 Estadístiques", "⚙️ Admin"])
@@ -301,11 +301,15 @@ def main():
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
             
+            # --- PROTECCIÓ SEGURA PER AL VÍDEO ---
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
-            if video_url:
-                st.video(video_url)
+            if video_url and str(video_url).startswith("http"):
+                try:
+                    st.video(video_url)
+                except Exception:
+                    st.warning("⚠️ L'enllaç del vídeo no és compatible o no està accessible.")
             else:
-                st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
+                st.warning("⚠️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
 
             if fotos_str:
                 lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
