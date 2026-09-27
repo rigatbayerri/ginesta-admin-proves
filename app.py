@@ -14,6 +14,7 @@ st.set_page_config(
 
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
 
+# Injectar manifest web i etiquetes d'Apple
 st.markdown(f"""
     <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{{
       'name': 'C.F. Ginesta Cadet F11',
@@ -300,15 +301,11 @@ def main():
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {partit_actual.get('jornada')}")
             
-            # Reproductors de vídeo protegits contra FileNotFoundError
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
-            if video_url and isinstance(video_url, str) and (video_url.startswith("http://") or video_url.startswith("https://")):
-                try:
-                    st.video(video_url)
-                except Exception:
-                    st.warning("⚠️ No s'ha pogut carregar el reproductor amb aquest enllaç.")
+            if video_url:
+                st.video(video_url)
             else:
-                st.warning("⚠️ L'enllaç del vídeo d'aquest partit no és vàlid o no està disponible.")
+                st.warning("⚠️ El vídeo d'aquest partit encara no està disponible.")
 
             if fotos_str:
                 lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
@@ -525,58 +522,119 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 4: ADMIN
+    # PESTANYA 4: ADMIN (COMPLETA AL 100%)
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
             tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos & Fotos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
 
             with tab_adm_partits:
-                st.markdown("#### ➕ Pujar Partit, Vídeo i Fins a 5 Fotos")
-                nou_titol = st.text_input("Títol del Partit")
-                nova_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1)
-                nova_data = st.date_input("Data")
-                nom_rival = st.text_input("Nom Rival")
-                resultat_partit = st.text_input("Resultat Final (Ex: 3-1)")
-                condicio_lloc = st.selectbox("Lloc", ["Casa", "Fora"])
-                
-                arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
-                arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
-                nou_video_url = st.text_input("Enllaç Vídeo (URL web)")
-                
-                if st.button("Guardar Partit"):
-                    if nou_titol and nou_video_url:
-                        try:
-                            escut_path_saved = ""
-                            if arxiu_escut is not None:
-                                escut_path_saved = os.path.join("escuts", arxiu_escut.name)
-                                with open(escut_path_saved, "wb") as f:
-                                    f.write(arxiu_escut.getbuffer())
+                st.markdown("#### 🎬 Gestió de Partits (Nou o Editar)")
+                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou", "✏️ Editar Partit Existent"])
 
-                            rutes_fotos = []
-                            if arxius_fotos:
-                                for foto in arxius_fotos[:5]:
-                                    f_path = os.path.join("fotos_partits", foto.name)
-                                    with open(f_path, "wb") as f:
-                                        f.write(foto.getbuffer())
-                                    rutes_fotos.append(f_path)
+                with sub_p_nou:
+                    nou_titol = st.text_input("Títol del Partit", key="t_nou")
+                    nova_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1, key="j_nou")
+                    nova_data = st.date_input("Data", key="d_nou")
+                    nom_rival = st.text_input("Nom Rival", key="r_nou")
+                    resultat_partit = st.text_input("Resultat Final (Ex: 3-1)", key="res_nou")
+                    condicio_lloc = st.selectbox("Lloc", ["Casa", "Fora"], key="ll_nou")
+                    
+                    arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
+                    arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
+                    nou_video_url = st.text_input("Enllaç Vídeo", key="v_url_nou")
+                    
+                    if st.button("Guardar Partit Nou"):
+                        if nou_titol and nou_video_url:
+                            try:
+                                escut_path_saved = ""
+                                if arxiu_escut is not None:
+                                    escut_path_saved = os.path.join("escuts", arxiu_escut.name)
+                                    with open(escut_path_saved, "wb") as f:
+                                        f.write(arxiu_escut.getbuffer())
 
-                            supabase.table("partits").insert({
-                                "titol": nou_titol,
-                                "jornada": int(nova_jornada),
-                                "data": str(nova_data),
-                                "rival": nom_rival,
-                                "resultat": resultat_partit,
-                                "lloc": condicio_lloc,
-                                "escut_rival_url": escut_path_saved,
-                                "fotos_partit_urls": ",".join(rutes_fotos),
-                                "video_url": nou_video_url
-                            }).execute()
-                            st.success("🎉 Partit guardat amb vídeo i galeria de fotos!")
-                            time.sleep(1)
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                                rutes_fotos = []
+                                if arxius_fotos:
+                                    for foto in arxius_fotos[:5]:
+                                        f_path = os.path.join("fotos_partits", foto.name)
+                                        with open(f_path, "wb") as f:
+                                            f.write(foto.getbuffer())
+                                        rutes_fotos.append(f_path)
+
+                                supabase.table("partits").insert({
+                                    "titol": nou_titol,
+                                    "jornada": int(nova_jornada),
+                                    "data": str(nova_data),
+                                    "rival": nom_rival,
+                                    "resultat": resultat_partit,
+                                    "lloc": condicio_lloc,
+                                    "escut_rival_url": escut_path_saved,
+                                    "fotos_partit_urls": ",".join(rutes_fotos),
+                                    "video_url": nou_video_url
+                                }).execute()
+                                st.success("🎉 Partit guardat amb èxit!")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                with sub_p_edit:
+                    partits_existents = []
+                    try:
+                        res_p = supabase.table("partits").select("*").order("data", desc=True).execute()
+                        partits_existents = res_p.data
+                    except:
+                        pass
+
+                    if not partits_existents:
+                        st.warning("No hi ha partits per editar.")
+                    else:
+                        dict_edit_partits = {f"J.{p.get('jornada')} - {p.get('titol')} ({p.get('resultat')})": p for p in partits_existents}
+                        sel_partit_str = st.selectbox("Selecciona el partit a modificar:", list(dict_edit_partits.keys()), key="sel_ed_p")
+                        p_edit = dict_edit_partits[sel_partit_str]
+
+                        edit_id = p_edit.get('id')
+                        edit_titol = st.text_input("Títol", value=p_edit.get('titol', ''), key="ed_t")
+                        edit_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=int(p_edit.get('jornada', 1)), key="ed_j")
+                        edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key="ed_r")
+                        edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key="ed_res")
+                        edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key="ed_ll")
+                        edit_video = st.text_input("Enllaç Vídeo", value=p_edit.get('video_url', ''), key="ed_v")
+                        
+                        edit_arxiu_escut = st.file_uploader("Canviar Escut Rival", type=["png", "jpg"], key="ed_esc")
+                        edit_arxius_fotos = st.file_uploader("Afegir/Canviar Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="ed_fotos")
+
+                        if st.button("Actualitzar Partit Canviat"):
+                            try:
+                                update_data = {
+                                    "titol": edit_titol,
+                                    "jornada": int(edit_jornada),
+                                    "rival": edit_rival,
+                                    "resultat": edit_resultat,
+                                    "lloc": edit_lloc,
+                                    "video_url": edit_video
+                                }
+                                if edit_arxiu_escut is not None:
+                                    escut_path_saved = os.path.join("escuts", edit_arxiu_escut.name)
+                                    with open(escut_path_saved, "wb") as f:
+                                        f.write(edit_arxiu_escut.getbuffer())
+                                    update_data["escut_rival_url"] = escut_path_saved
+
+                                if edit_arxius_fotos:
+                                    rutes_fotos = []
+                                    for foto in edit_arxius_fotos[:5]:
+                                        f_path = os.path.join("fotos_partits", foto.name)
+                                        with open(f_path, "wb") as f:
+                                            f.write(foto.getbuffer())
+                                        rutes_fotos.append(f_path)
+                                    update_data["fotos_partit_urls"] = ",".join(rutes_fotos)
+
+                                supabase.table("partits").update(update_data).eq("id", edit_id).execute()
+                                st.success("✅ Partit actualitzat correctament!")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error al actualitzar: {e}")
 
             with tab_adm_calendari:
                 st.markdown("#### 📅 Afegir Calendari")
