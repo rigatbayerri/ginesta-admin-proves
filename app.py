@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ESTIL I COLORS PERSONALITZATS ---
+# --- ESTIL I COLORS PERSONALITZATS (RESPONSIVE PER PC I TAULETA) ---
 st.markdown("""
     <style>
     .stApp {
@@ -28,6 +28,7 @@ st.markdown("""
         border-radius: 8px;
         border: none;
         font-weight: bold;
+        padding: 0.5rem 1rem;
     }
     .stButton>button:hover {
         background-color: #4a2858;
@@ -47,6 +48,22 @@ st.markdown("""
     div[data-baseweb="select"] span, div[data-baseweb="select"] svg {
         color: white !important;
         fill: white !important;
+    }
+    
+    /* Adaptació visual per a pantalles tàctiques i tauletes (< 768px) */
+    @media (max-width: 768px) {
+        .element-container {
+            width: 100% !important;
+        }
+        h1 {
+            font-size: 1.8rem !important;
+        }
+        h2 {
+            font-size: 1.4rem !important;
+        }
+        h3 {
+            font-size: 1.2rem !important;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -154,7 +171,6 @@ def main():
             
             col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
             
-            # Si juguem a Fora, invertim l'ordre a la videoteca també
             if lloc == "Fora":
                 with col_res1:
                     c_r1, c_r2 = st.columns([2, 1])
@@ -176,9 +192,8 @@ def main():
                         except:
                             pass
                     with c_g2:
-                        st.markdown("<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
             else:
-                # Si juguem a Casa, Ginesta a l'esquerra i rival a la dreta
                 with col_res1:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
@@ -187,7 +202,7 @@ def main():
                         except:
                             pass
                     with c_g2:
-                        st.markdown("<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
                 with col_res2:
                     st.markdown(f"<h2 style='text-align: center; color: #2b1b3d; margin: 0;'>{resultat}</h2>", unsafe_allow_html=True)
                     st.markdown(f"<p style='text-align: center; font-size: 14px; color: #666;'>({lloc})</p>", unsafe_allow_html=True)
@@ -244,7 +259,6 @@ def main():
 
                     col_left, col_vs, col_right = st.columns([3, 1, 3])
                     
-                    # Si juguem a FORA: el rival surt a l'esquerra i el Ginesta a la dreta
                     if lloc == "Fora":
                         with col_left:
                             cr1, cr2 = st.columns([1, 3])
@@ -274,8 +288,6 @@ def main():
                                     st.image("logo.png", width=38)
                                 except:
                                     st.write("⚽")
-                    
-                    # Si juguem a CASA: el Ginesta a l'esquerra i el rival a la dreta
                     else:
                         with col_left:
                             cg1, cg2 = st.columns([1, 3])
@@ -285,7 +297,7 @@ def main():
                                 except:
                                     st.write("⚽")
                             with cg2:
-                                st.markdown("<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin-top: 6px; font-weight: bold; color: #2b1b3d;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                         
                         with col_vs:
                             color_lloc = "#5c2d73"
