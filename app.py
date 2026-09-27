@@ -426,13 +426,14 @@ def main():
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA (REDISSENY EXCLUSIU I NET)
+    # PESTANYA 3: PLANTILLA (REDISSENY FUNCIONAL I MODERN EN GRAELLA)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
-        st.markdown("Resum de la plantilla ordenada per dorsal amb les dades de l'acta i minuts jugats.")
+        st.markdown("Fitxes individuals i percentatge de participació de cada jugadora.")
         st.markdown("---")
 
-        for jugadora in golejadores_data:
+        cols = st.columns(2)
+        for i, jugadora in enumerate(golejadores_data):
             rol = jugadora.get('rol', 'Jugadora')
             grogues_val = jugadora.get('grogues', 0)
             vermelles_val = jugadora.get('vermelles', 0)
@@ -454,34 +455,61 @@ def main():
                 mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
                 text_etiqueta_gol = "⚽ Mitjana gols/partit:"
 
-            # Disseny de targeta horitzontal unificada molt neta per a cada jugadora
-            with st.container():
-                st.markdown(f"""
-                <div style="background-color: white; padding: 16px 20px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 14px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; min-width: 240px; margin-bottom: 8px;">
-                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0;">
-                            <span style="font-weight: 900; font-size: 20px; line-height: 1;">{dorsal_val}</span>
-                            <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
+            with cols[i % 2]:
+                with st.container():
+                    st.markdown(f"""
+                        <div style="background-color: white; padding: 14px; border-radius: 12px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                                    <span style="font-weight: 900; font-size: 18px; line-height: 1;">{dorsal_val}</span>
+                                    <span style="font-size: 7px; color: #666; font-weight: 700; text-transform: uppercase;">{rol}</span>
+                                </div>
+                                <div style="flex-grow: 1; overflow: hidden;">
+                                    <h4 style="margin: 0; color: #5c2d73; font-size: 15px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{nom_jugadora}</h4>
+                                    <p style="margin: 2px 0 0 0; font-size: 11px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
+                                </div>
+                            </div>
+                            
+                            <div style="background-color: #f7f5fa; padding: 8px 10px; border-radius: 8px;">
+                                <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #2b1b3d; margin-bottom: 2px;">
+                                    <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
+                                    <span>Minuts: <b>{minuts_val}'</b></span>
+                                    <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
+                                </div>
+                                <div style="font-size: 11px; color: #2b1b3d;">
+                                    {text_etiqueta_gol} <b>{mitjana_gols_val}</b>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3 style="margin: 0; color: #5c2d73; font-size: 17px; font-weight: 900; text-transform: uppercase;">{nom_jugadora}</h3>
-                            <p style="margin: 3px 0 0 0; font-size: 12px; color: #555;">{estat_text} &nbsp;|&nbsp; 🟨<b>{grogues_val}</b> 🟥<b>{vermelles_val}</b></p>
-                        </div>
-                    </div>
+                    """, unsafe_allow_html=True)
 
-                    <div style="background-color: #f7f5fa; padding: 10px 16px; border-radius: 8px; flex-grow: 1; max-width: 450px; margin-bottom: 8px;">
-                        <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: #5c2d73;">📋 Dades de l'Acta Oficial:</p>
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #2b1b3d; margin-bottom: 2px;">
-                            <span>Titularitats: <b>{titularitats_val}/{n_partits}</b></span>
-                            <span>Minuts: <b>{minuts_val}'</b></span>
-                            <span>Mitjana: <b>{mitjana_min_val}'/p.</b></span>
-                        </div>
-                        <div style="font-size: 11px; color: #2b1b3d;">
-                            {text_etiqueta_gol} <b>{mitjana_gols_val}</b>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    # Gràfica de Donut per als minuts jugats
+                    total_minuts_possibles = n_partits * 80
+                    minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
+                    minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
+
+                    df_donut = pd.DataFrame({
+                        "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
+                        "Minuts": [minuts_jugats_efectius, minuts_restants]
+                    })
+                    fig_donut = px.pie(
+                        df_donut, 
+                        names="Estat", 
+                        values="Minuts", 
+                        hole=0.6,
+                        color_discrete_sequence=["#5c2d73", "#e0d8e8"]
+                    )
+                    fig_donut.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#2b1b3d", size=11),
+                        legend=dict(font=dict(color="#2b1b3d"), orientation="h", y=-0.2),
+                        margin=dict(t=0, b=10, l=0, r=0), 
+                        height=160
+                    )
+                    st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_plantilla_{nom_jugadora}_{i}")
+                    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
     # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
@@ -547,7 +575,8 @@ def main():
         with col_gols_favor:
             st.markdown("##### ⚽ Gols a Favor")
             fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", text="Gols Favor", color_discrete_sequence=["#5c2d73"])
-            fig_favor.update_traces(textposition='outside')
+            # Textos en blanc i visibles damunt de les barres
+            fig_favor.update_traces(textposition='inside', textfont=dict(color='white', size=13, weight='bold'))
             fig_favor.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
@@ -561,7 +590,8 @@ def main():
         with col_gols_contra:
             st.markdown("##### 🛡️ Gols en Contra")
             fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", text="Gols Contra", color_discrete_sequence=["#a569bd"])
-            fig_contra.update_traces(textposition='outside')
+            # Textos en blanc i visibles damunt de les barres
+            fig_contra.update_traces(textposition='inside', textfont=dict(color='white', size=13, weight='bold'))
             fig_contra.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
