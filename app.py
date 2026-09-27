@@ -144,20 +144,20 @@ def main():
     # Carregar dades de golejadores / jugadores
     golejadores_data = []
     try:
-        res_gol = supabase.table("golejadores").select("*").order("gols", desc=True).execute()
+        res_gol = supabase.table("golejadores").select("*").order("dorsal", desc=False).execute()
         golejadores_data = res_gol.data
     except:
         pass
 
     if not golejadores_data:
         golejadores_data = [
-            {"nom": "Clàudia", "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
-            {"nom": "Júlia", "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Martina", "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0},
-            {"nom": "Berta", "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Carla", "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
-            {"nom": "Aina", "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
-            {"nom": "Noa", "gols": 0, "rol": "Porteria", "grogues": 0, "vermelles": 0}
+            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
+            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
+            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0},
+            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
+            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0},
+            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0},
+            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0}
         ]
 
     # Carregar estadístiques generals des de Supabase
@@ -471,21 +471,27 @@ def main():
 
         st.markdown("---")
 
-        st.markdown("### ⚽ Plantilla, Gols i Targetes")
+        st.markdown("### ⚽ Plantilla, Dorsals, Gols i Targetes")
         
         cols = st.columns(3)
         for i, jugadora in enumerate(golejadores_data):
-            rol_text = "🧤 Porteria" if jugadora.get('rol') == "Porteria" else "⚽ Jugadora"
+            rol_text = "🧤 Portera" if jugadora.get('rol') == "Portera" else "⚽ Jugadora"
             grogues_val = jugadora.get('grogues', 0)
             vermelles_val = jugadora.get('vermelles', 0)
+            dorsal_val = jugadora.get('dorsal', '-')
             
             with cols[i % 3]:
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
-                        <h4 style="margin: 0; color: #5c2d73;">{jugadora.get('nom')} <span style="font-size: 11px; color: #888;">({rol_text})</span></h4>
-                        <p style="margin: 5px 0 0 0; font-size: 15px; color: #2b1b3d !important;">
-                            ⚽ <b>{jugadora.get('gols')}</b> gols &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
-                        </p>
+                    <div style="background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0; color: #5c2d73;">{jugadora.get('nom')} <span style="font-size: 11px; color: #888;">({rol_text})</span></h4>
+                            <p style="margin: 5px 0 0 0; font-size: 15px; color: #2b1b3d !important;">
+                                ⚽ <b>{jugadora.get('gols')}</b> gols &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
+                            </p>
+                        </div>
+                        <div style="background-color: #f7f5fa; border: 2px solid #5c2d73; color: #5c2d73; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; margin-left: 10px;">
+                            {dorsal_val}
+                        </div>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -609,16 +615,17 @@ def main():
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Gestió de Jugadores (Rol, Gols, Targetes)")
+                st.markdown("#### ⚽ Gestió de Jugadores (Dorsal, Rol, Gols, Targetes)")
                 
-                noms_jugadores = [j.get('nom') for j in golejadores_data]
+                noms_jugadores = [f"#{j.get('dorsal', '0')} - {j.get('nom')}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
-                jugadora_seleccionada = st.selectbox("Selecciona una jugadora:", noms_jugadores)
+                jugadora_seleccionada_str = st.selectbox("Selecciona una jugadora:", noms_jugadores)
                 
-                if jugadora_seleccionada == "➕ Afegir nova jugadora...":
+                if jugadora_seleccionada_str == "➕ Afegir nova jugadora...":
                     nova_jugadora_nom = st.text_input("Nom de la nova jugadora:")
-                    nou_rol = st.selectbox("Rol al camp:", ["Jugadora", "Porteria"])
+                    nou_dorsal = st.number_input("Dorsal:", min_value=1, max_value=99, value=12)
+                    nou_rol = st.selectbox("Rol al camp:", ["Jugadora", "Portera"])
                     gols_inicials = st.number_input("Gols inicials:", min_value=0, value=0)
                     grogues_inicials = st.number_input("Targetes grogues inicials:", min_value=0, value=0)
                     vermelles_inicials = st.number_input("Targetes vermelles inicials:", min_value=0, value=0)
@@ -628,13 +635,13 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": nova_jugadora_nom.strip(),
+                                    "dorsal": int(nou_dorsal),
                                     "gols": int(gols_inicials),
                                     "rol": nou_rol,
                                     "grogues": int(grogues_inicials),
                                     "vermelles": int(vermelles_inicials)
                                 }, on_conflict="nom").execute()
                                 
-                                # Sincronitzar totals de l'equip automàticament
                                 sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                 
                                 st.success(f"🎉 Jugadora {nova_jugadora_nom} afegida!")
@@ -642,27 +649,37 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
                 else:
+                    # Extreure el nom real de la selecció del selectbox
+                    jugadora_seleccionada = jugadora_seleccionada_str.split(" - ")[1]
                     j_actual = next((j for j in golejadores_data if j.get('nom') == jugadora_seleccionada), {})
+                    
+                    dorsal_actual = j_actual.get('dorsal', 0)
                     gols_actuals = j_actual.get('gols', 0)
                     rol_actual = j_actual.get('rol', 'Jugadora')
                     grogues_actuals = j_actual.get('grogues', 0)
                     vermelles_actuals = j_actual.get('vermelles', 0)
                     
-                    st.info(f"Jugadora: **{jugadora_seleccionada}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | 🟨 **{grogues_actuals}** | 🟥 **{vermelles_actuals}**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | Jugadora: **{jugadora_seleccionada}** | Rol: **{rol_actual}** | Gols: **{gols_actuals}** | 🟨 **{grogues_actuals}** | 🟥 **{vermelles_actuals}**")
                     
-                    # Canvi de rol ràpid
-                    nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Porteria"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
-                    if nou_canvi_rol != rol_actual:
-                        if st.button("Actualitzar Rol"):
+                    # Modificar dorsal o rol
+                    c_ed1, c_ed2 = st.columns(2)
+                    with c_ed1:
+                        nou_dorsal_input = st.number_input("Modificar Dorsal:", min_value=1, max_value=99, value=int(dorsal_actual))
+                    with c_ed2:
+                        nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Portera"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
+                    
+                    if nou_dorsal_input != dorsal_actual or nou_canvi_rol != rol_actual:
+                        if st.button("Actualitzar Dades Bàsiques"):
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": int(nou_dorsal_input),
                                     "gols": gols_actuals,
                                     "rol": nou_canvi_rol,
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals
                                 }, on_conflict="nom").execute()
-                                st.success("Rol actualitzat!")
+                                st.success("Dades actualitzades!")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
@@ -674,13 +691,13 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": dorsal_actual,
                                     "gols": gols_actuals + 1,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals
                                 }, on_conflict="nom").execute()
                                 
-                                # Sincronitzar automàticament els gols totals a l'equip
                                 sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                 
                                 st.success("Gol sumat i sincronitzat amb l'equip!")
@@ -691,13 +708,13 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": dorsal_actual,
                                     "gols": gols_actuals - 1,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
                                     "vermelles": vermelles_actuals
                                 }, on_conflict="nom").execute()
                                 
-                                # Sincronitzar automàticament els gols totals a l'equip
                                 sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                 
                                 st.success("Gol restat i sincronitzat.")
@@ -710,6 +727,7 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": dorsal_actual,
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals + 1,
@@ -723,6 +741,7 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": dorsal_actual,
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals - 1,
@@ -738,6 +757,7 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": dorsal_actual,
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
@@ -751,6 +771,7 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": jugadora_seleccionada,
+                                    "dorsal": dorsal_actual,
                                     "gols": gols_actuals,
                                     "rol": rol_actual,
                                     "grogues": grogues_actuals,
