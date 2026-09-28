@@ -614,13 +614,13 @@ def main():
                         for t in trams_llista:
                             trams_gols_nous_fav[t] = st.number_input(f"Favor {t}", min_value=0, value=0, key=f"nou_fav_{t}")
                     with col_t2:
-                        st.markdown("**🛡️ Gols en Contra per Tram")
+                        st.markdown("**🛡️ Gols en Contra per Tram**")
                         for t in trams_llista:
                             trams_gols_nous_con[t] = st.number_input(f"Contra {t}", min_value=0, value=0, key=f"nou_con_{t}")
 
                     st.markdown("---")
                     st.markdown("##### 🟨 Registrar Targetes en aquest Partit")
-                    noms_llista_jugadores = [j.get('nom') for j in golejadores_data]
+                    noms_llista_jugadores = [str(j.get('nom', '')) for j in golejadores_data if j.get('nom')]
                     
                     if "targetes_partit_nou" not in st.session_state:
                         st.session_state["targetes_partit_nou"] = []
@@ -634,13 +634,16 @@ def main():
                         tipus_card = st.selectbox("Tipus", ["Groga", "Vermella"], key="sel_tip_card_nou")
 
                     if st.button("➕ Afegir Targeta a la llista del partit", key="btn_add_card_list"):
-                        st.session_state["targetes_partit_nou"].append({"jugadora": jugadora_card, "minut": minut_card, "tipus": tipus_card})
-                        st.success(f"Afegida: {jugadora_card} (Minut {minut_card} - {tipus_card})")
+                        if jugadora_card:
+                            st.session_state["targetes_partit_nou"].append({"jugadora": str(jugadora_card), "minut": int(minut_card), "tipus": str(tipus_card)})
+                            st.success(f"Afegida: {jugadora_card} (Minut {minut_card} - {tipus_card})")
+                        else:
+                            st.warning("⚠️ Selecciona una jugadora vàlida.")
 
                     if st.session_state["targetes_partit_nou"]:
                         st.write("Targetes registrades per a aquest partit:")
                         for idx, card in enumerate(st.session_state["targetes_partit_nou"]):
-                            st.write(f"- ** | Minut {card['minut']} | {card['tipus']}")
+                            st.write(f"- **{card.get('jugadora', '')}** | Minut {card.get('minut', '')} | {card.get('tipus', '')}")
                         if st.button("Netejar llista de targetes", key="btnClearCards"):
                             st.session_state["targetes_partit_nou"] = []
                             st.rerun()
@@ -662,6 +665,11 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
+                                # Preparar text de targetes per guardar a la BD
+                                text_targetes_guardar = ""
+                                if st.session_state["targetes_partit_nou"]:
+                                    text_targetes_guardar = ", ".join([f"{c['jugadora']} (Min {c['minut']} - {c['tipus']})" for c in st.session_state["targetes_partit_nou"]])
+
                                 supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
@@ -671,7 +679,8 @@ def main():
                                     "lloc": condicio_lloc,
                                     "escut_rival_url": escut_path_saved,
                                     "fotos_partit_urls": ",".join(rutes_fotos),
-                                    "video_url": nou_video_url
+                                    "video_url": nou_video_url,
+                                    "targetes_partit": text_targetes_guardar
                                 }).execute()
 
                                 for t in trams_llista:
