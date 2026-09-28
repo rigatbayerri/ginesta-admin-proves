@@ -378,7 +378,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Escuts grans 65x65 tant per a rivals com per al Ginesta)
+    # PESTANYA 2: CALENDARI (Etiquetes CASA i FORA amb text blanc brillant)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -405,7 +405,7 @@ def main():
                 else:
                     text_marcador = str(resultat_cal)
 
-                # Etiqueta Casa o Fora
+                # Etiqueta Casa o Fora amb text BLANC
                 if lloc == "Casa":
                     badge_lloc = "<span style='background-color: #5c2d73; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;'>CASA</span>"
                 else:
