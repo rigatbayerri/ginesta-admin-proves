@@ -331,6 +331,11 @@ def main():
             jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {jornada_txt_mostra}")
             
+            # Mostrar targetes del partit si n'hi ha
+            targetes_partit_str = partit_actual.get('targetes_partit', '')
+            if targetes_partit_str:
+                st.markdown(f"🟨 **Targetes del partit:** {targetes_partit_str}")
+
             video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
             if video_url and str(video_url).startswith("http"):
                 try:
@@ -602,8 +607,6 @@ def main():
                     
                     st.markdown("---")
                     st.markdown("##### ⏱️ Registrar Gols per Trams en aquest Partit")
-                    st.markdown("Introdueix quants gols s'han marcat o encaixat en cada tram durant aquest partit. **Es sumaran automàticament al total de l'equip.**")
-                    
                     trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
                     trams_gols_nous_fav = {}
                     trams_gols_nous_con = {}
@@ -665,10 +668,52 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
-                                text_targetes_guardar = ""
-                                if st.session_state["targetes_partit_nou"]:
-                                    text_targetes_guardar = ", ".join([f"{c['jugadora']} (Min {c['minut']} - {c['tipus']})" for c in st.session_state["targetes_partit_nou"]])
+                                # Processar targetes i aplicar regla de doble groga / màxim 1 vermella
+                                llista_text_targetes = []
+                                
+                                # Diccionari temporal per comptar grogues en aquest partit específic
+                                comptador_grogues_partit = {}
 
+                                for card in st.session_state["targetes_partit_nou"]:
+                                    j_nom = card["jugadora"]
+                                    t_tipus = card["tipus"]
+                                    minut_card = card["minut"]
+
+                                    # Consultar estat actual de la jugadora a la BD
+                                    res_j = supabase.table("golejadores").select("*").eq("nom", j_nom).execute()
+                                    if res_j.data:
+                                        j_data = res_j.data[0]
+                                        grogues_actuals = int(j_data.get("grogues", 0) or 0)
+                                        vermelles_actuals = int(j_data.get("vermelles", 0) or 0)
+
+                                        # Portar registre de grogues en aquest partit
+                                        if j_nom not in comptador_grogues_partit:
+                                            comptador_grogues_partit[j_nom] = 0
+
+                                        if t_tipus == "Groga":
+                                            grogues_actuals += 1
+                                            comptador_grogues_partit[j_nom] += 1
+                                            llista_text_targetes.append(f"{j_nom} (Min {minut_card} - Groga)")
+
+                                            # Comprovar si arriba a 2 grogues (acumulades o en aquest partit) i no té vermella
+                                            if (grogues_actuals % 2 == 0 or comptador_grogues_partit[j_nom] >= 2) and vermelles_actuals == 0:
+                                                vermelles_actuals = 1
+                                                llista_text_targetes.append(f"{j_nom} (Min {minut_card} - Vermella per doble groga)")
+                                        
+                                        elif t_tipus == "Vermella":
+                                            if vermelles_actuals == 0:
+                                                vermelles_actuals = 1
+                                            llista_text_targetes.append(f"{j_nom} (Min {minut_card} - Vermella)")
+
+                                        # Actualitzar a la BD de jugadores
+                                        supabase.table("golejadores").update({
+                                            "grogues": grogues_actuals,
+                                            "vermelles": vermelles_actuals
+                                        }).eq("nom", j_nom).execute()
+
+                                text_targetes_guardar = ", ".join(llista_text_targetes) if llista_text_targetes else ""
+
+                                # Guardar partit amb les targetes definitives
                                 supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
@@ -682,6 +727,7 @@ def main():
                                     "targetes_partit": text_targetes_guardar
                                 }).execute()
 
+                                # Guardar gols per trams
                                 for t in trams_llista:
                                     if trams_gols_nous_fav[t] > 0 or trams_gols_nous_con[t] > 0:
                                         res_t = supabase.table("trams_gols").select("*").eq("tram", t).execute()
@@ -695,44 +741,6 @@ def main():
                                             "gols_favor": ant_fav + trams_gols_nous_fav[t],
                                             "gols_contra": ant_con + trams_gols_nous_con[t]
                                         }, on_conflict="tram").execute()
-
-                                # PROCESSAR TARGETES AMB REGLA DE DOBLE GROGA I LÍMIT DE VERMELLA
-                                for card in st.session_state["targetes_partit_nou"]:
-                                    j_nom = card["jugadora"]
-                                    t_tipus = card["tipus"]
-                                    minut_card = card["minut"]
-                                    
-                                    res_j = supabase.table("golejadores").select("*").eq("nom", j_nom).execute()
-                                    if res_j.data:
-                                        j_data = res_j.data[0]
-                                        grogues_actuals = int(j_data.get("grogues", 0) or 0)
-                                        vermelles_actuals = int(j_data.get("vermelles", 0) or 0)
-                                        
-                                        if t_tipus == "Groga":
-                                            grogues_actuals += 1
-                                            # Si amb aquesta groga arriba a 2 grogues (i no tenia vermella prèvia o vols controlar la doble groga)
-                                            if grogues_actuals % 2 == 0 and vermelles_actuals == 0:
-                                                vermelles_actuals = 1  # Màxim 1 vermella per jugadora
-                                                # Afegim automàticament la vermella a la llista visible del partit al mateix minut
-                                                text_targetes_guardar += f", {j_nom} (Min {minut_card} - Vermella per doble groga)"
-                                        elif t_tipus == "Vermella":
-                                            # Només pot tenir 1 vermella com a màxim
-                                            if vermelles_actuals == 0:
-                                                vermelles_actuals = 1
-                                            # Si ja en tenia 1, no es torna a sumar (es queda a 1)
-
-                                        supabase.table("golejadores").update({
-                                            "grogues": grogues_actuals,
-                                            "vermelles": vermelles_actuals
-                                        }).eq("nom", j_nom).execute()
-
-                                # Actualitzar el text final de targetes al partit si s'ha generat una doble groga automàtica
-                                if text_targetes_guardar:
-                                    # Obtenir l'últim partit inserit per actualitzar el text de targetes si cal
-                                    res_ult_p = supabase.table("partits").select("id").order("id", desc=True).limit(1).execute()
-                                    if res_ult_p.data:
-                                        p_id_ult = res_ult_p.data[0]["id"]
-                                        supabase.table("partits").update({"targetes_partit": text_targetes_guardar}).eq("id", p_id_ult).execute()
 
                                 st.session_state["targetes_partit_nou"] = []
                                 st.success("🎉 Partit guardat i estadístiques actualitzades automàticament!")
@@ -1078,7 +1086,7 @@ def main():
                                 nova_g = grogues_actuals + 1
                                 nova_v = vermelles_actuals
                                 if nova_g % 2 == 0 and nova_v == 0:
-                                    nova_v = 1  # Doble groga converteix en 1 vermella
+                                    nova_v = 1
                                 supabase.table("golejadores").upsert({
                                     "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                     "grogues": nova_g, "vermelles": nova_v,
@@ -1103,7 +1111,7 @@ def main():
                             try:
                                 supabase.table("golejadores").upsert({
                                     "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
-                                    "grogues": grogues_actuals, "vermelles": 1,  # Màxim 1
+                                    "grogues": grogues_actuals, "vermelles": 1,
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
