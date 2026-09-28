@@ -433,10 +433,10 @@ def main():
                                     st.write("🛡️")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA (Sense gràfica de minuts per protegir el clima de l'equip)
+    # PESTANYA 3: PLANTILLA (Amb dades originals de minuts i titularitats, sense gràfica)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
-        st.markdown("Fitxes individuals de les jugadores de l'equip.")
+        st.markdown("Fitxes individuals i percentatge de participació de cada jugadora.")
         st.markdown("---")
 
         cols = st.columns(2)
@@ -465,7 +465,7 @@ def main():
             with cols[i % 2]:
                 with st.container():
                     st.markdown(f"""
-                    <div style="background-color: white; padding: 15px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                    <div style="background-color: white; padding: 15px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
                         <div style="font-size: 18px; font-weight: 900; color: #5c2d73; text-transform: uppercase;">
                             #{dorsal_val} — {nom_jugadora} <span style="font-size: 11px; background-color: #f7f5fa; padding: 2px 6px; border-radius: 4px; color: #333; border: 1px solid #ddd;">{rol}</span>
                         </div>
@@ -474,12 +474,14 @@ def main():
                         </div>
                         <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
                         <div style="font-size: 11px; color: #1a1a1a;">
-                            <b>📋 Resum de Participació:</b><br>
-                            Titularitats: <b>{titularitats_val}/{n_partits}</b> &nbsp;|&nbsp; Partits jugats amb constància<br>
+                            <b>📋 Dades de l'Acta Oficial:</b><br>
+                            Titularitats: <b>{titularitats_val}/{n_partits}</b> &nbsp;|&nbsp; Minuts: <b>{minuts_val}'</b> &nbsp;|&nbsp; Mitjana: <b>{mitjana_min_val}'/p.</b><br>
                             {text_etiqueta_gol}: <b>{mitjana_gols_val}</b>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+
+                    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
@@ -880,7 +882,7 @@ def main():
                     minuts_actuals = int(j_actual.get('minuts_jugats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual})")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual}) | Titularitats (auto): **{titularitats_actuals}** | Minuts (auto): **{minuts_actuals}'**")
                     
                     c_ed1, c_ed2 = st.columns(2)
                     with c_ed1:
