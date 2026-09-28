@@ -622,16 +622,15 @@ def main():
                     st.markdown("##### 🟨 Registrar Targetes en aquest Partit")
                     noms_llista_jugadores = [j.get('nom') for j in golejadores_data]
                     
-                    # Sistema per afegir múltiples targetes ràpidament
                     if "targetes_partit_nou" not in st.session_state:
                         st.session_state["targetes_partit_nou"] = []
 
-                    c_ tarjeta_1, c_tarjeta_2, c_tarjeta_3 = st.columns([2, 1, 1])
-                    with c_tarjeta_1:
+                    c_tarj_1, c_tarj_2, c_tarj_3 = st.columns([2, 1, 1])
+                    with c_tarj_1:
                         jugadora_card = st.selectbox("Jugadora amonestada", noms_llista_jugadores, key="sel_j_card_nou")
-                    with c_tarjeta_2:
+                    with c_tarj_2:
                         minut_card = st.number_input("Minut", min_value=1, max_value=90, value=45, key="num_min_card_nou")
-                    with c_tarjeta_3:
+                    with c_tarj_3:
                         tipus_card = st.selectbox("Tipus", ["Groga", "Vermella"], key="sel_tip_card_nou")
 
                     if st.button("➕ Afegir Targeta a la llista del partit", key="btn_add_card_list"):
@@ -663,7 +662,6 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
-                                # 1. Guardar el partit
                                 supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
@@ -676,10 +674,8 @@ def main():
                                     "video_url": nou_video_url
                                 }).execute()
 
-                                # 2. Sumar automàticament els gols als trams existents a la BD
                                 for t in trams_llista:
                                     if trams_gols_nous_fav[t] > 0 or trams_gols_nous_con[t] > 0:
-                                        # Obtenir dades actuals del tram
                                         res_t = supabase.table("trams_gols").select("*").eq("tram", t).execute()
                                         ant_fav, ant_con = 0, 0
                                         if res_t.data:
@@ -692,11 +688,9 @@ def main():
                                             "gols_contra": ant_con + trams_gols_nous_con[t]
                                         }, on_conflict="tram").execute()
 
-                                # 3. Sumar automàticament les targetes a les jugadores
                                 for card in st.session_state["targetes_partit_nou"]:
                                     j_nom = card["jugadora"]
                                     t_tipus = card["tipus"]
-                                    # Buscar jugadora a la BD
                                     res_j = supabase.table("golejadores").select("*").eq("nom", j_nom).execute()
                                     if res_j.data:
                                         j_data = res_j.data[0]
