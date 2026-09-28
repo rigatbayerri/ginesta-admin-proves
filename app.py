@@ -411,7 +411,7 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA (Amb Partits Jugats i Titularitats)
+    # PESTANYA 3: PLANTILLA
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
         st.markdown("Fitxes individuals, partits jugats i titularitats de cada jugadora.")
@@ -453,7 +453,7 @@ def main():
 
                     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    # PESTANYA 4: ESTADÍSTIQUES
+    # PESTANYA 4: ESTADÍSTIQUES (Amb gràfiques d'àrea suau / Spline)
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -516,8 +516,17 @@ def main():
         col_gols_favor, col_gols_contra = st.columns(2)
         with col_gols_favor:
             st.markdown("##### ⚽ Gols a Favor")
-            fig_favor = px.bar(df_trams, x="Minuts", y="Gols Favor", text="Gols Favor", color_discrete_sequence=["#5c2d73"])
-            fig_favor.update_traces(textposition='outside', textfont=dict(color='#1a1a1a', size=13, weight='bold'))
+            fig_favor = px.area(
+                df_trams, 
+                x="Minuts", 
+                y="Gols Favor", 
+                color_discrete_sequence=["#5c2d73"]
+            )
+            fig_favor.update_traces(
+                line=dict(width=3, color='#5c2d73'),
+                fillcolor='rgba(92, 45, 115, 0.25)',
+                mode='lines+markers'
+            )
             fig_favor.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
@@ -530,8 +539,17 @@ def main():
 
         with col_gols_contra:
             st.markdown("##### 🛡️ Gols en Contra")
-            fig_contra = px.bar(df_trams, x="Minuts", y="Gols Contra", text="Gols Contra", color_discrete_sequence=["#a569bd"])
-            fig_contra.update_traces(textposition='outside', textfont=dict(color='#1a1a1a', size=13, weight='bold'))
+            fig_contra = px.area(
+                df_trams, 
+                x="Minuts", 
+                y="Gols Contra", 
+                color_discrete_sequence=["#a569bd"]
+            )
+            fig_contra.update_traces(
+                line=dict(width=3, color='#a569bd'),
+                fillcolor='rgba(165, 105, 189, 0.25)',
+                mode='lines+markers'
+            )
             fig_contra.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
