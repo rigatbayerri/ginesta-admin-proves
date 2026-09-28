@@ -356,7 +356,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI
+    # PESTANYA 2: CALENDARI (Targetes compactes, escuts i noms grans, textos llegibles)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -376,64 +376,82 @@ def main():
                 rival = partit.get('rival', '-')
                 lloc = partit.get('lloc', 'Casa')
                 escut_path = partit.get('escut_rival_url', '')
+                resultat_cal = partit.get('resultat', '')
+
+                if not resultat_cal or str(resultat_cal).strip() == "" or str(resultat_cal).lower() == "none":
+                    text_marcador = "VS"
+                else:
+                    text_marcador = str(resultat_cal)
+
                 color_bg_lloc = "#5c2d73" if lloc == "Casa" else "#a569bd"
 
                 with st.container():
                     st.markdown(f"""
-                        <div style="background-color: white; padding: 12px 14px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 1px 1px 5px rgba(0,0,0,0.04);">
-                            <div style="font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #f0e8f5; padding-bottom: 4px;">
-                                Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}
+                        <div style="background-color: white; padding: 8px 12px; border-radius: 8px; border: 1px solid #e0d8e8; margin-bottom: 6px; box-shadow: 1px 1px 3px rgba(0,0,0,0.03);">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #f2ecf8; padding-bottom: 2px;">
+                                <span>Jornada {jornada}</span>
+                                <span>📅 {data} &nbsp;|&nbsp; ⏰ {hora}</span>
                             </div>
                     """, unsafe_allow_html=True)
 
-                    col_left, col_vs, col_right = st.columns([3, 1, 3])
+                    col_left, col_mid, col_right = st.columns([4, 2, 4])
+
                     if lloc == "Fora":
+                        # Rival a l'esquerra, Ginesta a la dreta
                         with col_left:
                             cr1, cr2 = st.columns([1, 3])
                             with cr1:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=42)
+                                    st.image(escut_path, width=50)
                                 else:
-                                    st.write("🛡️")
+                                    st.markdown("<div style='font-size: 32px; text-align: center;'>🛡️</div>", unsafe_allow_html=True)
                             with cr2:
-                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
-                        with col_vs:
+                                st.markdown(f"<p style='margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
+                        
+                        with col_mid:
                             st.markdown(f"""
-                                <div style="text-align: center; padding-top: 6px;">
-                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">{lloc}</span>
+                                <div style="text-align: center; padding-top: 4px;">
+                                    <span style="color: #1a1a1a; background-color: #f0eaf5; padding: 4px 10px; border-radius: 6px; font-size: 14px; font-weight: 900; border: 1px solid #d5c8e3;">{text_marcador}</span><br>
+                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 3px;">{lloc}</span>
                                 </div>
                             """, unsafe_allow_html=True)
+
                         with col_right:
                             cg1, cg2 = st.columns([3, 1])
                             with cg1:
-                                st.markdown("<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                                st.markdown("<p style='text-align: right; margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
                             with cg2:
-                                st.image(LOGO_URL, width=42)
+                                st.image(LOGO_URL, width=50)
                     else:
+                        # Ginesta a l'esquerra, Rival a la dreta
                         with col_left:
                             cg1, cg2 = st.columns([1, 3])
                             with cg1:
-                                st.image(LOGO_URL, width=42)
+                                st.image(LOGO_URL, width=50)
                             with cg2:
-                                st.markdown(f"<p style='margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
-                        with col_vs:
+                                st.markdown(f"<p style='margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
+                        
+                        with col_mid:
                             st.markdown(f"""
-                                <div style="text-align: center; padding-top: 6px;">
-                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">{lloc}</span>
+                                <div style="text-align: center; padding-top: 4px;">
+                                    <span style="color: #1a1a1a; background-color: #f0eaf5; padding: 4px 10px; border-radius: 6px; font-size: 14px; font-weight: 900; border: 1px solid #d5c8e3;">{text_marcador}</span><br>
+                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 3px;">{lloc}</span>
                                 </div>
                             """, unsafe_allow_html=True)
+
                         with col_right:
                             cr1, cr2 = st.columns([3, 1])
                             with cr1:
-                                st.markdown(f"<p style='text-align: right; margin-top: 8px; font-weight: bold; font-size: 12px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='text-align: right; margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
                             with cr2:
                                 if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=42)
+                                    st.image(escut_path, width=50)
                                 else:
-                                    st.write("🛡️")
+                                    st.markdown("<div style='font-size: 32px; text-align: center;'>🛡️</div>", unsafe_allow_html=True)
+
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA (Amb dades originals de minuts i titularitats, sense gràfica)
+    # PESTANYA 3: PLANTILLA
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
         st.markdown("Fitxes individuals i percentatge de participació de cada jugadora.")
@@ -752,7 +770,7 @@ def main():
                                 
                                 recalcular_totals_jugadores()
 
-                                st.success("✅ Partit actualitzat i minuts recalculats correctament!")
+                                st.success("✅ Partit actualitzat correctament!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
@@ -777,7 +795,7 @@ def main():
                                         supabase.table("partits").delete().eq("id", edit_id).execute()
                                         recalcular_totals_jugadores()
                                         st.session_state[confirm_key_p] = False
-                                        st.success("🗑️ Partit eliminat i minuts actualitzats.")
+                                        st.success("🗑️ Partit eliminat.")
                                         time.sleep(1)
                                         st.rerun()
                                     except Exception as e:
@@ -787,37 +805,89 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
+            # PESTANYA ADMIN: CALENDARI (Amb opció d'afegir i posar/actualitzar resultat)
             with tab_adm_calendari:
-                st.markdown("#### 📅 Afegir Calendari")
-                cal_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1, key="cj")
-                cal_data = st.date_input("Data", key="cd")
-                cal_hora = st.text_input("Hora", value="10:30")
-                cal_rival = st.text_input("Rival", key="cr")
-                cal_lloc = st.selectbox("Lloc", ["Casa", "Fora"], key="cl")
-                cal_escut = st.file_uploader("Escut del Rival per al Calendari (PNG)", type=["png", "jpg"], key="escut_cal")
-                
-                if st.button("Afegir al Calendari"):
-                    if cal_rival:
-                        try:
-                            escut_cal_path = ""
-                            if cal_escut is not None:
-                                escut_cal_path = os.path.join("escuts", cal_escut.name)
-                                with open(escut_cal_path, "wb") as f:
-                                    f.write(cal_escut.getbuffer())
+                st.markdown("#### 📅 Gestió del Calendari Oficial i Resultats")
+                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partit al Calendari", "✏️ Actualitzar Resultat / Editar Partit"])
 
-                            supabase.table("calendari").insert({
-                                "id": int(time.time()),
-                                "jornada": int(cal_jornada),
-                                "data": str(cal_data),
-                                "hora": cal_hora,
-                                "rival": cal_rival,
-                                "lloc": cal_lloc,
-                                "escut_rival_url": escut_cal_path
-                            }).execute()
-                            st.success("✅ Partit afegit al calendari!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                with sub_cal_nou:
+                    cal_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1, key="cj")
+                    cal_data = st.date_input("Data", key="cd")
+                    cal_hora = st.text_input("Hora", value="10:30", key="ch")
+                    cal_rival = st.text_input("Rival", key="cr")
+                    cal_lloc = st.selectbox("Lloc", ["Casa", "Fora"], key="cl")
+                    cal_escut = st.file_uploader("Escut del Rival per al Calendari (PNG)", type=["png", "jpg"], key="escut_cal")
+                    
+                    if st.button("Afegir al Calendari"):
+                        if cal_rival:
+                            try:
+                                escut_cal_path = ""
+                                if cal_escut is not None:
+                                    escut_cal_path = os.path.join("escuts", cal_escut.name)
+                                    with open(escut_cal_path, "wb") as f:
+                                        f.write(cal_escut.getbuffer())
+
+                                supabase.table("calendari").insert({
+                                    "id": int(time.time()),
+                                    "jornada": int(cal_jornada),
+                                    "data": str(cal_data),
+                                    "hora": cal_hora,
+                                    "rival": cal_rival,
+                                    "lloc": cal_lloc,
+                                    "escut_rival_url": escut_cal_path,
+                                    "resultat": ""
+                                }).execute()
+                                st.success("✅ Partit afegit al calendari!")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                with sub_cal_edit:
+                    cal_existents = []
+                    try:
+                        res_c_ed = supabase.table("calendari").select("*").order("jornada", desc=False).execute()
+                        cal_existents = res_c_ed.data
+                    except:
+                        pass
+
+                    if not cal_existents:
+                        st.warning("No hi ha partits al calendari per editar.")
+                    else:
+                        dict_cal_ed = {f"J.{c.get('jornada')} vs {c.get('rival')} ({c.get('data')})": c for c in cal_existents}
+                        sel_c_str = st.selectbox("Selecciona el partit del calendari a modificar:", list(dict_cal_ed.keys()), key="sel_ed_cal")
+                        c_edit_item = dict_cal_ed[sel_c_str]
+
+                        c_id = c_edit_item.get("id")
+                        edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=int(c_edit_item.get("jornada", 1)), key="ec_j")
+                        edit_c_rival = st.text_input("Rival", value=c_edit_item.get("rival", ""), key="ec_r")
+                        edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=c_edit_item.get("resultat", ""), key="ec_res")
+                        edit_c_hora = st.text_input("Hora", value=c_edit_item.get("hora", ""), key="ec_h")
+                        edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if c_edit_item.get("lloc", "Casa")=="Casa" else 1, key="ec_ll")
+
+                        if st.button("Guardar Canvis de Resultat / Calendari"):
+                            try:
+                                supabase.table("calendari").update({
+                                    "jornada": int(edit_c_jornada),
+                                    "rival": edit_c_rival,
+                                    "resultat": edit_c_resultat.strip(),
+                                    "hora": edit_c_hora,
+                                    "lloc": edit_c_lloc
+                                }).eq("id", c_id).execute()
+                                st.success("✅ Partit del calendari actualitzat correctament!")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+
+                        if st.button("🗑️ Eliminar aquest partit del calendari", key="del_cal_item"):
+                            try:
+                                supabase.table("calendari").delete().eq("id", c_id).execute()
+                                st.success("🗑️ Partit eliminat del calendari.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
 
             with tab_adm_stats:
                 st.markdown("#### 📈 Mètriques Generals")
@@ -882,7 +952,7 @@ def main():
                     minuts_actuals = int(j_actual.get('minuts_jugats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual}) | Titularitats (auto): **{titularitats_actuals}** | Minuts (auto): **{minuts_actuals}'**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual})")
                     
                     c_ed1, c_ed2 = st.columns(2)
                     with c_ed1:
