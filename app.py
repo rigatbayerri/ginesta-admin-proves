@@ -356,7 +356,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Targetes compactes, escuts i noms grans, textos llegibles)
+    # PESTANYA 2: CALENDARI (Disseny vertical compacte, escuts grossos, llegibilitat total)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -383,73 +383,47 @@ def main():
                 else:
                     text_marcador = str(resultat_cal)
 
-                color_bg_lloc = "#5c2d73" if lloc == "Casa" else "#a569bd"
+                # Etiqueta Casa o Fora amb colors contrastats
+                if lloc == "Casa":
+                    badge_lloc = "<span style='background-color: #5c2d73; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;'>CASA</span>"
+                else:
+                    badge_lloc = "<span style='background-color: #2e4053; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;'>FORA</span>"
 
-                with st.container():
-                    st.markdown(f"""
-                        <div style="background-color: white; padding: 8px 12px; border-radius: 8px; border: 1px solid #e0d8e8; margin-bottom: 6px; box-shadow: 1px 1px 3px rgba(0,0,0,0.03);">
-                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #f2ecf8; padding-bottom: 2px;">
-                                <span>Jornada {jornada}</span>
-                                <span>📅 {data} &nbsp;|&nbsp; ⏰ {hora}</span>
+                # Ordre dels equips segons si juguem a Casa o Fora
+                if lloc == "Fora":
+                    # Rival a l'esquerra, Ginesta a la dreta
+                    eq1_nom, eq1_img = rival, (escut_path if escut_path and os.path.exists(escut_path) else None)
+                    eq2_nom, eq2_img = "C.F. Ginesta", LOGO_URL
+                else:
+                    # Ginesta a l'esquerra, Rival a la dreta
+                    eq1_nom, eq1_img = "C.F. Ginesta", LOGO_URL
+                    eq2_nom, eq2_img = rival, (escut_path if escut_path and os.path.exists(escut_path) else None)
+
+                # Generació de HTML compacte vertical
+                img1_html = f"<img src='file://{eq1_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq1_img and not eq1_img.startswith("http") else (f"<img src='{eq1_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq1_img else "<div style='font-size: 32px;'>🛡️</div>")
+                img2_html = f"<img src='file://{eq2_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq2_img and not eq2_img.startswith("http") else (f"<img src='{eq2_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq2_img else "<div style='font-size: 32px;'>🛡️</div>")
+
+                st.markdown(f"""
+                    <div style="background-color: white; padding: 10px 14px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 8px; box-shadow: 1px 1px 4px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 4px; margin-bottom: 6px;">
+                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} ({hora})</span>
+                            {badge_lloc}
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                                {img1_html}
+                                <span style="font-weight: 900; font-size: 13px; color: #1a1a1a; word-break: break-word;">{eq1_nom}</span>
                             </div>
-                    """, unsafe_allow_html=True)
-
-                    col_left, col_mid, col_right = st.columns([4, 2, 4])
-
-                    if lloc == "Fora":
-                        # Rival a l'esquerra, Ginesta a la dreta
-                        with col_left:
-                            cr1, cr2 = st.columns([1, 3])
-                            with cr1:
-                                if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=50)
-                                else:
-                                    st.markdown("<div style='font-size: 32px; text-align: center;'>🛡️</div>", unsafe_allow_html=True)
-                            with cr2:
-                                st.markdown(f"<p style='margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
-                        
-                        with col_mid:
-                            st.markdown(f"""
-                                <div style="text-align: center; padding-top: 4px;">
-                                    <span style="color: #1a1a1a; background-color: #f0eaf5; padding: 4px 10px; border-radius: 6px; font-size: 14px; font-weight: 900; border: 1px solid #d5c8e3;">{text_marcador}</span><br>
-                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 3px;">{lloc}</span>
-                                </div>
-                            """, unsafe_allow_html=True)
-
-                        with col_right:
-                            cg1, cg2 = st.columns([3, 1])
-                            with cg1:
-                                st.markdown("<p style='text-align: right; margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
-                            with cg2:
-                                st.image(LOGO_URL, width=50)
-                    else:
-                        # Ginesta a l'esquerra, Rival a la dreta
-                        with col_left:
-                            cg1, cg2 = st.columns([1, 3])
-                            with cg1:
-                                st.image(LOGO_URL, width=50)
-                            with cg2:
-                                st.markdown(f"<p style='margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>C.F. Ginesta</p>", unsafe_allow_html=True)
-                        
-                        with col_mid:
-                            st.markdown(f"""
-                                <div style="text-align: center; padding-top: 4px;">
-                                    <span style="color: #1a1a1a; background-color: #f0eaf5; padding: 4px 10px; border-radius: 6px; font-size: 14px; font-weight: 900; border: 1px solid #d5c8e3;">{text_marcador}</span><br>
-                                    <span style="color: white; background-color: {color_bg_lloc}; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; display: inline-block; margin-top: 3px;">{lloc}</span>
-                                </div>
-                            """, unsafe_allow_html=True)
-
-                        with col_right:
-                            cr1, cr2 = st.columns([3, 1])
-                            with cr1:
-                                st.markdown(f"<p style='text-align: right; margin-top: 10px; font-weight: 900; font-size: 14px; color: #1a1a1a;'>{rival}</p>", unsafe_allow_html=True)
-                            with cr2:
-                                if escut_path and os.path.exists(escut_path):
-                                    st.image(escut_path, width=50)
-                                else:
-                                    st.markdown("<div style='font-size: 32px; text-align: center;'>🛡️</div>", unsafe_allow_html=True)
-
-                    st.markdown("</div>", unsafe_allow_html=True)
+                            <div style="text-align: center; width: 16%;">
+                                <span style="background-color: #f0eaf5; color: #1a1a1a; padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 900; border: 1px solid #d5c8e3;">{text_marcador}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
+                                <span style="font-weight: 900; font-size: 13px; color: #1a1a1a; text-align: right; word-break: break-word;">{eq2_nom}</span>
+                                {img2_html}
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
     # PESTANYA 3: PLANTILLA
     with tab_plantilla:
@@ -805,7 +779,7 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI (Amb opció d'afegir i posar/actualitzar resultat)
+            # PESTANYA ADMIN: CALENDARI
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió del Calendari Oficial i Resultats")
                 sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partit al Calendari", "✏️ Actualitzar Resultat / Editar Partit"])
