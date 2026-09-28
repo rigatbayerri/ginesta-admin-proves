@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import os
 import time
+import base64
 
 # --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
@@ -13,6 +14,17 @@ st.set_page_config(
 )
 
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
+
+# Funció per convertir imatges locals a Base64 (evita que desapareguin al HTML de Streamlit)
+def obtenir_imatge_base64(path):
+    if path and os.path.exists(path):
+        try:
+            with open(path, "rb") as img_file:
+                encoded = base64.b64encode(img_file.read()).decode()
+                return f"data:image/png;base64,{encoded}"
+        except:
+            pass
+    return ""
 
 # Injectar manifest web i etiquetes d'Apple
 st.markdown(f"""
@@ -331,6 +343,7 @@ def main():
                         if escut_path and os.path.exists(escut_path):
                             st.image(escut_path, width=35)
                         else:
+                        
                             st.write("🛡️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
@@ -356,7 +369,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Disseny vertical compacte, escuts grossos, llegibilitat total)
+    # PESTANYA 2: CALENDARI (Escuts grans 65x65 amb Base64, disseny compacte i llegible)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -383,42 +396,44 @@ def main():
                 else:
                     text_marcador = str(resultat_cal)
 
-                # Etiqueta Casa o Fora amb colors contrastats
+                # Etiqueta Casa o Fora
                 if lloc == "Casa":
-                    badge_lloc = "<span style='background-color: #5c2d73; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;'>CASA</span>"
+                    badge_lloc = "<span style='background-color: #5c2d73; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;'>CASA</span>"
                 else:
-                    badge_lloc = "<span style='background-color: #2e4053; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;'>FORA</span>"
+                    badge_lloc = "<span style='background-color: #2e4053; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;'>FORA</span>"
 
                 # Ordre dels equips segons si juguem a Casa o Fora
                 if lloc == "Fora":
-                    # Rival a l'esquerra, Ginesta a la dreta
-                    eq1_nom, eq1_img = rival, (escut_path if escut_path and os.path.exists(escut_path) else None)
-                    eq2_nom, eq2_img = "C.F. Ginesta", LOGO_URL
+                    eq1_nom = rival
+                    eq1_img_b64 = obtenir_imatge_base64(escut_path)
+                    eq2_nom = "C.F. Ginesta"
+                    eq2_img_b64 = obtenir_imatge_base64(LOGO_URL)
                 else:
-                    # Ginesta a l'esquerra, Rival a la dreta
-                    eq1_nom, eq1_img = "C.F. Ginesta", LOGO_URL
-                    eq2_nom, eq2_img = rival, (escut_path if escut_path and os.path.exists(escut_path) else None)
+                    eq1_nom = "C.F. Ginesta"
+                    eq1_img_b64 = obtenir_imatge_base64(LOGO_URL)
+                    eq2_nom = rival
+                    eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                # Generació de HTML compacte vertical
-                img1_html = f"<img src='file://{eq1_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq1_img and not eq1_img.startswith("http") else (f"<img src='{eq1_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq1_img else "<div style='font-size: 32px;'>🛡️</div>")
-                img2_html = f"<img src='file://{eq2_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq2_img and not eq2_img.startswith("http") else (f"<img src='{eq2_img}' width='45' style='height: 45px; object-fit: contain;'>" if eq2_img else "<div style='font-size: 32px;'>🛡️</div>")
+                # HTML per als escuts (mida gran 65x65 píxels)
+                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
+                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
 
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 10px 14px; border-radius: 10px; border: 1px solid #e0d8e8; margin-bottom: 8px; box-shadow: 1px 1px 4px rgba(0,0,0,0.04);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 4px; margin-bottom: 6px;">
-                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} ({hora})</span>
+                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
+                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}</span>
                             {badge_lloc}
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                            <div style="display: flex; align-items: center; gap: 12px; width: 40%;">
                                 {img1_html}
-                                <span style="font-weight: 900; font-size: 13px; color: #1a1a1a; word-break: break-word;">{eq1_nom}</span>
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq1_nom}</span>
                             </div>
-                            <div style="text-align: center; width: 16%;">
-                                <span style="background-color: #f0eaf5; color: #1a1a1a; padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 900; border: 1px solid #d5c8e3;">{text_marcador}</span>
+                            <div style="text-align: center; width: 20%;">
+                                <span style="background-color: #f0eaf5; color: #1a1a1a; padding: 6px 14px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 1px solid #d5c8e3; display: inline-block;">{text_marcador}</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
-                                <span style="font-weight: 900; font-size: 13px; color: #1a1a1a; text-align: right; word-break: break-word;">{eq2_nom}</span>
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; width: 40%;">
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq2_nom}</span>
                                 {img2_html}
                             </div>
                         </div>
