@@ -5,6 +5,7 @@ import plotly.express as px
 import os
 import time
 import base64
+import requests
 
 # --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
@@ -15,16 +16,25 @@ st.set_page_config(
 
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
 
-# Funció per convertir imatges locals a Base64 (evita que desapareguin al HTML de Streamlit)
-def obtenir_imatge_base64(path):
-    if path and os.path.exists(path):
-        try:
-            with open(path, "rb") as img_file:
+# Funció infal·lible per convertir qualsevol imatge (local o web) a Base64
+def obtenir_imatge_base64(path_o_url):
+    if not path_o_url:
+        return ""
+    try:
+        # Si és una URL web (com el logo del Ginesta)
+        if path_o_url.startswith("http"):
+            response = requests.get(path_o_url, timeout=5)
+            if response.status_code == 200:
+                encoded = base64.b64encode(response.content).decode()
+                return f"data:image/png;base64,{encoded}"
+        # Si és un fitxer local (com els rivals a la carpeta escuts)
+        elif os.path.exists(path_o_url):
+            with open(path_o_url, "rb") as img_file:
                 encoded = base64.b64encode(img_file.read()).decode()
                 return f"data:image/png;base64,{encoded}"
-        except:
-            pass
-    return ""
+    except:
+        pass
+    return path_o_url # Retorna l'original si falla
 
 # Injectar manifest web i etiquetes d'Apple
 st.markdown(f"""
@@ -343,7 +353,6 @@ def main():
                         if escut_path and os.path.exists(escut_path):
                             st.image(escut_path, width=35)
                         else:
-                        
                             st.write("🛡️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
@@ -369,7 +378,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Escuts grans 65x65 amb Base64, disseny compacte i llegible)
+    # PESTANYA 2: CALENDARI (Escuts grans 65x65 tant per a rivals com per al Ginesta)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
