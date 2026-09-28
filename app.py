@@ -326,7 +326,6 @@ def main():
                             st.write("🛡️")
                 with col_res2:
                     st.markdown(f"<h2 style='text-align: center; color: #1a1a1a; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #555;'>({lloc})</p>", unsafe_allow_html=True)
                 with col_res3:
                     c_g1, c_g2 = st.columns([1, 2])
                     with c_g1:
@@ -342,7 +341,6 @@ def main():
                         st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px; font-size: 14px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
                 with col_res2:
                     st.markdown(f"<h2 style='text-align: center; color: #1a1a1a; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='text-align: center; font-size: 11px; color: #555;'>({lloc})</p>", unsafe_allow_html=True)
                 with col_res3:
                     c_r1, c_r2 = st.columns([2, 1])
                     with c_r1:
@@ -376,7 +374,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Lectura garantida del resultat de Supabase i disseny net sense textos confosos)
+    # PESTANYA 2: CALENDARI (Sense cap text de CASA o FORA, només ordre visual)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -403,13 +401,7 @@ def main():
                 else:
                     text_marcador = str(resultat_cal)
 
-                # Etiqueta Casa o Fora amb text blanc impecable
-                if lloc == "Casa":
-                    badge_lloc = "<span style='background-color: #5c2d73; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;'>CASA</span>"
-                else:
-                    badge_lloc = "<span style='background-color: #2e4053; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;'>FORA</span>"
-
-                # Ordre dels equips segons si juguem a Casa o Fora
+                # Ordre dels equips segons si juguem a Casa o Fora (sense cap etiqueta de text)
                 if lloc == "Fora":
                     eq1_nom = rival
                     eq1_img_b64 = obtenir_imatge_base64(escut_path)
@@ -429,7 +421,6 @@ def main():
                     <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
                             <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}</span>
-                            {badge_lloc}
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center; gap: 12px; width: 40%;">
