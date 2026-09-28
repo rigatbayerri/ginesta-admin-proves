@@ -433,10 +433,10 @@ def main():
                                     st.write("🛡️")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA
+    # PESTANYA 3: PLANTILLA (Sense gràfica de minuts per protegir el clima de l'equip)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
-        st.markdown("Fitxes individuals i percentatge de participació de cada jugadora.")
+        st.markdown("Fitxes individuals de les jugadores de l'equip.")
         st.markdown("---")
 
         cols = st.columns(2)
@@ -465,7 +465,7 @@ def main():
             with cols[i % 2]:
                 with st.container():
                     st.markdown(f"""
-                    <div style="background-color: white; padding: 15px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                    <div style="background-color: white; padding: 15px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
                         <div style="font-size: 18px; font-weight: 900; color: #5c2d73; text-transform: uppercase;">
                             #{dorsal_val} — {nom_jugadora} <span style="font-size: 11px; background-color: #f7f5fa; padding: 2px 6px; border-radius: 4px; color: #333; border: 1px solid #ddd;">{rol}</span>
                         </div>
@@ -474,40 +474,12 @@ def main():
                         </div>
                         <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
                         <div style="font-size: 11px; color: #1a1a1a;">
-                            <b>📋 Dades de l'Acta Oficial:</b><br>
-                            Titularitats: <b>{titularitats_val}/{n_partits}</b> &nbsp;|&nbsp; Minuts: <b>{minuts_val}'</b> &nbsp;|&nbsp; Mitjana: <b>{mitjana_min_val}'/p.</b><br>
+                            <b>📋 Resum de Participació:</b><br>
+                            Titularitats: <b>{titularitats_val}/{n_partits}</b> &nbsp;|&nbsp; Partits jugats amb constància<br>
                             {text_etiqueta_gol}: <b>{mitjana_gols_val}</b>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-
-                    with st.expander(f"📊 Veure gràfica de minuts de #{dorsal_val} {nom_jugadora}"):
-                        total_minuts_possibles = n_partits * 80
-                        minuts_jugats_efectius = min(minuts_val, total_minuts_possibles)
-                        minuts_restants = max(0, total_minuts_possibles - minuts_jugats_efectius)
-
-                        df_donut = pd.DataFrame({
-                            "Estat": ["Minuts Jugats", "Minuts Restants / No Jugats"],
-                            "Minuts": [minuts_jugats_efectius, minuts_restants]
-                        })
-                        fig_donut = px.pie(
-                            df_donut, 
-                            names="Estat", 
-                            values="Minuts", 
-                            hole=0.6,
-                            color_discrete_sequence=["#5c2d73", "#e0d8e8"]
-                        )
-                        fig_donut.update_layout(
-                            paper_bgcolor="rgba(0,0,0,0)",
-                            plot_bgcolor="rgba(0,0,0,0)",
-                            font=dict(color="#1a1a1a", size=11, family="sans-serif"),
-                            legend=dict(font=dict(color="#1a1a1a"), orientation="h", y=-0.2),
-                            margin=dict(t=0, b=10, l=0, r=0), 
-                            height=180
-                        )
-                        st.plotly_chart(fig_donut, use_container_width=True, key=f"graf_donut_plantilla_{nom_jugadora}_{i}")
-
-                    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
@@ -649,7 +621,6 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
-                                # 1. Inserir el partit
                                 res_ins_partit = supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
@@ -662,10 +633,8 @@ def main():
                                     "video_url": nou_video_url
                                 }).execute()
 
-                                # Recuperar l'ID del partit inserit
                                 partit_id_inserit = res_ins_partit.data[0]["id"]
 
-                                # 2. Inserir les actes a la taula actes_partits
                                 actes_a_inserir = []
                                 for j in golejadores_data:
                                     j_nom = j.get('nom')
@@ -677,7 +646,6 @@ def main():
                                     })
                                 supabase.table("actes_partits").insert(actes_a_inserir).execute()
 
-                                # 3. Recalcular automàticament els totals de les jugadores
                                 recalcular_totals_jugadores()
 
                                 st.success("🎉 Partit guardat i minuts acumulats automàticament!")
@@ -723,7 +691,6 @@ def main():
                         esborrar_fotos_check = st.checkbox("🗑️ Esborrar totes les fotos d'aquest partit", key="chk_del_fotos")
 
                         st.markdown("##### ⏱️ Modificar Minuts d'aquest Partit:")
-                        # Carregar actes existents per a aquest partit
                         actes_existents_partit = {}
                         try:
                             res_act_partit = supabase.table("actes_partits").select("*").eq("partit_id", edit_id).execute()
@@ -772,7 +739,6 @@ def main():
 
                                 supabase.table("partits").update(update_data).eq("id", edit_id).execute()
 
-                                # Actualitzar actes (esborrar i tornar a inserir o upsert)
                                 for j in golejadores_data:
                                     j_nom = j.get('nom')
                                     supabase.table("actes_partits").upsert({
@@ -914,7 +880,7 @@ def main():
                     minuts_actuals = int(j_actual.get('minuts_jugats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
-                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual}) | Titularitats (auto): **{titularitats_actuals}** | Minuts (auto): **{minuts_actuals}'**")
+                    st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual})")
                     
                     c_ed1, c_ed2 = st.columns(2)
                     with c_ed1:
