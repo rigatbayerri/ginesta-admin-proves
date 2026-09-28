@@ -453,7 +453,7 @@ def main():
 
                     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    # PESTANYA 4: ESTADÍSTIQUES (Amb gràfiques d'àrea suau / Spline)
+    # PESTANYA 4: ESTADÍSTIQUES (Amb referències i text en negre a les gràfiques)
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -530,10 +530,19 @@ def main():
             fig_favor.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#1a1a1a", size=11),
+                font=dict(color="#1a1a1a", size=12),
                 margin=dict(t=25, b=0, l=0, r=0), 
                 height=240,
-                yaxis=dict(showgrid=True, gridcolor='#e0d8e8')
+                xaxis=dict(
+                    tickfont=dict(color="#1a1a1a", size=11, weight="bold"),
+                    title=dict(font=dict(color="#1a1a1a"))
+                ),
+                yaxis=dict(
+                    showgrid=True, 
+                    gridcolor='#e0d8e8',
+                    tickfont=dict(color="#1a1a1a", size=11, weight="bold"),
+                    title=dict(font=dict(color="#1a1a1a"))
+                )
             )
             st.plotly_chart(fig_favor, use_container_width=True)
 
@@ -553,10 +562,19 @@ def main():
             fig_contra.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#1a1a1a", size=11),
+                font=dict(color="#1a1a1a", size=12),
                 margin=dict(t=25, b=0, l=0, r=0), 
                 height=240,
-                yaxis=dict(showgrid=True, gridcolor='#e0d8e8')
+                xaxis=dict(
+                    tickfont=dict(color="#1a1a1a", size=11, weight="bold"),
+                    title=dict(font=dict(color="#1a1a1a"))
+                ),
+                yaxis=dict(
+                    showgrid=True, 
+                    gridcolor='#e0d8e8',
+                    tickfont=dict(color="#1a1a1a", size=11, weight="bold"),
+                    title=dict(font=dict(color="#1a1a1a"))
+                )
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
