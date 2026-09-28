@@ -183,31 +183,6 @@ with st.sidebar:
         st.session_state["auth_level"] = None
         st.rerun()
 
-# --- FUNCIÓ PER RECALCULAR MINUTS I TITULARITATS AUTOMÀTICAMENT DES D'ACTES ---
-def recalcular_totals_jugadores():
-    try:
-        res_j = supabase.table("golejadores").select("nom").execute()
-        jugadores = res_j.data
-        res_actes = supabase.table("actes_partits").select("*").execute()
-        actes = res_actes.data
-
-        totals = {j["nom"]: {"minuts": 0, "titularitats": 0} for j in jugadores}
-
-        for acte in actes:
-            nom_j = acte.get("jugadora_nom")
-            if nom_j in totals:
-                totals[nom_j]["minuts"] += int(acte.get("minuts", 0) or 0)
-                if acte.get("titular", False):
-                    totals[nom_j]["titularitats"] += 1
-
-        for nom, valors in totals.items():
-            supabase.table("golejadores").update({
-                "minuts_jugats": valors["minuts"],
-                "titularitats": valors["titularitats"]
-            }).eq("nom", nom).execute()
-    except Exception as e:
-        print(f"Error recalculant actes: {e}")
-
 # --- APLICACIÓ PRINCIPAL ---
 def main():
     col1, col2 = st.columns([1, 4])
@@ -231,13 +206,13 @@ def main():
 
     if not golejadores_data:
         golejadores_data = [
-            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 10, "minuts_jugats": 720},
-            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 9, "minuts_jugats": 680},
-            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0, "gols_encaixats": 0, "titularitats": 11, "minuts_jugats": 750},
-            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 8, "minuts_jugats": 590},
-            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 7, "minuts_jugats": 520},
-            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 8, "minuts_jugats": 610},
-            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5, "titularitats": 12, "minuts_jugats": 840}
+            {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 10},
+            {"nom": "Júlia", "dorsal": 7, "gols": 6, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 9},
+            {"nom": "Martina", "dorsal": 8, "gols": 5, "rol": "Jugadora", "grogues": 2, "vermelles": 0, "gols_encaixats": 0, "titularitats": 11},
+            {"nom": "Berta", "dorsal": 11, "gols": 4, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 8},
+            {"nom": "Carla", "dorsal": 14, "gols": 4, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 7},
+            {"nom": "Aina", "dorsal": 6, "gols": 3, "rol": "Jugadora", "grogues": 0, "vermelles": 0, "gols_encaixats": 0, "titularitats": 8},
+            {"nom": "Noa", "dorsal": 1, "gols": 0, "rol": "Portera", "grogues": 0, "vermelles": 0, "gols_encaixats": 5, "titularitats": 12}
         ]
 
     golejadores_data = sorted(golejadores_data, key=lambda x: int(x.get('dorsal', 0) or 0))
@@ -374,7 +349,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Sense cap text de CASA o FORA, només ordre visual)
+    # PESTANYA 2: CALENDARI
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -401,7 +376,6 @@ def main():
                 else:
                     text_marcador = str(resultat_cal)
 
-                # Ordre dels equips segons si juguem a Casa o Fora (sense cap etiqueta de text)
                 if lloc == "Fora":
                     eq1_nom = rival
                     eq1_img_b64 = obtenir_imatge_base64(escut_path)
@@ -413,7 +387,6 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                # HTML per als escuts (65x65 píxels)
                 img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
                 img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
 
@@ -438,10 +411,10 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 3: PLANTILLA
+    # PESTANYA 3: PLANTILLA (Amb titularitats recuperades)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
-        st.markdown("Fitxes individuals i percentatge de participació de cada jugadora.")
+        st.markdown("Fitxes individuals i titularitats de cada jugadora.")
         st.markdown("---")
 
         cols = st.columns(2)
@@ -451,21 +424,14 @@ def main():
             vermelles_val = jugadora.get('vermelles', 0)
             dorsal_val = jugadora.get('dorsal', '-')
             nom_jugadora = jugadora.get('nom', '').upper()
-            
-            titularitats_val = int(jugadora.get('titularitats', 0) or 0)
-            minuts_val = int(jugadora.get('minuts_jugats', 0) or 0)
-            mitjana_min_val = int(minuts_val / n_partits) if n_partits > 0 else 0
+            titularitats_val = jugadora.get('titularitats', 0)
             
             if rol == "Portera":
                 gols_encaixats_val = jugadora.get('gols_encaixats', 0)
                 estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
-                mitjana_gols_val = round(gols_encaixats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols encaixats/partit"
             else:
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
-                mitjana_gols_val = round(gols_realitzats_val / n_partits, 2) if n_partits > 0 else 0.0
-                text_etiqueta_gol = "⚽ Mitjana gols/partit"
 
             with cols[i % 2]:
                 with st.container():
@@ -479,9 +445,7 @@ def main():
                         </div>
                         <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
                         <div style="font-size: 11px; color: #1a1a1a;">
-                            <b>📋 Dades de l'Acta Oficial:</b><br>
-                            Titularitats: <b>{titularitats_val}/{n_partits}</b> &nbsp;|&nbsp; Minuts: <b>{minuts_val}'</b> &nbsp;|&nbsp; Mitjana: <b>{mitjana_min_val}'/p.</b><br>
-                            {text_etiqueta_gol}: <b>{mitjana_gols_val}</b>
+                            ⭐ Titularitats: <b>{titularitats_val}</b> partits
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -577,14 +541,14 @@ def main():
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
-    # PESTANYA 5: ADMIN
+    # PESTANYA 5: ADMIN (Amb opció de gestionar titularitats)
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
             tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos & Fotos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
 
             with tab_adm_partits:
-                st.markdown("#### 🎬 Gestió de Partits i Minuts per Jornada")
+                st.markdown("#### 🎬 Gestió de Partits i Vídeos")
                 sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou", "✏️ Editar / Esborrar Partit Existent"])
 
                 with sub_p_nou:
@@ -599,19 +563,7 @@ def main():
                     arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
                     nou_video_url = st.text_input("Enllaç Vídeo", key="v_url_nou")
                     
-                    st.markdown("---")
-                    st.markdown("##### ⏱️ Minuts i Titularitats jugats en aquesta Jornada:")
-                    minuts_jornada_input = {}
-                    titulars_jornada_input = {}
-                    for j in golejadores_data:
-                        j_nom = j.get('nom')
-                        c_m1, c_m2 = st.columns([2, 1])
-                        with c_m1:
-                            minuts_jornada_input[j_nom] = st.number_input(f"Minuts de {j_nom} (#{j.get('dorsal')}):", min_value=0, max_value=90, value=0, key=f"min_j_{j_nom}")
-                        with c_m2:
-                            titulars_jornada_input[j_nom] = st.checkbox(f"Titular?", key=f"tit_j_{j_nom}")
-                    
-                    if st.button("Guardar Partit i Actualitzar Minuts"):
+                    if st.button("Guardar Partit"):
                         if nou_titol and nou_video_url:
                             try:
                                 escut_path_saved = ""
@@ -628,7 +580,7 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
-                                res_ins_partit = supabase.table("partits").insert({
+                                supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
                                     "data": str(nova_data),
@@ -640,22 +592,7 @@ def main():
                                     "video_url": nou_video_url
                                 }).execute()
 
-                                partit_id_inserit = res_ins_partit.data[0]["id"]
-
-                                actes_a_inserir = []
-                                for j in golejadores_data:
-                                    j_nom = j.get('nom')
-                                    actes_a_inserir.append({
-                                        "partit_id": partit_id_inserit,
-                                        "jugadora_nom": j_nom,
-                                        "minuts": int(minuts_jornada_input.get(j_nom, 0)),
-                                        "titular": bool(titulars_jornada_input.get(j_nom, False))
-                                    })
-                                supabase.table("actes_partits").insert(actes_a_inserir).execute()
-
-                                recalcular_totals_jugadores()
-
-                                st.success("🎉 Partit guardat i minuts acumulats automàticament!")
+                                st.success("🎉 Partit guardat correctament!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
@@ -697,27 +634,7 @@ def main():
                         edit_arxius_fotos = st.file_uploader("Afegir/Canviar Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="ed_fotos")
                         esborrar_fotos_check = st.checkbox("🗑️ Esborrar totes les fotos d'aquest partit", key="chk_del_fotos")
 
-                        st.markdown("##### ⏱️ Modificar Minuts d'aquest Partit:")
-                        actes_existents_partit = {}
-                        try:
-                            res_act_partit = supabase.table("actes_partits").select("*").eq("partit_id", edit_id).execute()
-                            for ac in res_act_partit.data:
-                                actes_existents_partit[ac["jugadora_nom"]] = {"minuts": ac["minuts"], "titular": ac["titular"]}
-                        except:
-                            pass
-
-                        edit_minuts_jornada_input = {}
-                        edit_titulars_jornada_input = {}
-                        for j in golejadores_data:
-                            j_nom = j.get('nom')
-                            dades_acta = actes_existents_partit.get(j_nom, {"minuts": 0, "titular": False})
-                            c_em1, c_em2 = st.columns([2, 1])
-                            with c_em1:
-                                edit_minuts_jornada_input[j_nom] = st.number_input(f"Minuts {j_nom}:", min_value=0, max_value=90, value=int(dades_acta.get("minuts", 0)), key=f"edit_min_j_{j_nom}_{edit_id}")
-                            with c_em2:
-                                edit_titulars_jornada_input[j_nom] = st.checkbox(f"Titular?", value=bool(dades_acta.get("titular", False)), key=f"edit_tit_j_{j_nom}_{edit_id}")
-
-                        if st.button("Actualitzar Partit i Recalcular Minuts"):
+                        if st.button("Actualitzar Partit"):
                             try:
                                 update_data = {
                                     "titol": edit_titol,
@@ -746,17 +663,6 @@ def main():
 
                                 supabase.table("partits").update(update_data).eq("id", edit_id).execute()
 
-                                for j in golejadores_data:
-                                    j_nom = j.get('nom')
-                                    supabase.table("actes_partits").upsert({
-                                        "partit_id": edit_id,
-                                        "jugadora_nom": j_nom,
-                                        "minuts": int(edit_minuts_jornada_input.get(j_nom, 0)),
-                                        "titular": bool(edit_titulars_jornada_input.get(j_nom, False))
-                                    }, on_conflict="partit_id,jugadora_nom").execute()
-                                
-                                recalcular_totals_jugadores()
-
                                 st.success("✅ Partit actualitzat correctament!")
                                 time.sleep(1)
                                 st.rerun()
@@ -780,7 +686,6 @@ def main():
                                 if st.button("Sí, eliminar partit", type="primary", key="btn_confirm_del_p"):
                                     try:
                                         supabase.table("partits").delete().eq("id", edit_id).execute()
-                                        recalcular_totals_jugadores()
                                         st.session_state[confirm_key_p] = False
                                         st.success("🗑️ Partit eliminat.")
                                         time.sleep(1)
@@ -890,7 +795,7 @@ def main():
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("#### ⚽ Gestió de Jugadores (Afegir, Gols, Targetes)")
+                st.markdown("#### ⚽ Gestió de Jugadores (Afegir, Gols, Targetes, Titularitats)")
                 noms_jugadores = [f"#{int(j.get('dorsal', 0) or 0)} - {j.get('nom').upper()}" for j in golejadores_data]
                 noms_jugadores.append("➕ Afegir nova jugadora...")
                 
@@ -904,6 +809,7 @@ def main():
                     grogues_inicials = st.number_input("Targetes grogues:", min_value=0, value=0)
                     vermelles_inicials = st.number_input("Targetes vermelles:", min_value=0, value=0)
                     gols_encaixats_inicials = st.number_input("Gols encaixats (si portera):", min_value=0, value=0)
+                    titularitats_inicials = st.number_input("Titularitats inicials:", min_value=0, value=0)
                     
                     if st.button("Crear Jugadora"):
                         if nova_jugadora_nom:
@@ -916,8 +822,7 @@ def main():
                                     "grogues": int(grogues_inicials),
                                     "vermelles": int(vermelles_inicials),
                                     "gols_encaixats": int(gols_encaixats_inicials),
-                                    "titularitats": 0,
-                                    "minuts_jugats": 0
+                                    "titularitats": int(titularitats_inicials)
                                 }, on_conflict="nom").execute()
                                 
                                 sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
@@ -936,16 +841,17 @@ def main():
                     vermelles_actuals = int(j_actual.get('vermelles', 0) or 0)
                     gols_encaixats_actuals = int(j_actual.get('gols_encaixats', 0) or 0)
                     titularitats_actuals = int(j_actual.get('titularitats', 0) or 0)
-                    minuts_actuals = int(j_actual.get('minuts_jugats', 0) or 0)
                     nom_real = j_actual.get('nom', jugadora_seleccionada)
                     
                     st.info(f"Dorsal: **#{dorsal_actual}** | **{nom_real.upper()}** ({rol_actual})")
                     
-                    c_ed1, c_ed2 = st.columns(2)
+                    c_ed1, c_ed2, c_ed3 = st.columns(3)
                     with c_ed1:
                         nou_dorsal_input = st.number_input("Modificar Dorsal:", min_value=1, max_value=99, value=dorsal_actual if dorsal_actual > 0 else 1)
                     with c_ed2:
                         nou_canvi_rol = st.selectbox("Modificar Rol:", ["Jugadora", "Portera"], index=0 if rol_actual=="Jugadora" else 1, key="canvi_rol_sel")
+                    with c_ed3:
+                        noves_titularitats = st.number_input("Modificar Titularitats:", min_value=0, value=titularitats_actuals)
 
                     if st.button("Actualitzar Dades de la Jugadora"):
                         try:
@@ -957,15 +863,14 @@ def main():
                                 "grogues": grogues_actuals,
                                 "vermelles": vermelles_actuals,
                                 "gols_encaixats": gols_encaixats_actuals,
-                                "titularitats": titularitats_actuals,
-                                "minuts_jugats": minuts_actuals
+                                "titularitats": int(noves_titularitats)
                             }, on_conflict="nom").execute()
                             st.success("✅ Dades actualitzades correctament!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
-                    st.markdown("##### Sumar / Restar Gols i Targetes")
+                    st.markdown("##### Sumar / Restar Gols, Targetes i Titularitats")
                     if rol_actual == "Portera":
                         c_bt1, c_bt2, c_bt3 = st.columns(3)
                         with c_bt1:
@@ -974,7 +879,7 @@ def main():
                                     supabase.table("golejadores").upsert({
                                         "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                         "grogues": grogues_actuals, "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals + 1, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                        "gols_encaixats": gols_encaixats_actuals + 1, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
                                     st.rerun()
                                 except Exception as e:
@@ -984,7 +889,7 @@ def main():
                                     supabase.table("golejadores").upsert({
                                         "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                         "grogues": grogues_actuals, "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals - 1, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                        "gols_encaixats": gols_encaixats_actuals - 1, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
                                     st.rerun()
                                 except Exception as e:
@@ -997,7 +902,7 @@ def main():
                                     supabase.table("golejadores").upsert({
                                         "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals + 1, "rol": rol_actual,
                                         "grogues": grogues_actuals, "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                        "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                     st.rerun()
@@ -1008,7 +913,7 @@ def main():
                                     supabase.table("golejadores").upsert({
                                         "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals - 1, "rol": rol_actual,
                                         "grogues": grogues_actuals, "vermelles": vermelles_actuals,
-                                        "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                        "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                     st.rerun()
@@ -1021,7 +926,7 @@ def main():
                                 supabase.table("golejadores").upsert({
                                     "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                     "grogues": grogues_actuals + 1, "vermelles": vermelles_actuals,
-                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
                             except Exception as e:
@@ -1031,7 +936,7 @@ def main():
                                 supabase.table("golejadores").upsert({
                                     "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                     "grogues": grogues_actuals - 1, "vermelles": vermelles_actuals,
-                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
                             except Exception as e:
@@ -1043,7 +948,7 @@ def main():
                                 supabase.table("golejadores").upsert({
                                     "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                     "grogues": grogues_actuals, "vermelles": vermelles_actuals + 1,
-                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
                             except Exception as e:
@@ -1053,7 +958,7 @@ def main():
                                 supabase.table("golejadores").upsert({
                                     "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
                                     "grogues": grogues_actuals, "vermelles": vermelles_actuals - 1,
-                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals, "minuts_jugats": minuts_actuals
+                                    "gols_encaixats": gols_encaixats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
                             except Exception as e:
