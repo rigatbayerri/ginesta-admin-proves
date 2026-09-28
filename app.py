@@ -21,20 +21,18 @@ def obtenir_imatge_base64(path_o_url):
     if not path_o_url:
         return ""
     try:
-        # Si és una URL web (com el logo del Ginesta)
         if path_o_url.startswith("http"):
             response = requests.get(path_o_url, timeout=5)
             if response.status_code == 200:
                 encoded = base64.b64encode(response.content).decode()
                 return f"data:image/png;base64,{encoded}"
-        # Si és un fitxer local (com els rivals a la carpeta escuts)
         elif os.path.exists(path_o_url):
             with open(path_o_url, "rb") as img_file:
                 encoded = base64.b64encode(img_file.read()).decode()
                 return f"data:image/png;base64,{encoded}"
     except:
         pass
-    return path_o_url # Retorna l'original si falla
+    return path_o_url
 
 # Injectar manifest web i etiquetes d'Apple
 st.markdown(f"""
@@ -378,7 +376,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Etiquetes CASA i FORA amb text blanc brillant)
+    # PESTANYA 2: CALENDARI (Lectura garantida del resultat de Supabase i disseny net sense textos confosos)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -405,7 +403,7 @@ def main():
                 else:
                     text_marcador = str(resultat_cal)
 
-                # Etiqueta Casa o Fora amb text BLANC
+                # Etiqueta Casa o Fora amb text blanc impecable
                 if lloc == "Casa":
                     badge_lloc = "<span style='background-color: #5c2d73; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;'>CASA</span>"
                 else:
@@ -423,7 +421,7 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                # HTML per als escuts (mida gran 65x65 píxels)
+                # HTML per als escuts (65x65 píxels)
                 img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
                 img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
 
