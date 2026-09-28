@@ -453,7 +453,7 @@ def main():
 
                     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    # PESTANYA 4: ESTADÍSTIQUES (Amb referències i text en negre a les gràfiques)
+    # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -585,8 +585,8 @@ def main():
             tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos & Fotos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
 
             with tab_adm_partits:
-                st.markdown("#### 🎬 Gestió de Partits i Vídeos")
-                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou", "✏️ Editar / Esborrar Partit Existent"])
+                st.markdown("#### 🎬 Gestió de Partits, Trams i Targetes")
+                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou (amb Trams i Targetes)", "✏️ Editar / Esborrar Partit Existent"])
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
@@ -600,7 +600,53 @@ def main():
                     arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
                     nou_video_url = st.text_input("Enllaç Vídeo", key="v_url_nou")
                     
-                    if st.button("Guardar Partit"):
+                    st.markdown("---")
+                    st.markdown("##### ⏱️ Registrar Gols per Trams en aquest Partit")
+                    st.markdown("Introdueix quants gols s'han marcat o encaixat en cada tram durant aquest partit. **Es sumaran automàticament al total de l'equip.**")
+                    
+                    trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
+                    trams_gols_nous_fav = {}
+                    trams_gols_nous_con = {}
+                    
+                    col_t1, col_t2 = st.columns(2)
+                    with col_t1:
+                        st.markdown("**⚽ Gols a Favor per Tram**")
+                        for t in trams_llista:
+                            trams_gols_nous_fav[t] = st.number_input(f"Favor {t}", min_value=0, value=0, key=f"nou_fav_{t}")
+                    with col_t2:
+                        st.markdown("**🛡️ Gols en Contra per Tram")
+                        for t in trams_llista:
+                            trams_gols_nous_con[t] = st.number_input(f"Contra {t}", min_value=0, value=0, key=f"nou_con_{t}")
+
+                    st.markdown("---")
+                    st.markdown("##### 🟨 Registrar Targetes en aquest Partit")
+                    noms_llista_jugadores = [j.get('nom') for j in golejadores_data]
+                    
+                    # Sistema per afegir múltiples targetes ràpidament
+                    if "targetes_partit_nou" not in st.session_state:
+                        st.session_state["targetes_partit_nou"] = []
+
+                    c_ tarjeta_1, c_tarjeta_2, c_tarjeta_3 = st.columns([2, 1, 1])
+                    with c_tarjeta_1:
+                        jugadora_card = st.selectbox("Jugadora amonestada", noms_llista_jugadores, key="sel_j_card_nou")
+                    with c_tarjeta_2:
+                        minut_card = st.number_input("Minut", min_value=1, max_value=90, value=45, key="num_min_card_nou")
+                    with c_tarjeta_3:
+                        tipus_card = st.selectbox("Tipus", ["Groga", "Vermella"], key="sel_tip_card_nou")
+
+                    if st.button("➕ Afegir Targeta a la llista del partit", key="btn_add_card_list"):
+                        st.session_state["targetes_partit_nou"].append({"jugadora": jugadora_card, "minut": minut_card, "tipus": tipus_card})
+                        st.success(f"Afegida: {jugadora_card} (Minut {minut_card} - {tipus_card})")
+
+                    if st.session_state["targetes_partit_nou"]:
+                        st.write("Targetes registrades per a aquest partit:")
+                        for idx, card in enumerate(st.session_state["targetes_partit_nou"]):
+                            st.write(f"- ** | Minut {card['minut']} | {card['tipus']}")
+                        if st.button("Netejar llista de targetes", key="btnClearCards"):
+                            st.session_state["targetes_partit_nou"] = []
+                            st.rerun()
+
+                    if st.button("Guardar Partit i Actualitzar Estadístiques"):
                         if nou_titol and nou_video_url:
                             try:
                                 escut_path_saved = ""
@@ -617,6 +663,7 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
+                                # 1. Guardar el partit
                                 supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
@@ -629,7 +676,45 @@ def main():
                                     "video_url": nou_video_url
                                 }).execute()
 
-                                st.success("🎉 Partit guardat correctament!")
+                                # 2. Sumar automàticament els gols als trams existents a la BD
+                                for t in trams_llista:
+                                    if trams_gols_nous_fav[t] > 0 or trams_gols_nous_con[t] > 0:
+                                        # Obtenir dades actuals del tram
+                                        res_t = supabase.table("trams_gols").select("*").eq("tram", t).execute()
+                                        ant_fav, ant_con = 0, 0
+                                        if res_t.data:
+                                            ant_fav = res_t.data[0].get("gols_favor", 0)
+                                            ant_con = res_t.data[0].get("gols_contra", 0)
+                                        
+                                        supabase.table("trams_gols").upsert({
+                                            "tram": t,
+                                            "gols_favor": ant_fav + trams_gols_nous_fav[t],
+                                            "gols_contra": ant_con + trams_gols_nous_con[t]
+                                        }, on_conflict="tram").execute()
+
+                                # 3. Sumar automàticament les targetes a les jugadores
+                                for card in st.session_state["targetes_partit_nou"]:
+                                    j_nom = card["jugadora"]
+                                    t_tipus = card["tipus"]
+                                    # Buscar jugadora a la BD
+                                    res_j = supabase.table("golejadores").select("*").eq("nom", j_nom).execute()
+                                    if res_j.data:
+                                        j_data = res_j.data[0]
+                                        grogues_actuals = j_data.get("grogues", 0)
+                                        vermelles_actuals = j_data.get("vermelles", 0)
+                                        
+                                        if t_tipus == "Groga":
+                                            grogues_actuals += 1
+                                        else:
+                                            vermelles_actuals += 1
+                                            
+                                        supabase.table("golejadores").update({
+                                            "grogues": grogues_actuals,
+                                            "vermelles": vermelles_actuals
+                                        }).eq("nom", j_nom).execute()
+
+                                st.session_state["targetes_partit_nou"] = []
+                                st.success("🎉 Partit guardat i estadístiques actualitzades automàticament!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
