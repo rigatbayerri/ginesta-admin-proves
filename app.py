@@ -278,12 +278,11 @@ def main():
                         except:
                             pass
                 
-                # Si no troba cap partit a partir d'avui (tots són passats), agafem l'últim
                 if not proper_partit and llista_cal:
                     proper_partit = llista_cal[-1]
 
                 if proper_partit:
-                    j_ prop = proper_partit.get('jornada', '-')
+                    j_prop = proper_partit.get('jornada', '-')
                     data_prop = proper_partit.get('data', '-')
                     hora_prop = proper_partit.get('hora', '-')
                     rival_prop = proper_partit.get('rival', '-')
@@ -302,14 +301,14 @@ def main():
                         e2_nom = rival_prop
                         e2_img = obtenir_imatge_base64(escut_prop)
 
-                    img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️</div>"
-                    img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️️</div>"
+                    img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️️</div>"
+                    img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️</div>"
                     maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
 
                     st.markdown(f"""
                         <div style="background: linear-gradient(135deg, #f7f3fb 0%, #ede4f5 100%); padding: 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 3px 3px 10px rgba(92,45,115,0.08);">
                             <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px;">
-                                ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_ prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
+                                ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
                             </div>
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
@@ -465,8 +464,8 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️️</div>"
-                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️️</div>"
+                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
+                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
 
                 maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_url}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_url and str(maps_url).startswith("http") else ""
 
@@ -627,7 +626,7 @@ def main():
             st.plotly_chart(fig_favor, use_container_width=True)
 
         with col_gols_contra:
-            st.markdown("##### 🛡️ Gols en Contra")
+            st.markdown("##### 🛡️️ Gols en Contra")
             fig_contra = px.area(
                 df_trams, 
                 x="Minuts", 
@@ -692,7 +691,7 @@ def main():
                         for t in trams_llista:
                             trams_gols_nous_fav[t] = st.number_input(f"Favor {t}", min_value=0, value=0, key=f"nou_fav_{t}")
                     with col_t2:
-                        st.markdown("**🛡️ Gols en Contra per Tram**")
+                        st.markdown("**🛡️️ Gols en Contra per Tram**")
                         for t in trams_llista:
                             trams_gols_nous_con[t] = st.number_input(f"Contra {t}", min_value=0, value=0, key=f"nou_con_{t}")
 
@@ -1390,7 +1389,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
@@ -1408,7 +1407,7 @@ def main():
 
             # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
-                st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
+                st.markdown("#### ⏱️️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
                 actual_con = dict_trams[tram_coll]["gols_contra"]
