@@ -187,16 +187,21 @@ with st.sidebar:
 
 # --- APLICACIÓ PRINCIPAL ---
 def main():
-    # Capçalera amb escut centrat i text "CADET F11" a sota
-    col_c1, col_c2, col_c3 = st.columns([1, 2, 1])
-    with col_c2:
-        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-        try:
-            st.image(LOGO_URL, width=130)
-        except:
-            st.write("⚽")
-        st.markdown("<h1 style='color: #5c2d73; font-weight: 900; font-size: 2.2rem; margin-top: 10px; margin-bottom: 0px; letter-spacing: 1px;'>CADET F11</h1>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    # Capçalera 100% centrada amb disseny creatiu tipus insígnia esportiva
+    escut_b64 = obtenir_imatge_base64(LOGO_URL)
+    st.markdown(f"""
+        <div style="text-align: center; padding: 10px 0 20px 0;">
+            <div style="display: inline-block; padding: 12px; background: white; border-radius: 50%; box-shadow: 0px 4px 15px rgba(92,45,115,0.15); border: 2px solid #f0eaf5; margin-bottom: 10px;">
+                <img src="{escut_b64}" style="width: 100px; height: 100px; object-fit: contain; display: block;">
+            </div>
+            <div style="font-size: 24px; font-weight: 900; color: #5c2d73; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;">
+                CADET F11
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">
+                C.F. Ginesta
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.divider()
 
@@ -213,12 +218,10 @@ def main():
                 except:
                     return datetime.date.max
 
-            # Ordenar per data pura de més propera a més llunyana
             llista_cal_per_data = sorted(res_cal_all.data, key=parse_data_partit)
             avui = datetime.date.today()
             proper_partit = None
             
-            # Agafar el primer partit la data del qual sigui avui o posterior
             for p in llista_cal_per_data:
                 d_obj = parse_data_partit(p)
                 if d_obj >= avui:
@@ -249,7 +252,7 @@ def main():
                     e2_img = obtenir_imatge_base64(escut_prop)
 
                 img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️</div>"
-                img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️️</div>"
+                img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️</div>"
                 maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
 
                 st.markdown(f"""
@@ -328,7 +331,7 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # CALENDARI COM A PRIMERA PESTANYA
+    # PESTANYES PRINCIPALS
     if st.session_state["auth_level"] == "admin":
         tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
     else:
@@ -441,7 +444,6 @@ def main():
 
             st.markdown("---")
 
-            # SUBPESTANYES INTERNES DINS DE VIDEOTECA
             sub_vid, sub_fot = st.tabs(["📺 Vídeo del Partit", "📸 Galeria de Fotos"])
 
             with sub_vid:
@@ -953,7 +955,6 @@ def main():
 
                                 maps_anada_final = DIRECCIO_CASA if cal_lloc == "Casa" else cal_maps.strip()
 
-                                # Guardar Anada
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()),
                                     "jornada": int(cal_jornada),
@@ -970,7 +971,6 @@ def main():
                                 lloc_tornada = "Fora" if cal_lloc == "Casa" else "Casa"
                                 maps_tornada_final = DIRECCIO_CASA if lloc_tornada == "Casa" else cal_maps_volta.strip()
 
-                                # Guardar Tornada (Amb el mateix escut i adreça automàtica)
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()) + 1,
                                     "jornada": int(jornada_tornada),
@@ -990,7 +990,6 @@ def main():
                                 st.error(f"❌ Error: {e}")
 
                 else:
-                    # EDICIÓ DE PARTIT SELECCIONAT
                     partit_carregat = dict_map_cal[sel_accio_cal]
                     c_id = partit_carregat.get("id")
                     jornada_actual_num = int(partit_carregat.get("jornada", 1))
@@ -1061,7 +1060,6 @@ def main():
                                     maps_anada_final = DIRECCIO_CASA if edit_lloc_a == "Casa" else edit_maps_a.strip()
                                     maps_tornada_final = DIRECCIO_CASA if edit_lloc_t == "Casa" else edit_maps_t.strip()
 
-                                    # Guardar Anada
                                     supabase.table("calendari").update({
                                         "jornada": int(jornada_actual_num),
                                         "rival": edit_r_anada,
@@ -1073,7 +1071,6 @@ def main():
                                         "maps_url": maps_anada_final
                                     }).eq("id", c_id).execute()
 
-                                    # Guardar o crear Tornada (amb el mateix escut automàtic)
                                     supabase.table("calendari").upsert({
                                         "id": t_id,
                                         "jornada": int(jornada_tornada_num),
@@ -1104,7 +1101,6 @@ def main():
                                     st.error(f"❌ Error: {e}")
 
                     else:
-                        # SI ÉS UNA JORNADA DE LA 2a VOLTA (14-26) EDITADA DIRECTAMENT
                         st.markdown(f"##### ✏️ Editant Partit de Tornada - Jornada {jornada_actual_num}")
 
                         edit_c_jornada = st.number_input("Jornada", min_value=14, max_value=26, value=jornada_actual_num, key=f"ec_j_{c_id}")
@@ -1149,7 +1145,7 @@ def main():
                                     st.error(f"❌ Error: {e}")
 
                         with col_act2:
-                            if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
+                            if st.button("🗑️️ Eliminar Partit", key=f"btn_del_{c_id}"):
                                 try:
                                     supabase.table("calendari").delete().eq("id", c_id).execute()
                                     st.success("🗑️ Partit eliminat del calendari.")
@@ -1365,7 +1361,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
