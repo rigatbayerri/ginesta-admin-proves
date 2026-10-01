@@ -360,7 +360,6 @@ def main():
         try:
             res_cal = supabase.table("calendari").select("*").execute()
             calendari_data = res_cal.data
-            # Ordenar numèricament per jornada (de 1 a 26)
             calendari_data = sorted(calendari_data, key=lambda x: int(x.get('jornada', 1) or 1))
         except:
             pass
@@ -595,7 +594,7 @@ def main():
 
             with tab_adm_partits:
                 st.markdown("#### 🎬 Gestió de Partits, Trams i Targetes")
-                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou (amb Trams i Targetes)", "✏️️ Editar / Esborrar Partit Existent"])
+                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou (amb Trams i Targetes)", "✏️ Editar / Esborrar Partit Existent"])
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
@@ -843,13 +842,13 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI (Amb autogeneració de segona volta i edició de data arreglada)
+            # PESTANYA ADMIN: CALENDARI (Amb taula de lectura prèvia i edició de dades carregades)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió del Calendari Oficial i Resultats")
-                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partits (Anada + Autogeneració Segona Volta)", "✏️ Actualitzar Resultat / Data / Editar Partit"])
+                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partits (Anada + Autogeneració)", "✏️ Actualitzar / Veure Dades Existents"])
 
                 with sub_cal_nou:
-                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. Un cop guardis la jornada de l'anada, el programa **crearà automàticament la seva corresponent jornada de la segona volta (de la 14 a la 26)** invertint el camp (Casa ⇄ Fora)!")
+                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. El programa **crearà automàticament la tornada (de la 14 a la 26)** invertint el camp (Casa ⇄ Fora)!")
                     
                     cal_jornada = st.number_input("Jornada (1 a 13)", min_value=1, max_value=13, value=1, key="cj")
                     cal_data = st.date_input("Data del partit d'anada", key="cd")
@@ -873,7 +872,6 @@ def main():
                                     with open(escut_cal_path, "wb") as f:
                                         f.write(cal_escut.getbuffer())
 
-                                # 1. Guardar partit anada
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()),
                                     "jornada": int(cal_jornada),
@@ -886,7 +884,6 @@ def main():
                                     "resultat": ""
                                 }, on_conflict="jornada,rival").execute()
 
-                                # 2. Generar automàticament la tornada (Jornada + 13) invertint Casa/Fora
                                 jornada_tornada = int(cal_jornada) + 13
                                 lloc_tornada = "Fora" if cal_lloc == "Casa" else "Casa"
 
@@ -919,15 +916,28 @@ def main():
                     if not cal_existents:
                         st.warning("No hi ha partits al calendari per editar.")
                     else:
+                        st.markdown("##### 📋 Llistat i Lectura de Dades Actuals al Calendari")
+                        df_preview = pd.DataFrame([{
+                            "Jornada": c.get('jornada'),
+                            "Data": c.get('data'),
+                            "Hora": c.get('hora'),
+                            "Rival": c.get('rival'),
+                            "Lloc": c.get('lloc'),
+                            "Resultat": c.get('resultat') or "-",
+                            "Google Maps": "Sí" if c.get('maps_url') else "No"
+                        } for c in cal_existents])
+                        st.dataframe(df_preview, use_container_width=True, hide_index=True)
+
+                        st.markdown("---")
+                        st.markdown("##### ✏️ Modificar Partit Seleccionat")
                         dict_cal_ed = {f"J.{c.get('jornada')} vs {c.get('rival')} ({c.get('data')})": c for c in cal_existents}
-                        sel_c_str = st.selectbox("Selecciona el partit del calendari a modificar:", list(dict_cal_ed.keys()), key="sel_ed_cal")
+                        sel_c_str = st.selectbox("Selecciona el partit a modificar:", list(dict_cal_ed.keys()), key="sel_ed_cal")
                         c_edit_item = dict_cal_ed[sel_c_str]
 
                         c_id = c_edit_item.get("id")
                         edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=26, value=int(c_edit_item.get("jornada", 1)), key="ec_j")
                         edit_c_rival = st.text_input("Rival", value=c_edit_item.get("rival", ""), key="ec_r")
                         
-                        # Conversió segura de la data existent per al date_input
                         data_str_ant = c_edit_item.get("data", "2026-01-01")
                         try:
                             import datetime
@@ -1174,7 +1184,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
@@ -1190,13 +1200,14 @@ def main():
                                 st.session_state[confirm_key] = False
                                 st.rerun()
 
+            # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
                 st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
                 actual_con = dict_trams[tram_coll]["gols_contra"]
                 
-                st.info(f"📊 **Bloc seleccionat: Minuts {tram_coll}** — Gols a Favor: **{actual_fav}** ⚽ | Gols en Contra: **{actual_con}** 🛡️")
+                st.info(f"📊 **Bloc seleccionat: Minuts {tram_coll}** — Gols a Favor: **{actual_fav}** ⚽ | Gols en Contra: **{actual_con}** 🛡️️")
                 
                 c_f1, c_f2 = st.columns(2)
                 with c_f1:
