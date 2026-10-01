@@ -187,14 +187,16 @@ with st.sidebar:
 
 # --- APLICACIÓ PRINCIPAL ---
 def main():
-    col1, col2 = st.columns([1, 4])
-    with col1:
+    # Capçalera amb escut centrat i text "CADET F11" a sota
+    col_c1, col_c2, col_c3 = st.columns([1, 2, 1])
+    with col_c2:
+        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
         try:
-            st.image(LOGO_URL, width=110)
+            st.image(LOGO_URL, width=130)
         except:
             st.write("⚽")
-    with col2:
-        st.markdown("<h1 style='color: #5c2d73; font-weight: 900; font-size: 2.3rem; margin-top: 10px; line-height: 1.1;'>C.F. GINESTA CADET F11</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #5c2d73; font-weight: 900; font-size: 2.2rem; margin-top: 10px; margin-bottom: 0px; letter-spacing: 1px;'>CADET F11</h1>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -247,7 +249,7 @@ def main():
                     e2_img = obtenir_imatge_base64(escut_prop)
 
                 img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️</div>"
-                img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️</div>"
+                img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️️</div>"
                 maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
 
                 st.markdown(f"""
@@ -326,110 +328,13 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
+    # CALENDARI COM A PRIMERA PESTANYA
     if st.session_state["auth_level"] == "admin":
-        tab_videos, tab_calendari, tab_plantilla, tab_stats, tab_admin = st.tabs(["🎬 Videoteca", "📅 Calendari", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
+        tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
     else:
-        tab_videos, tab_calendari, tab_plantilla, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "👥 Plantilla", "📊 Estadístiques"])
+        tab_calendari, tab_videos, tab_plantilla, tab_stats = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS I GALERIA DE FOTOS
-    with tab_videos:
-        st.subheader("📺 Partits Gravats, Resultats i Galeria")
-        partits = []
-        try:
-            response = supabase.table("partits").select("*").order("data", desc=True).execute()
-            partits = response.data
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
-
-        if not partits:
-            st.warning("Encara no hi ha partits registrats.")
-        else:
-            opcions_partits = {}
-            for p in partits:
-                jornada_val = p.get('jornada')
-                j_str = f"J.{jornada_val}" if jornada_val and str(jornada_val).strip() else "J-"
-                titol_val = p.get('titol', 'Partit')
-                res_val = p.get('resultat')
-                res_str = str(res_val) if res_val and str(res_val).strip().lower() != "none" else "vs"
-                opcions_partits[f"{j_str} - {titol_val} ({res_str})"] = p
-
-            partit_seleccionat_str = st.selectbox("Selecciona un partit:", list(opcions_partits.keys()))
-            partit_actual = opcions_partits[partit_seleccionat_str]
-            
-            rival = partit_actual.get('rival', 'Rival')
-            resultat = partit_actual.get('resultat', ' - ')
-            lloc = partit_actual.get('lloc', 'Casa')
-            escut_path = partit_actual.get('escut_rival_url') 
-            fotos_str = partit_actual.get('fotos_partit_urls', '')
-            
-            st.markdown("---")
-            col_res1, col_res2, col_res3 = st.columns([2, 3, 2])
-            
-            if lloc == "Fora":
-                with col_res1:
-                    c_r1, c_r2 = st.columns([2, 1])
-                    with c_r1:
-                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px; font-size: 14px;'>{rival}</h4>", unsafe_allow_html=True)
-                    with c_r2:
-                        if escut_path and os.path.exists(escut_path):
-                            st.image(escut_path, width=35)
-                        else:
-                            st.write("🛡️")
-                with col_res2:
-                    st.markdown(f"<h2 style='text-align: center; color: #1a1a1a; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
-                with col_res3:
-                    c_g1, c_g2 = st.columns([1, 2])
-                    with c_g1:
-                        st.image(LOGO_URL, width=35)
-                    with c_g2:
-                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px; font-size: 14px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
-            else:
-                with col_res1:
-                    c_g1, c_g2 = st.columns([1, 2])
-                    with c_g1:
-                        st.image(LOGO_URL, width=35)
-                    with c_g2:
-                        st.markdown(f"<h4 style='color: #5c2d73; margin-top: 5px; font-size: 14px;'>C.F. Ginesta</h4>", unsafe_allow_html=True)
-                with col_res2:
-                    st.markdown(f"<h2 style='text-align: center; color: #1a1a1a; margin: 0; font-size: 18px;'>{resultat}</h2>", unsafe_allow_html=True)
-                with col_res3:
-                    c_r1, c_r2 = st.columns([2, 1])
-                    with c_r1:
-                        st.markdown(f"<h4 style='text-align: right; color: #5c2d73; margin-top: 5px; font-size: 14px;'>{rival}</h4>", unsafe_allow_html=True)
-                    with c_r2:
-                        if escut_path and os.path.exists(escut_path):
-                            st.image(escut_path, width=35)
-                        else:
-                            st.write("🛡️")
-
-            st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
-            jornada_mostra = partit_actual.get('jornada')
-            jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
-            st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {jornada_txt_mostra}")
-            
-            targetes_partit_str = partit_actual.get('targetes_partit', '')
-            if targetes_partit_str:
-                st.markdown(f"🟨 **Targetes del partit:** {targetes_partit_str}")
-
-            video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
-            if video_url and str(video_url).startswith("http"):
-                try:
-                    st.video(video_url)
-                except Exception:
-                    st.warning("⚠️ L'enllaç del vídeo no és compatible o no està accessible.")
-            else:
-                st.warning("⚠️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
-
-            if fotos_str:
-                lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
-                if lletres_fotos:
-                    st.markdown("---")
-                    st.markdown("### 📸 Galeria de Fotos del Partit")
-                    for f_path in lletres_fotos:
-                        if os.path.exists(f_path):
-                            st.image(f_path, use_container_width=True)
-
-    # PESTANYA 2: CALENDARI PÚBLIC (Ordenat estrictament per JORNADA)
+    # PESTANYA 1: CALENDARI PÚBLIC
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -494,6 +399,72 @@ def main():
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+
+    # PESTANYA 2: VIDEOTECA AMB SUBPESTANYES INTERNES (VÍDEOS / FOTOS)
+    with tab_videos:
+        st.subheader("📺 Videoteca & Galeria de Partits")
+        partits = []
+        try:
+            response = supabase.table("partits").select("*").order("data", desc=True).execute()
+            partits = response.data
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
+        if not partits:
+            st.warning("Encara no hi ha partits registrats.")
+        else:
+            opcions_partits = {}
+            for p in partits:
+                jornada_val = p.get('jornada')
+                j_str = f"J.{jornada_val}" if jornada_val and str(jornada_val).strip() else "J-"
+                titol_val = p.get('titol', 'Partit')
+                res_val = p.get('resultat')
+                res_str = str(res_val) if res_val and str(res_val).strip().lower() != "none" else "vs"
+                opcions_partits[f"{j_str} - {titol_val} ({res_str})"] = p
+
+            partit_seleccionat_str = st.selectbox("Selecciona un partit:", list(opcions_partits.keys()))
+            partit_actual = opcions_partits[partit_seleccionat_str]
+            
+            rival = partit_actual.get('rival', 'Rival')
+            lloc = partit_actual.get('lloc', 'Casa')
+            fotos_str = partit_actual.get('fotos_partit_urls', '')
+            
+            st.markdown("---")
+            st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
+            jornada_mostra = partit_actual.get('jornada')
+            jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
+            st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {jornada_txt_mostra} &nbsp;|&nbsp; 📍 **Lloc:** {lloc} &nbsp;|&nbsp; 🛡️ **Rival:** {rival}")
+            
+            targetes_partit_str = partit_actual.get('targetes_partit', '')
+            if targetes_partit_str:
+                st.markdown(f"🟨 **Targetes del partit:** {targetes_partit_str}")
+
+            st.markdown("---")
+
+            # SUBPESTANYES INTERNES DINS DE VIDEOTECA
+            sub_vid, sub_fot = st.tabs(["📺 Vídeo del Partit", "📸 Galeria de Fotos"])
+
+            with sub_vid:
+                video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
+                if video_url and str(video_url).startswith("http"):
+                    try:
+                        st.video(video_url)
+                    except Exception:
+                        st.warning("⚠️ L'enllaç del vídeo no és compatible o no està accessible.")
+                else:
+                    st.warning("⚠️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
+
+            with sub_fot:
+                if fotos_str:
+                    lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
+                    if lletres_fotos:
+                        for f_path in lletres_fotos:
+                            if os.path.exists(f_path):
+                                st.image(f_path, use_container_width=True)
+                    else:
+                        st.info("No hi ha fotos disponibles per a aquest partit.")
+                else:
+                    st.info("No hi ha fotos disponibles per a aquest partit.")
 
     # PESTANYA 3: PLANTILLA
     with tab_plantilla:
@@ -631,7 +602,7 @@ def main():
             st.plotly_chart(fig_favor, use_container_width=True)
 
         with col_gols_contra:
-            st.markdown("##### 🛡️️ Gols en Contra")
+            st.markdown("##### 🛡️ Gols en Contra")
             fig_contra = px.area(
                 df_trams, 
                 x="Minuts", 
@@ -1181,7 +1152,7 @@ def main():
                             if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
                                 try:
                                     supabase.table("calendari").delete().eq("id", c_id).execute()
-                                    st.success("🗑️️ Partit eliminat del calendari.")
+                                    st.success("🗑️ Partit eliminat del calendari.")
                                     time.sleep(1)
                                     st.rerun()
                                 except Exception as e:
@@ -1394,7 +1365,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
