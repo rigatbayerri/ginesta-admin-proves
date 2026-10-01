@@ -355,7 +355,7 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI PÚBLIC (Amb enllaços de Google Maps 100% clickables)
+    # PESTANYA 2: CALENDARI PÚBLIC
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
@@ -844,7 +844,7 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT
+            # PESTANYA ADMIN: CALENDARI UNIFICAT (Amb assignació automàtica de l'adreça de casa)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
                 st.markdown("Selecciona una jornada de la 1a volta (1-13) per editar **l'anada i la tornada a la vegada**, o tria **'➕ Afegir nova jornada'**.")
@@ -873,7 +873,7 @@ def main():
 
                 if sel_accio_cal == "➕ Afegir nova jornada (Anada + Tornada Automàtica)":
                     st.markdown("##### ➕ Creació de Nova Jornada (Anada i Tornada)")
-                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. El programa crearà automàticament la tornada i assignarà el mateix escut.")
+                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. El programa crearà automàticament la tornada, l'escut i l'adreça de casa.")
 
                     cal_jornada = st.number_input("Jornada (1 a 13)", min_value=1, max_value=13, value=1, key="cj_nou")
                     cal_rival = st.text_input("Rival", key="cr_nou")
@@ -884,12 +884,15 @@ def main():
                     st.markdown("🟢 **Partit d'Anada:**")
                     cal_data = st.date_input("Data de l'anada", key="cd_nou")
                     cal_hora = st.text_input("Hora de l'anada", value="10:30", key="ch_nou")
+                    
+                    # Si és a Casa, posem directament la direcció de casa nostra per defecte
                     default_maps_anada = DIRECCIO_CASA if cal_lloc == "Casa" else ""
                     cal_maps = st.text_input("Google Maps de l'estadi de l'anada", value=default_maps_anada, key="cmaps_nou")
 
                     st.markdown("🔵 **Partit de Tornada (Segona Volta):**")
                     cal_data_volta = st.date_input("Data de la tornada", key="cd_volta_nou")
                     cal_hora_volta = st.text_input("Hora de la tornada", value="10:30", key="ch_volta_nou")
+                    
                     lloc_tornada_preview = "Fora" if cal_lloc == "Casa" else "Casa"
                     default_maps_volta = DIRECCIO_CASA if lloc_tornada_preview == "Casa" else ""
                     cal_maps_volta = st.text_input("Google Maps de l'estadi de la tornada", value=default_maps_volta, key="cmaps_volta_nou")
@@ -904,7 +907,8 @@ def main():
                                         f.write(cal_escut.getbuffer())
                                     escut_cal_path = escut_path
 
-                                maps_anada_final = cal_maps.strip() if cal_maps.strip() else (DIRECCIO_CASA if cal_lloc == "Casa" else "")
+                                # Assignació automàtica de Google Maps segons si es juga a Casa o Fora
+                                maps_anada_final = DIRECCIO_CASA if cal_lloc == "Casa" else cal_maps.strip()
 
                                 # Guardar Anada
                                 supabase.table("calendari").upsert({
@@ -921,9 +925,9 @@ def main():
 
                                 jornada_tornada = int(cal_jornada) + 13
                                 lloc_tornada = "Fora" if cal_lloc == "Casa" else "Casa"
-                                maps_tornada_final = cal_maps_volta.strip() if cal_maps_volta.strip() else (DIRECCIO_CASA if lloc_tornada == "Casa" else "")
+                                maps_tornada_final = DIRECCIO_CASA if lloc_tornada == "Casa" else cal_maps_volta.strip()
 
-                                # Guardar Tornada (Amb el mateix escut automàticament)
+                                # Guardar Tornada (Amb el mateix escut i adreça automàtica)
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()) + 1,
                                     "jornada": int(jornada_tornada),
@@ -936,7 +940,7 @@ def main():
                                     "resultat": ""
                                 }, on_conflict="jornada").execute()
 
-                                st.success(f"✅ Jornada {cal_jornada} (Anada) i Jornada {jornada_tornada} (Tornada) afegides correctament amb l'escut sincronitzat!")
+                                st.success(f"✅ Jornada {cal_jornada} (Anada) i Jornada {jornada_tornada} (Tornada) afegides correctament amb l'escut i mapes sincronitzats!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
@@ -976,7 +980,10 @@ def main():
                         idx_la = 0 if lloc_a_ant == "Casa" else 1
                         edit_lloc_a = st.selectbox("Lloc anada", ["Casa", "Fora"], index=idx_la, key=f"ec_ll_a_{c_id}")
                         edit_res_a = st.text_input("Resultat anada", value=partit_carregat.get("resultat", ""), key=f"ec_res_a_{c_id}")
-                        edit_maps_a = st.text_input("Google Maps anada", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_a_{c_id}")
+                        
+                        # Si es selecciona Casa, posem automàticament la direcció de casa
+                        default_edit_maps_a = DIRECCIO_CASA if edit_lloc_a == "Casa" else partit_carregat.get("maps_url", "")
+                        edit_maps_a = st.text_input("Google Maps anada", value=default_edit_maps_a, key=f"ec_maps_a_{c_id}")
 
                         st.markdown("---")
                         st.markdown(f"🔵 **Partit de Tornada (Jornada {jornada_tornada_num}):**")
@@ -995,7 +1002,10 @@ def main():
                         idx_lt = 0 if lloc_t_ant == "Casa" else 1
                         edit_lloc_t = st.selectbox("Lloc tornada", ["Casa", "Fora"], index=idx_lt, key=f"ec_ll_t_{t_id}")
                         edit_res_t = st.text_input("Resultat tornada", value=partit_tornada_obj.get("resultat", "") if partit_tornada_obj else "", key=f"ec_res_t_{t_id}")
-                        edit_maps_t = st.text_input("Google Maps tornada", value=partit_tornada_obj.get("maps_url", "") if partit_tornada_obj else "", key=f"ec_maps_t_{t_id}")
+                        
+                        # Si es selecciona Casa a la tornada, posem automàticament la direcció de casa
+                        default_edit_maps_t = DIRECCIO_CASA if edit_lloc_t == "Casa" else (partit_tornada_obj.get("maps_url", "") if partit_tornada_obj else "")
+                        edit_maps_t = st.text_input("Google Maps tornada", value=default_edit_maps_t, key=f"ec_maps_t_{t_id}")
 
                         col_act1, col_act2 = st.columns(2)
                         with col_act1:
@@ -1007,6 +1017,9 @@ def main():
                                         with open(escut_final_path, "wb") as f:
                                             f.write(edit_arxiu_escut_nou.getbuffer())
 
+                                    maps_anada_final = DIRECCIO_CASA if edit_lloc_a == "Casa" else edit_maps_a.strip()
+                                    maps_tornada_final = DIRECCIO_CASA if edit_lloc_t == "Casa" else edit_maps_t.strip()
+
                                     # Guardar Anada
                                     supabase.table("calendari").update({
                                         "jornada": int(jornada_actual_num),
@@ -1016,7 +1029,7 @@ def main():
                                         "lloc": edit_lloc_a,
                                         "escut_rival_url": escut_final_path,
                                         "resultat": edit_res_a.strip(),
-                                        "maps_url": edit_maps_a.strip()
+                                        "maps_url": maps_anada_final
                                     }).eq("id", c_id).execute()
 
                                     # Guardar o crear Tornada (amb el mateix escut automàtic)
@@ -1029,10 +1042,10 @@ def main():
                                         "lloc": edit_lloc_t,
                                         "escut_rival_url": escut_final_path,
                                         "resultat": edit_res_t.strip(),
-                                        "maps_url": edit_maps_t.strip()
+                                        "maps_url": maps_tornada_final
                                     }, on_conflict="jornada").execute()
 
-                                    st.success("✅ Canvis guardats correctament (Anada i Tornada amb escut sincronitzat)!")
+                                    st.success("✅ Canvis guardats correctament (Anada i Tornada amb escut i mapes sincronitzats)!")
                                     time.sleep(1)
                                     st.rerun()
                                 except Exception as e:
@@ -1070,12 +1083,15 @@ def main():
                         edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=idx_lloc, key=f"ec_ll_{c_id}")
                         
                         edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1)", value=partit_carregat.get("resultat", ""), key=f"ec_res_{c_id}")
-                        edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_{c_id}")
+                        
+                        default_edit_maps_single = DIRECCIO_CASA if edit_c_lloc == "Casa" else partit_carregat.get("maps_url", "")
+                        edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=default_edit_maps_single, key=f"ec_maps_{c_id}")
 
                         col_act1, col_act2 = st.columns(2)
                         with col_act1:
                             if st.button("💾 Guardar Canvis de la Tornada", key=f"btn_save_{c_id}"):
                                 try:
+                                    maps_final_single = DIRECCIO_CASA if edit_c_lloc == "Casa" else edit_c_maps.strip()
                                     supabase.table("calendari").update({
                                         "jornada": int(edit_c_jornada),
                                         "rival": edit_c_rival,
@@ -1083,7 +1099,7 @@ def main():
                                         "hora": edit_c_hora,
                                         "lloc": edit_c_lloc,
                                         "resultat": edit_c_resultat.strip(),
-                                        "maps_url": edit_c_maps.strip()
+                                        "maps_url": maps_final_single
                                     }).eq("id", c_id).execute()
                                     st.success("✅ Partit de tornada actualitzat correctament!")
                                     time.sleep(1)
@@ -1326,7 +1342,7 @@ def main():
 
             # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
-                st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
+                st.markdown("#### ⏱️️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
                 actual_con = dict_trams[tram_coll]["gols_contra"]
