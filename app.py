@@ -190,12 +190,11 @@ def main():
     col1, col2 = st.columns([1, 4])
     with col1:
         try:
-            st.image(LOGO_URL, width=70)
+            st.image(LOGO_URL, width=110)
         except:
             st.write("⚽")
     with col2:
-        st.title("C.F. Ginesta - Cadet F11")
-        st.markdown("*Videoteca & Estadístiques*")
+        st.markdown("<h1 style='color: #5c2d73; font-weight: 900; font-size: 2.3rem; margin-top: 10px; line-height: 1.1;'>C.F. GINESTA CADET F11</h1>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -401,7 +400,7 @@ def main():
                         if escut_path and os.path.exists(escut_path):
                             st.image(escut_path, width=35)
                         else:
-                            st.write("🛡️️")
+                            st.write("🛡️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             jornada_mostra = partit_actual.get('jornada')
@@ -437,7 +436,6 @@ def main():
         try:
             res_cal = supabase.table("calendari").select("*").execute()
             calendari_data = res_cal.data
-            # Aquí es manté ordenat estrictament per número de jornada
             calendari_data = sorted(calendari_data, key=lambda x: int(x.get('jornada', 1) or 1))
         except:
             pass
@@ -633,7 +631,7 @@ def main():
             st.plotly_chart(fig_favor, use_container_width=True)
 
         with col_gols_contra:
-            st.markdown("##### 🛡️ Gols en Contra")
+            st.markdown("##### 🛡️️ Gols en Contra")
             fig_contra = px.area(
                 df_trams, 
                 x="Minuts", 
@@ -1183,7 +1181,7 @@ def main():
                             if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
                                 try:
                                     supabase.table("calendari").delete().eq("id", c_id).execute()
-                                    st.success("🗑️ Partit eliminat del calendari.")
+                                    st.success("🗑️️ Partit eliminat del calendari.")
                                     time.sleep(1)
                                     st.rerun()
                                 except Exception as e:
