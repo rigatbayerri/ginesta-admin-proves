@@ -395,8 +395,8 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
-                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
+                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️️</div>"
+                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️️</div>"
 
                 maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_url}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_url and str(maps_url).startswith("http") else ""
 
@@ -844,10 +844,10 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT (Creació automàtica anada+tornada i edició individual)
+            # PESTANYA ADMIN: CALENDARI UNIFICAT (Amb edició conjunta Anada+Tornada o Tornada sola)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
-                st.markdown("Selecciona una jornada existent (de l'1 a la 26) per editar-la directament, o tria **'➕ Afegir nova jornada'**.")
+                st.markdown("Selecciona una jornada de la 1a volta (1-13) per editar **l'anada i la tornada a la vegada**, selecciona una de la 2a volta (14-26) per editar-la directament, o tria **'➕ Afegir nova jornada'**.")
 
                 cal_existents = []
                 try:
@@ -862,7 +862,8 @@ def main():
                     j_val = c.get('jornada', 1)
                     r_val = c.get('rival', 'Rival')
                     d_val = c.get('data', '')
-                    txt = f"Jornada {j_val} vs {r_val} ({d_val})"
+                    voltag = " (Anada)" if int(j_val) <= 13 else " (Tornada)"
+                    txt = f"Jornada {j_val} vs {r_val} ({d_val}){voltag}"
                     opcions_calendari.append(txt)
                     dict_map_cal[txt] = c
 
@@ -943,56 +944,147 @@ def main():
                     # EDICIÓ DE PARTIT SELECCIONAT
                     partit_carregat = dict_map_cal[sel_accio_cal]
                     c_id = partit_carregat.get("id")
+                    jornada_actual_num = int(partit_carregat.get("jornada", 1))
 
-                    st.markdown(f"##### ✏️ Editant Jornada {partit_carregat.get('jornada')} - Rival: {partit_carregat.get('rival')}")
+                    # SI ÉS UNA JORNADA DE LA 1a VOLTA (1-13), PERMETEM EDITAR ANADA I TORNADA COJUNTAMENT O SEPARADA
+                    if jornada_actual_num <= 13:
+                        jornada_tornada_num = jornada_actual_num + 13
+                        # Busquem si existeix el partit de tornada a la BD
+                        partit_tornada_obj = next((item for item in cal_existents if int(item.get("jornada", 0)) == jornada_tornada_num), None)
 
-                    edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=26, value=int(partit_carregat.get("jornada", 1)), key=f"ec_j_{c_id}")
-                    edit_c_rival = st.text_input("Rival", value=partit_carregat.get("rival", ""), key=f"ec_r_{c_id}")
-                    
-                    data_str_ant = partit_carregat.get("data", str(datetime.date.today()))
-                    try:
-                        data_obj_ant = datetime.datetime.strptime(data_str_ant, "%Y-%m-%d").date()
-                    except:
-                        data_obj_ant = datetime.date.today()
+                        st.markdown(f"##### ✏️ Editant Jornada {jornada_actual_num} (Anada) i Jornada {jornada_tornada_num} (Tornada)")
 
-                    edit_c_data = st.date_input("Data del Partit", value=data_obj_ant, key=f"ec_d_{c_id}")
-                    edit_c_hora = st.text_input("Hora", value=partit_carregat.get("hora", ""), key=f"ec_h_{c_id}")
-                    
-                    lloc_actual = partit_carregat.get("lloc", "Casa")
-                    idx_lloc = 0 if lloc_actual == "Casa" else 1
-                    edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=idx_lloc, key=f"ec_ll_{c_id}")
-                    
-                    edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=partit_carregat.get("resultat", ""), key=f"ec_res_{c_id}")
-                    edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_{c_id}")
+                        st.markdown("🟢 **Partit d'Anada:**")
+                        edit_r_anada = st.text_input("Rival (Anada)", value=partit_carregat.get("rival", ""), key=f"ec_r_a_{c_id}")
+                        
+                        d_str_a = partit_carregat.get("data", str(datetime.date.today()))
+                        try:
+                            d_obj_a = datetime.datetime.strptime(d_str_a, "%Y-%m-%d").date()
+                        except:
+                            d_obj_a = datetime.date.today()
+                        edit_d_anada = st.date_input("Data anada", value=d_obj_a, key=f"ec_d_a_{c_id}")
+                        edit_h_anada = st.text_input("Hora anada", value=partit_carregat.get("hora", ""), key=f"ec_h_a_{c_id}")
+                        
+                        lloc_a_ant = partit_carregat.get("lloc", "Casa")
+                        idx_la = 0 if lloc_a_ant == "Casa" else 1
+                        edit_lloc_a = st.selectbox("Lloc anada", ["Casa", "Fora"], index=idx_la, key=f"ec_ll_a_{c_id}")
+                        edit_res_a = st.text_input("Resultat anada", value=partit_carregat.get("resultat", ""), key=f"ec_res_a_{c_id}")
+                        edit_maps_a = st.text_input("Google Maps anada", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_a_{c_id}")
 
-                    col_act1, col_act2 = st.columns(2)
-                    with col_act1:
-                        if st.button("💾 Guardar Canvis del Partit", key=f"btn_save_{c_id}"):
-                            try:
-                                supabase.table("calendari").update({
-                                    "jornada": int(edit_c_jornada),
-                                    "rival": edit_c_rival,
-                                    "data": str(edit_c_data),
-                                    "hora": edit_c_hora,
-                                    "lloc": edit_c_lloc,
-                                    "resultat": edit_c_resultat.strip(),
-                                    "maps_url": edit_c_maps.strip()
-                                }).eq("id", c_id).execute()
-                                st.success("✅ Partit del calendari actualitzat correctament!")
-                                time.sleep(1)
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                        st.markdown("---")
+                        st.markdown(f"🔵 **Partit de Tornada (Jornada {jornada_tornada_num}):**")
+                        
+                        t_id = partit_tornada_obj.get("id") if partit_tornada_obj else int(time.time()) + 99
+                        d_str_t = partit_tornada_obj.get("data", str(datetime.date.today())) if partit_tornada_obj else str(datetime.date.today())
+                        try:
+                            d_obj_t = datetime.datetime.strptime(d_str_t, "%Y-%m-%d").date()
+                        except:
+                            d_obj_t = datetime.date.today()
 
-                    with col_act2:
-                        if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
-                            try:
-                                supabase.table("calendari").delete().eq("id", c_id).execute()
-                                st.success("🗑️ Partit eliminat del calendari.")
-                                time.sleep(1)
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                        edit_d_tornada = st.date_input("Data tornada", value=d_obj_t, key=f"ec_d_t_{t_id}")
+                        edit_h_tornada = st.text_input("Hora tornada", value=partit_tornada_obj.get("hora", "10:30") if partit_tornada_obj else "10:30", key=f"ec_h_t_{t_id}")
+                        
+                        lloc_t_ant = partit_tornada_obj.get("lloc", ("Fora" if lloc_a_ant == "Casa" else "Casa")) if partit_tornada_obj else ("Fora" if lloc_a_ant == "Casa" else "Casa")
+                        idx_lt = 0 if lloc_t_ant == "Casa" else 1
+                        edit_lloc_t = st.selectbox("Lloc tornada", ["Casa", "Fora"], index=idx_lt, key=f"ec_ll_t_{t_id}")
+                        edit_res_t = st.text_input("Resultat tornada", value=partit_tornada_obj.get("resultat", "") if partit_tornada_obj else "", key=f"ec_res_t_{t_id}")
+                        edit_maps_t = st.text_input("Google Maps tornada", value=partit_tornada_obj.get("maps_url", "") if partit_tornada_obj else "", key=f"ec_maps_t_{t_id}")
+
+                        col_act1, col_act2 = st.columns(2)
+                        with col_act1:
+                            if st.button("💾 Guardar Canvis (Anada i Tornada)", key=f"btn_save_both_{c_id}"):
+                                try:
+                                    # Guardar Anada
+                                    supabase.table("calendari").update({
+                                        "jornada": int(jornada_actual_num),
+                                        "rival": edit_r_anada,
+                                        "data": str(edit_d_anada),
+                                        "hora": edit_h_anada,
+                                        "lloc": edit_lloc_a,
+                                        "resultat": edit_res_a.strip(),
+                                        "maps_url": edit_maps_a.strip()
+                                    }).eq("id", c_id).execute()
+
+                                    # Guardar o crear Tornada
+                                    supabase.table("calendari").upsert({
+                                        "id": t_id,
+                                        "jornada": int(jornada_tornada_num),
+                                        "rival": edit_r_anada,
+                                        "data": str(edit_d_tornada),
+                                        "hora": edit_h_tornada,
+                                        "lloc": edit_lloc_t,
+                                        "resultat": edit_res_t.strip(),
+                                        "maps_url": edit_maps_t.strip()
+                                    }, on_conflict="jornada").execute()
+
+                                    st.success("✅ Canvis guardats correctament (Anada i Tornada)!")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+
+                        with col_act2:
+                            if st.button("🗑️ Eliminar Jornada Sencera", key=f"btn_del_both_{c_id}"):
+                                try:
+                                    supabase.table("calendari").delete().eq("jornada", int(jornada_actual_num)).execute()
+                                    supabase.table("calendari").delete().eq("jornada", int(jornada_tornada_num)).execute()
+                                    st.success("🗑️ Jornades eliminades.")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+
+                    else:
+                        # SI ÉS UNA JORNADA DE LA 2a VOLTA (14-26) EDITADA DIRECTAMENT
+                        st.markdown(f"##### ✏️️ Editant Partit de Tornada - Jornada {jornada_actual_num}")
+
+                        edit_c_jornada = st.number_input("Jornada", min_value=14, max_value=26, value=jornada_actual_num, key=f"ec_j_{c_id}")
+                        edit_c_rival = st.text_input("Rival", value=partit_carregat.get("rival", ""), key=f"ec_r_{c_id}")
+                        
+                        data_str_ant = partit_carregat.get("data", str(datetime.date.today()))
+                        try:
+                            data_obj_ant = datetime.datetime.strptime(data_str_ant, "%Y-%m-%d").date()
+                        except:
+                            data_obj_ant = datetime.date.today()
+
+                        edit_c_data = st.date_input("Data del Partit", value=data_obj_ant, key=f"ec_d_{c_id}")
+                        edit_c_hora = st.text_input("Hora", value=partit_carregat.get("hora", ""), key=f"ec_h_{c_id}")
+                        
+                        lloc_actual = partit_carregat.get("lloc", "Casa")
+                        idx_lloc = 0 if lloc_actual == "Casa" else 1
+                        edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=idx_lloc, key=f"ec_ll_{c_id}")
+                        
+                        edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1)", value=partit_carregat.get("resultat", ""), key=f"ec_res_{c_id}")
+                        edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_{c_id}")
+
+                        col_act1, col_act2 = st.columns(2)
+                        with col_act1:
+                            if st.button("💾 Guardar Canvis de la Tornada", key=f"btn_save_{c_id}"):
+                                try:
+                                    supabase.table("calendari").update({
+                                        "jornada": int(edit_c_jornada),
+                                        "rival": edit_c_rival,
+                                        "data": str(edit_c_data),
+                                        "hora": edit_c_hora,
+                                        "lloc": edit_c_lloc,
+                                        "resultat": edit_c_resultat.strip(),
+                                        "maps_url": edit_c_maps.strip()
+                                    }).eq("id", c_id).execute()
+                                    st.success("✅ Partit de tornada actualitzat correctament!")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
+
+                        with col_act2:
+                            if st.button("🗑️️ Eliminar Partit", key=f"btn_del_{c_id}"):
+                                try:
+                                    supabase.table("calendari").delete().eq("id", c_id).execute()
+                                    st.success("🗑️️ Partit eliminat del calendari.")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ Error: {e}")
 
             # PESTANYA ADMIN: ESTADÍSTIQUES I MÈTRIQUES
             with tab_adm_stats:
@@ -1201,7 +1293,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
