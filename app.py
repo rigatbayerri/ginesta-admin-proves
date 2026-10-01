@@ -355,42 +355,36 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI (Mostra de l'1 a la 13 i la seva respectiva tornada de la 14 a la 26)
+    # PESTANYA 2: CALENDARI PÚBLIC (Ordenat numèricament de l'1 a la 26 de forma neta)
     with tab_calendari:
-        st.subheader("📅 Calendari Oficial (Anada i Tornada)")
+        st.subheader("📅 Calendari Oficial")
         calendari_data = []
         try:
             res_cal = supabase.table("calendari").select("*").execute()
             calendari_data = res_cal.data
+            calendari_data = sorted(calendari_data, key=lambda x: int(x.get('jornada', 1) or 1))
         except:
             pass
 
         if not calendari_data:
             st.warning("No hi ha partits al calendari.")
         else:
-            # Creem un diccionari per buscar ràpidament per número de jornada
-            dict_jornades = {int(p.get('jornada', 0)): p for p in calendari_data}
-            
-            # Mostrem les jornades de l'1 a la 13 (primera volta) i hi adjuntem la seva tornada (+13)
-            for j in range(1, 14):
-                partit_anada = dict_jornades.get(j)
-                partit_tornada = dict_jornades.get(j + 13)
+            for partit in calendari_data:
+                jornada = partit.get('jornada', '-')
+                data = partit.get('data', '-')
+                hora = partit.get('hora', '-')
+                rival = partit.get('rival', '-')
+                lloc = partit.get('lloc', 'Casa')
+                escut_path = partit.get('escut_rival_url', '')
+                resultat_cal = partit.get('resultat', '')
+                maps_url = partit.get('maps_url', '')
 
-                if not partit_anada:
-                    continue  # Si no existeix la jornada d'anada, saltem
+                if not resultat_cal or str(resultat_cal).strip() == "" or str(resultat_cal).lower() == "none":
+                    text_marcador = "VS"
+                else:
+                    text_marcador = str(resultat_cal)
 
-                # Dades Anada
-                data_a = partit_anada.get('data', '-')
-                hora_a = partit_anada.get('hora', '-')
-                rival = partit_anada.get('rival', '-')
-                lloc_a = partit_anada.get('lloc', 'Casa')
-                escut_path = partit_anada.get('escut_rival_url', '')
-                res_a = partit_anada.get('resultat', '')
-                maps_a = partit_anada.get('maps_url', '')
-
-                text_marcador_a = str(res_a) if res_a and str(res_a).strip() and str(res_a).lower() != "none" else "VS"
-
-                if lloc_a == "Fora":
+                if lloc == "Fora":
                     eq1_nom = rival
                     eq1_img_b64 = obtenir_imatge_base64(escut_path)
                     eq2_nom = "C.F. Ginesta"
@@ -401,61 +395,29 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                img1_html = f"<img src='{eq1_img_b64}' style='width: 50px; height: 50px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 30px;'>🛡️</div>"
-                img2_html = f"<img src='{eq2_img_b64}' style='width: 50px; height: 50px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 30px;'>🛡️</div>"
-                maps_html_a = f"&nbsp;|&nbsp; 📍 <a href='{maps_a}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_a and str(maps_a).startswith("http") else ""
+                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
+                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
 
-                # Dades Tornada (si existeix)
-                tornada_html = ""
-                if partit_tornada:
-                    j_t = partit_tornada.get('jornada', j + 13)
-                    data_t = partit_tornada.get('data', '-')
-                    hora_t = partit_tornada.get('hora', '-')
-                    lloc_t = partit_tornada.get('lloc', 'Fora')
-                    res_t = partit_tornada.get('resultat', '')
-                    maps_t = partit_tornada.get('maps_url', '')
-                    text_marcador_t = str(res_t) if res_t and str(res_t).strip() and str(res_t).lower() != "none" else "VS"
-                    maps_html_t = f"&nbsp;|&nbsp; 📍 <a href='{maps_t}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_t and str(maps_t).startswith("http") else ""
-                    
-                    eq_t1 = rival if lloc_t == "Fora" else "C.F. Ginesta"
-                    eq_t2 = "C.F. Ginesta" if lloc_t == "Fora" else rival
-
-                    tornada_html = f"""
-                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d5c8e3; background-color: #faf7fc; padding: 8px 12px; border-radius: 8px;">
-                            <div style="font-size: 11px; color: #5c2d73; font-weight: bold; margin-bottom: 4px;">
-                                🔵 PARTIT DE TORNADA (Jornada {j_t}) &nbsp;|&nbsp; 📅 {data_t} &nbsp;|&nbsp; ⏰ {hora_t} ({lloc_t}) {maps_html_t}
-                            </div>
-                            <div style="font-size: 13px; font-weight: 700; color: #1a1a1a;">
-                                {eq_t1} <span style="background-color: #f0eaf5; padding: 2px 8px; border-radius: 6px; border: 1px solid #d5c8e3;">{text_marcador_t}</span> {eq_t2}
-                            </div>
-                        </div>
-                    """
-                else:
-                    tornada_html = f"""
-                        <div style="margin-top: 8px; font-size: 11px; color: #888; font-style: italic;">
-                            🔵 Partit de tornada (Jornada {j + 13}) pendent de registrar o configurar.
-                        </div>
-                    """
+                maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_url}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_url and str(maps_url).startswith("http") else ""
 
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
+                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
-                            <span>🟢 ANADA - Jornada {j} &nbsp;|&nbsp; 📅 {data_a} &nbsp;|&nbsp; ⏰ {hora_a} ({lloc_a}) {maps_html_a}</span>
+                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora} {maps_html}</span>
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
+                            <div style="display: flex; align-items: center; gap: 12px; width: 40%;">
                                 {img1_html}
-                                <span style="font-weight: 900; font-size: 14px; color: #1a1a1a;">{eq1_nom}</span>
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq1_nom}</span>
                             </div>
                             <div style="text-align: center; width: 20%;">
-                                <span style="background-color: #f0eaf5; color: #1a1a1a; padding: 4px 12px; border-radius: 8px; font-size: 15px; font-weight: 900; border: 1px solid #d5c8e3; display: inline-block;">{text_marcador_a}</span>
+                                <span style="background-color: #f0eaf5; color: #1a1a1a; padding: 6px 14px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 1px solid #d5c8e3; display: inline-block;">{text_marcador}</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 40%;">
-                                <span style="font-weight: 900; font-size: 14px; color: #1a1a1a; text-align: right;">{eq2_nom}</span>
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; width: 40%;">
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq2_nom}</span>
                                 {img2_html}
                             </div>
                         </div>
-                        {tornada_html}
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -882,10 +844,10 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT
+            # PESTANYA ADMIN: CALENDARI UNIFICAT (Creació automàtica anada+tornada i edició individual)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
-                st.markdown("Selecciona qualsevol jornada existent (de l'1 al 26) per editar-la, o tria **'➕ Afegir nova jornada'**.")
+                st.markdown("Selecciona una jornada existent (de l'1 a la 26) per editar-la directament, o tria **'➕ Afegir nova jornada'**.")
 
                 cal_existents = []
                 try:
@@ -1239,7 +1201,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
