@@ -16,6 +16,7 @@ st.set_page_config(
 )
 
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
+DIRECCIO_CASA = "https://maps.app.goo.gl/qq7hJCHrqQv4ZVAB7"
 
 # Funció infal·lible per convertir qualsevol imatge (local o web) a Base64
 def obtenir_imatge_base64(path_o_url):
@@ -343,7 +344,7 @@ def main():
                 except Exception:
                     st.warning("⚠️ L'enllaç del vídeo no és compatible o no està accessible.")
             else:
-                st.warning("⚠️️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
+                st.warning("⚠️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
 
             if fotos_str:
                 lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
@@ -843,26 +844,36 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI (Amb botó de càrrega per veure i modificar dades)
+            # PESTANYA ADMIN: CALENDARI (Amb adreça de Casa automàtica)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió del Calendari Oficial i Resultats")
-                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partits (Anada + Autogeneració)", "✏️ Seleccionar i Modificar Partit Existent"])
+                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partits (Anada + Tornada Automàtica)", "✏️ Seleccionar i Modificar Partit Existent"])
 
                 with sub_cal_nou:
-                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. El programa **crearà automàticament la tornada (de la 14 a la 26)** invertint el camp (Casa ⇄ Fora)!")
+                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. Si jugueu a **Casa**, el programa posarà automàticament l'enllaç de l'estadi del Ginesta. Si jugueu a **Fora**, pots posar l'enllaç del camp del rival!")
                     
                     cal_jornada = st.number_input("Jornada (1 a 13)", min_value=1, max_value=13, value=1, key="cj")
-                    cal_data = st.date_input("Data del partit d'anada", key="cd")
-                    cal_hora = st.text_input("Hora", value="10:30", key="ch")
                     cal_rival = st.text_input("Rival", key="cr")
                     cal_lloc = st.selectbox("Lloc a l'anada", ["Casa", "Fora"], key="cl")
                     cal_escut = st.file_uploader("Escut del Rival (PNG)", type=["png", "jpg"], key="escut_cal")
-                    cal_maps = st.text_input("Enllaç Google Maps de l'estadi (Opcional)", key="cmaps")
-                    
+
                     st.markdown("---")
-                    st.markdown("📅 **Data per a la Jornada de la Segona Volta:**")
-                    cal_data_volta = st.date_input("Data del partit de tornada", key="cd_volta")
-                    cal_hora_volta = st.text_input("Hora del partit de tornada", value="10:30", key="ch_volta")
+                    st.markdown("🟢 **Partit d'Anada:**")
+                    cal_data = st.date_input("Data de l'anada", key="cd")
+                    cal_hora = st.text_input("Hora de l'anada", value="10:30", key="ch")
+                    
+                    # Si és a Casa, posem el link fixe per defecte, si no, camp buit o editable
+                    default_maps_anada = DIRECCIO_CASA if cal_lloc == "Casa" else ""
+                    cal_maps = st.text_input("Google Maps de l'estadi de l'anada", value=default_maps_anada, key="cmaps")
+
+                    st.markdown("🔵 **Partit de Tornada (Segona Volta):**")
+                    cal_data_volta = st.date_input("Data de la tornada", key="cd_volta")
+                    cal_hora_volta = st.text_input("Hora de la tornada", value="10:30", key="ch_volta")
+                    
+                    # A la tornada s'inverteix el lloc, per tant si anada era Casa, tornada serà Fora (i a l'inrevés)
+                    lloc_tornada_preview = "Fora" if cal_lloc == "Casa" else "Casa"
+                    default_maps_volta = DIRECCIO_CASA if lloc_tornada_preview == "Casa" else ""
+                    cal_maps_volta = st.text_input("Google Maps de l'estadi de la tornada", value=default_maps_volta, key="cmaps_volta")
 
                     if st.button("Afegir Jornada (Anada i Tornada Automàtica)"):
                         if cal_rival:
@@ -874,6 +885,10 @@ def main():
                                         f.write(cal_escut.getbuffer())
                                     escut_cal_path = escut_path
 
+                                # Si és a casa i no han escrit res, assegurem l'enllaç de casa
+                                maps_anada_final = cal_maps.strip() if cal_maps.strip() else (DIRECCIO_CASA if cal_lloc == "Casa" else "")
+
+                                # 1. Guardar partit anada
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()),
                                     "jornada": int(cal_jornada),
@@ -882,12 +897,14 @@ def main():
                                     "rival": cal_rival,
                                     "lloc": cal_lloc,
                                     "escut_rival_url": escut_cal_path,
-                                    "maps_url": cal_maps,
+                                    "maps_url": maps_anada_final,
                                     "resultat": ""
                                 }, on_conflict="jornada,rival").execute()
 
+                                # 2. Guardar partit tornada (Jornada + 13) invertint Casa/Fora
                                 jornada_tornada = int(cal_jornada) + 13
                                 lloc_tornada = "Fora" if cal_lloc == "Casa" else "Casa"
+                                maps_tornada_final = cal_maps_volta.strip() if cal_maps_volta.strip() else (DIRECCIO_CASA if lloc_tornada == "Casa" else "")
 
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()) + 1,
@@ -897,11 +914,11 @@ def main():
                                     "rival": cal_rival,
                                     "lloc": lloc_tornada,
                                     "escut_rival_url": escut_cal_path,
-                                    "maps_url": cal_maps,
+                                    "maps_url": maps_tornada_final,
                                     "resultat": ""
                                 }, on_conflict="jornada,rival").execute()
 
-                                st.success(f"✅ Jornada {cal_jornada} (Anada) i Jornada {jornada_tornada} (Tornada automàtica) afegides correctament!")
+                                st.success(f"✅ Jornada {cal_jornada} (Anada) i Jornada {jornada_tornada} (Tornada) afegides correctament amb els seus Google Maps!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
@@ -923,7 +940,6 @@ def main():
                         st.markdown("Selecciona el partit i clica el botó per carregar les dades:")
                         sel_c_str = st.selectbox("Selecciona partit:", list(dict_cal_ed.keys()), key="sel_ed_cal_auto")
                         
-                        # Inicialitzar estat si no existeix
                         if "edit_cal_item_data" not in st.session_state:
                             st.session_state["edit_cal_item_data"] = None
 
@@ -931,7 +947,6 @@ def main():
                             st.session_state["edit_cal_item_data"] = dict_cal_ed[sel_c_str]
                             st.success("Dades carregades correctament!")
 
-                        # Si tenim dades carregades, mostrem el formulari amb els valors omplerts
                         if st.session_state["edit_cal_item_data"]:
                             partit_carregat = st.session_state["edit_cal_item_data"]
                             c_id = partit_carregat.get("id")
@@ -956,7 +971,10 @@ def main():
                             edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=idx_lloc, key="ec_ll_val")
                             
                             edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=partit_carregat.get("resultat", ""), key="ec_res_val")
-                            edit_c_maps = st.text_input("Enllaç Google Maps", value=partit_carregat.get("maps_url", ""), key="ec_maps_val")
+                            
+                            # Si canvien a Casa i no hi ha mapa o hi havia l'antic, podem posar el de casa automàtic si es vol, o deixar l'existent
+                            maps_actual_val = partit_carregat.get("maps_url", "")
+                            edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=maps_actual_val, key="ec_maps_val")
 
                             col_act1, col_act2 = st.columns(2)
                             with col_act1:
@@ -1186,7 +1204,7 @@ def main():
                                 st.error(f"❌ Error: {e}")
 
                     st.markdown("---")
-                    st.markdown("##### 🗑️ Zona de Perill (Eliminar Jugadora)")
+                    st.markdown("##### 🗑️️ Zona de Perill (Eliminar Jugadora)")
                     confirm_key = f"confirm_del_{nom_real}"
                     if confirm_key not in st.session_state:
                         st.session_state[confirm_key] = False
@@ -1196,7 +1214,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
