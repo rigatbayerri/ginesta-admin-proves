@@ -257,8 +257,78 @@ def main():
     else:
         tab_videos, tab_calendari, tab_plantilla, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "👥 Plantilla", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS I GALERIA DE FOTOS
+    # PESTANYA 1: VÍDEOS, GALERIA DE FOTOS I PROPER PARTIT AUTOMÀTIC
     with tab_videos:
+        # --- BUSCADOR AUTOMÀTIC DEL PROPER PARTIT ---
+        try:
+            res_cal_all = supabase.table("calendari").select("*").execute()
+            if res_cal_all.data:
+                llista_cal = sorted(res_cal_all.data, key=lambda x: int(x.get('jornada', 1) or 1))
+                avui = datetime.date.today()
+                proper_partit = None
+                
+                for p in llista_cal:
+                    d_str = p.get('data')
+                    if d_str:
+                        try:
+                            d_obj = datetime.datetime.strptime(d_str, "%Y-%m-%d").date()
+                            if d_obj >= avui:
+                                proper_partit = p
+                                break
+                        except:
+                            pass
+                
+                # Si no troba cap partit a partir d'avui (tots són passats), agafem l'últim
+                if not proper_partit and llista_cal:
+                    proper_partit = llista_cal[-1]
+
+                if proper_partit:
+                    j_ prop = proper_partit.get('jornada', '-')
+                    data_prop = proper_partit.get('data', '-')
+                    hora_prop = proper_partit.get('hora', '-')
+                    rival_prop = proper_partit.get('rival', '-')
+                    lloc_prop = proper_partit.get('lloc', 'Casa')
+                    escut_prop = proper_partit.get('escut_rival_url', '')
+                    maps_prop = proper_partit.get('maps_url', '')
+
+                    if lloc_prop == "Fora":
+                        e1_nom = rival_prop
+                        e1_img = obtenir_imatge_base64(escut_prop)
+                        e2_nom = "C.F. Ginesta"
+                        e2_img = obtenir_imatge_base64(LOGO_URL)
+                    else:
+                        e1_nom = "C.F. Ginesta"
+                        e1_img = obtenir_imatge_base64(LOGO_URL)
+                        e2_nom = rival_prop
+                        e2_img = obtenir_imatge_base64(escut_prop)
+
+                    img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️</div>"
+                    img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️️</div>"
+                    maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
+
+                    st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #f7f3fb 0%, #ede4f5 100%); padding: 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 3px 3px 10px rgba(92,45,115,0.08);">
+                            <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px;">
+                                ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_ prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                                    {img1_p}
+                                    <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
+                                </div>
+                                <div style="text-align: center; width: 16%;">
+                                    <span style="background-color: #5c2d73; color: white; padding: 5px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
+                                    <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
+                                    {img2_p}
+                                </div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+        except:
+            pass
+
         st.subheader("📺 Partits Gravats, Resultats i Galeria")
         partits = []
         try:
@@ -395,8 +465,8 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
-                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
+                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️️</div>"
+                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️️</div>"
 
                 maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_url}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_url and str(maps_url).startswith("http") else ""
 
@@ -844,7 +914,7 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT (Amb assignació automàtica de l'adreça de casa)
+            # PESTANYA ADMIN: CALENDARI UNIFICAT
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
                 st.markdown("Selecciona una jornada de la 1a volta (1-13) per editar **l'anada i la tornada a la vegada**, o tria **'➕ Afegir nova jornada'**.")
@@ -885,7 +955,6 @@ def main():
                     cal_data = st.date_input("Data de l'anada", key="cd_nou")
                     cal_hora = st.text_input("Hora de l'anada", value="10:30", key="ch_nou")
                     
-                    # Si és a Casa, posem directament la direcció de casa nostra per defecte
                     default_maps_anada = DIRECCIO_CASA if cal_lloc == "Casa" else ""
                     cal_maps = st.text_input("Google Maps de l'estadi de l'anada", value=default_maps_anada, key="cmaps_nou")
 
@@ -907,7 +976,6 @@ def main():
                                         f.write(cal_escut.getbuffer())
                                     escut_cal_path = escut_path
 
-                                # Assignació automàtica de Google Maps segons si es juga a Casa o Fora
                                 maps_anada_final = DIRECCIO_CASA if cal_lloc == "Casa" else cal_maps.strip()
 
                                 # Guardar Anada
@@ -981,7 +1049,6 @@ def main():
                         edit_lloc_a = st.selectbox("Lloc anada", ["Casa", "Fora"], index=idx_la, key=f"ec_ll_a_{c_id}")
                         edit_res_a = st.text_input("Resultat anada", value=partit_carregat.get("resultat", ""), key=f"ec_res_a_{c_id}")
                         
-                        # Si es selecciona Casa, posem automàticament la direcció de casa
                         default_edit_maps_a = DIRECCIO_CASA if edit_lloc_a == "Casa" else partit_carregat.get("maps_url", "")
                         edit_maps_a = st.text_input("Google Maps anada", value=default_edit_maps_a, key=f"ec_maps_a_{c_id}")
 
@@ -1003,7 +1070,6 @@ def main():
                         edit_lloc_t = st.selectbox("Lloc tornada", ["Casa", "Fora"], index=idx_lt, key=f"ec_ll_t_{t_id}")
                         edit_res_t = st.text_input("Resultat tornada", value=partit_tornada_obj.get("resultat", "") if partit_tornada_obj else "", key=f"ec_res_t_{t_id}")
                         
-                        # Si es selecciona Casa a la tornada, posem automàticament la direcció de casa
                         default_edit_maps_t = DIRECCIO_CASA if edit_lloc_t == "Casa" else (partit_tornada_obj.get("maps_url", "") if partit_tornada_obj else "")
                         edit_maps_t = st.text_input("Google Maps tornada", value=default_edit_maps_t, key=f"ec_maps_t_{t_id}")
 
@@ -1342,7 +1408,7 @@ def main():
 
             # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
-                st.markdown("#### ⏱️️ Actualització Ràpida de Gols per Minuts (+ / -)")
+                st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
                 actual_con = dict_trams[tram_coll]["gols_contra"]
