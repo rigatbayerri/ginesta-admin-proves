@@ -331,7 +331,6 @@ def main():
             jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
             st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {jornada_txt_mostra}")
             
-            # Mostrar targetes del partit si n'hi ha
             targetes_partit_str = partit_actual.get('targetes_partit', '')
             if targetes_partit_str:
                 st.markdown(f"🟨 **Targetes del partit:** {targetes_partit_str}")
@@ -354,13 +353,15 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI
+    # PESTANYA 2: CALENDARI (Ordenat numèricament de l'1 a la 26)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
         try:
-            res_cal = supabase.table("calendari").select("*").order("jornada", desc=False).execute()
+            res_cal = supabase.table("calendari").select("*").execute()
             calendari_data = res_cal.data
+            # Ordenar numèricament per jornada (de 1 a 26)
+            calendari_data = sorted(calendari_data, key=lambda x: int(x.get('jornada', 1) or 1))
         except:
             pass
 
@@ -375,6 +376,7 @@ def main():
                 lloc = partit.get('lloc', 'Casa')
                 escut_path = partit.get('escut_rival_url', '')
                 resultat_cal = partit.get('resultat', '')
+                maps_url = partit.get('maps_url', '')
 
                 if not resultat_cal or str(resultat_cal).strip() == "" or str(resultat_cal).lower() == "none":
                     text_marcador = "VS"
@@ -395,10 +397,12 @@ def main():
                 img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
                 img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
 
+                maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_url}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_url and str(maps_url).startswith("http") else ""
+
                 st.markdown(f"""
                     <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
-                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora}</span>
+                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora} {maps_html}</span>
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center; gap: 12px; width: 40%;">
@@ -591,7 +595,7 @@ def main():
 
             with tab_adm_partits:
                 st.markdown("#### 🎬 Gestió de Partits, Trams i Targetes")
-                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou (amb Trams i Targetes)", "✏️ Editar / Esborrar Partit Existent"])
+                sub_p_nou, sub_p_edit = st.tabs(["➕ Pujar Partit Nou (amb Trams i Targetes)", "✏️️ Editar / Esborrar Partit Existent"])
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
@@ -668,10 +672,7 @@ def main():
                                             f.write(foto.getbuffer())
                                         rutes_fotos.append(f_path)
 
-                                # Processar targetes i aplicar regla de doble groga / màxim 1 vermella
                                 llista_text_targetes = []
-                                
-                                # Diccionari temporal per comptar grogues en aquest partit específic
                                 comptador_grogues_partit = {}
 
                                 for card in st.session_state["targetes_partit_nou"]:
@@ -679,14 +680,12 @@ def main():
                                     t_tipus = card["tipus"]
                                     minut_card = card["minut"]
 
-                                    # Consultar estat actual de la jugadora a la BD
                                     res_j = supabase.table("golejadores").select("*").eq("nom", j_nom).execute()
                                     if res_j.data:
                                         j_data = res_j.data[0]
                                         grogues_actuals = int(j_data.get("grogues", 0) or 0)
                                         vermelles_actuals = int(j_data.get("vermelles", 0) or 0)
 
-                                        # Portar registre de grogues en aquest partit
                                         if j_nom not in comptador_grogues_partit:
                                             comptador_grogues_partit[j_nom] = 0
 
@@ -695,7 +694,6 @@ def main():
                                             comptador_grogues_partit[j_nom] += 1
                                             llista_text_targetes.append(f"{j_nom} (Min {minut_card} - Groga)")
 
-                                            # Comprovar si arriba a 2 grogues (acumulades o en aquest partit) i no té vermella
                                             if (grogues_actuals % 2 == 0 or comptador_grogues_partit[j_nom] >= 2) and vermelles_actuals == 0:
                                                 vermelles_actuals = 1
                                                 llista_text_targetes.append(f"{j_nom} (Min {minut_card} - Vermella per doble groga)")
@@ -705,7 +703,6 @@ def main():
                                                 vermelles_actuals = 1
                                             llista_text_targetes.append(f"{j_nom} (Min {minut_card} - Vermella)")
 
-                                        # Actualitzar a la BD de jugadores
                                         supabase.table("golejadores").update({
                                             "grogues": grogues_actuals,
                                             "vermelles": vermelles_actuals
@@ -713,7 +710,6 @@ def main():
 
                                 text_targetes_guardar = ", ".join(llista_text_targetes) if llista_text_targetes else ""
 
-                                # Guardar partit amb les targetes definitives
                                 supabase.table("partits").insert({
                                     "titol": nou_titol,
                                     "jornada": nova_jornada.strip(),
@@ -727,7 +723,6 @@ def main():
                                     "targetes_partit": text_targetes_guardar
                                 }).execute()
 
-                                # Guardar gols per trams
                                 for t in trams_llista:
                                     if trams_gols_nous_fav[t] > 0 or trams_gols_nous_con[t] > 0:
                                         res_t = supabase.table("trams_gols").select("*").eq("tram", t).execute()
@@ -848,20 +843,28 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI
+            # PESTANYA ADMIN: CALENDARI (Amb autogeneració de segona volta i edició de data arreglada)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió del Calendari Oficial i Resultats")
-                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partit al Calendari", "✏️ Actualitzar Resultat / Editar Partit"])
+                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partits (Anada + Autogeneració Segona Volta)", "✏️ Actualitzar Resultat / Data / Editar Partit"])
 
                 with sub_cal_nou:
-                    cal_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=1, key="cj")
-                    cal_data = st.date_input("Data", key="cd")
+                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. Un cop guardis la jornada de l'anada, el programa **crearà automàticament la seva corresponent jornada de la segona volta (de la 14 a la 26)** invertint el camp (Casa ⇄ Fora)!")
+                    
+                    cal_jornada = st.number_input("Jornada (1 a 13)", min_value=1, max_value=13, value=1, key="cj")
+                    cal_data = st.date_input("Data del partit d'anada", key="cd")
                     cal_hora = st.text_input("Hora", value="10:30", key="ch")
                     cal_rival = st.text_input("Rival", key="cr")
-                    cal_lloc = st.selectbox("Lloc", ["Casa", "Fora"], key="cl")
-                    cal_escut = st.file_uploader("Escut del Rival per al Calendari (PNG)", type=["png", "jpg"], key="escut_cal")
+                    cal_lloc = st.selectbox("Lloc a l'anada", ["Casa", "Fora"], key="cl")
+                    cal_escut = st.file_uploader("Escut del Rival (PNG)", type=["png", "jpg"], key="escut_cal")
+                    cal_maps = st.text_input("Enllaç Google Maps de l'estadi (Opcional)", key="cmaps")
                     
-                    if st.button("Afegir al Calendari"):
+                    st.markdown("---")
+                    st.markdown("📅 **Data per a la Jornada de la Segona Volta:**")
+                    cal_data_volta = st.date_input("Data del partit de tornada", key="cd_volta")
+                    cal_hora_volta = st.text_input("Hora del partit de tornada", value="10:30", key="ch_volta")
+
+                    if st.button("Afegir Jornada (Anada i Tornada Automàtica)"):
                         if cal_rival:
                             try:
                                 escut_cal_path = ""
@@ -870,7 +873,8 @@ def main():
                                     with open(escut_cal_path, "wb") as f:
                                         f.write(cal_escut.getbuffer())
 
-                                supabase.table("calendari").insert({
+                                # 1. Guardar partit anada
+                                supabase.table("calendari").upsert({
                                     "id": int(time.time()),
                                     "jornada": int(cal_jornada),
                                     "data": str(cal_data),
@@ -878,9 +882,27 @@ def main():
                                     "rival": cal_rival,
                                     "lloc": cal_lloc,
                                     "escut_rival_url": escut_cal_path,
+                                    "maps_url": cal_maps,
                                     "resultat": ""
-                                }).execute()
-                                st.success("✅ Partit afegit al calendari!")
+                                }, on_conflict="jornada,rival").execute()
+
+                                # 2. Generar automàticament la tornada (Jornada + 13) invertint Casa/Fora
+                                jornada_tornada = int(cal_jornada) + 13
+                                lloc_tornada = "Fora" if cal_lloc == "Casa" else "Casa"
+
+                                supabase.table("calendari").upsert({
+                                    "id": int(time.time()) + 1,
+                                    "jornada": int(jornada_tornada),
+                                    "data": str(cal_data_volta),
+                                    "hora": cal_hora_volta,
+                                    "rival": cal_rival,
+                                    "lloc": lloc_tornada,
+                                    "escut_rival_url": escut_cal_path,
+                                    "maps_url": cal_maps,
+                                    "resultat": ""
+                                }, on_conflict="jornada,rival").execute()
+
+                                st.success(f"✅ Jornada {cal_jornada} (Anada) i Jornada {jornada_tornada} (Tornada automàtica) afegides correctament!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
@@ -889,8 +911,8 @@ def main():
                 with sub_cal_edit:
                     cal_existents = []
                     try:
-                        res_c_ed = supabase.table("calendari").select("*").order("jornada", desc=False).execute()
-                        cal_existents = res_c_ed.data
+                        res_c_ed = supabase.table("calendari").select("*").execute()
+                        cal_existents = sorted(res_c_ed.data, key=lambda x: int(x.get('jornada', 1) or 1))
                     except:
                         pass
 
@@ -902,20 +924,33 @@ def main():
                         c_edit_item = dict_cal_ed[sel_c_str]
 
                         c_id = c_edit_item.get("id")
-                        edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=38, value=int(c_edit_item.get("jornada", 1)), key="ec_j")
+                        edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=26, value=int(c_edit_item.get("jornada", 1)), key="ec_j")
                         edit_c_rival = st.text_input("Rival", value=c_edit_item.get("rival", ""), key="ec_r")
-                        edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=c_edit_item.get("resultat", ""), key="ec_res")
+                        
+                        # Conversió segura de la data existent per al date_input
+                        data_str_ant = c_edit_item.get("data", "2026-01-01")
+                        try:
+                            import datetime
+                            data_obj_ant = datetime.datetime.strptime(data_str_ant, "%Y-%m-%d").date()
+                        except:
+                            data_obj_ant = datetime.date.today()
+
+                        edit_c_data = st.date_input("Data del Partit", value=data_obj_ant, key="ec_d")
                         edit_c_hora = st.text_input("Hora", value=c_edit_item.get("hora", ""), key="ec_h")
                         edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if c_edit_item.get("lloc", "Casa")=="Casa" else 1, key="ec_ll")
+                        edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=c_edit_item.get("resultat", ""), key="ec_res")
+                        edit_c_maps = st.text_input("Enllaç Google Maps", value=c_edit_item.get("maps_url", ""), key="ec_maps")
 
-                        if st.button("Guardar Canvis de Resultat / Calendari"):
+                        if st.button("Guardar Canvis de Data / Resultat / Calendari"):
                             try:
                                 supabase.table("calendari").update({
                                     "jornada": int(edit_c_jornada),
                                     "rival": edit_c_rival,
-                                    "resultat": edit_c_resultat.strip(),
+                                    "data": str(edit_c_data),
                                     "hora": edit_c_hora,
-                                    "lloc": edit_c_lloc
+                                    "lloc": edit_c_lloc,
+                                    "resultat": edit_c_resultat.strip(),
+                                    "maps_url": edit_c_maps.strip()
                                 }).eq("id", c_id).execute()
                                 st.success("✅ Partit del calendari actualitzat correctament!")
                                 time.sleep(1)
