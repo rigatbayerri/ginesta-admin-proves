@@ -844,10 +844,10 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI (Sistema unificat tipus "jugadores")
+            # PESTANYA ADMIN: CALENDARI UNIFICAT (Amb anada/tornada automàtica i edició)
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
-                st.markdown("Selecciona una jornada existent per editar-la o modificar-la, o tria **'➕ Afegir nova jornada'** per crear-la.")
+                st.markdown("Selecciona una jornada existent per editar-la (o afegir-li la tornada si li falta), o tria **'➕ Afegir nova jornada'**.")
 
                 cal_existents = []
                 try:
@@ -856,7 +856,6 @@ def main():
                 except:
                     pass
 
-                # Construïm les opcions del desplegable
                 opcions_calendari = ["➕ Afegir nova jornada (Anada + Tornada Automàtica)"]
                 dict_map_cal = {}
                 for c in cal_existents:
