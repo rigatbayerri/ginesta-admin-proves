@@ -199,6 +199,81 @@ def main():
 
     st.divider()
 
+    # --- BANNER FIX GLOBAL: ORDENAT STRICTAMENT PER DATA (El més proper primer) ---
+    try:
+        res_cal_all = supabase.table("calendari").select("*").execute()
+        if res_cal_all.data:
+            def parse_data_partit(p):
+                d_str = p.get('data')
+                if not d_str:
+                    return datetime.date.max
+                try:
+                    return datetime.datetime.strptime(str(d_str).strip(), "%Y-%m-%d").date()
+                except:
+                    return datetime.date.max
+
+            # Ordenar per data pura de més propera a més llunyana
+            llista_cal_per_data = sorted(res_cal_all.data, key=parse_data_partit)
+            avui = datetime.date.today()
+            proper_partit = None
+            
+            # Agafar el primer partit la data del qual sigui avui o posterior
+            for p in llista_cal_per_data:
+                d_obj = parse_data_partit(p)
+                if d_obj >= avui:
+                    proper_partit = p
+                    break
+            
+            if not proper_partit and llista_cal_per_data:
+                proper_partit = llista_cal_per_data[-1]
+
+            if proper_partit:
+                j_prop = proper_partit.get('jornada', '-')
+                data_prop = proper_partit.get('data', '-')
+                hora_prop = proper_partit.get('hora', '-')
+                rival_prop = proper_partit.get('rival', '-')
+                lloc_prop = proper_partit.get('lloc', 'Casa')
+                escut_prop = proper_partit.get('escut_rival_url', '')
+                maps_prop = proper_partit.get('maps_url', '')
+
+                if lloc_prop == "Fora":
+                    e1_nom = rival_prop
+                    e1_img = obtenir_imatge_base64(escut_prop)
+                    e2_nom = "C.F. Ginesta"
+                    e2_img = obtenir_imatge_base64(LOGO_URL)
+                else:
+                    e1_nom = "C.F. Ginesta"
+                    e1_img = obtenir_imatge_base64(LOGO_URL)
+                    e2_nom = rival_prop
+                    e2_img = obtenir_imatge_base64(escut_prop)
+
+                img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️</div>"
+                img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️</div>"
+                maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
+
+                st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #f7f3fb 0%, #ede4f5 100%); padding: 14px 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 3px 3px 10px rgba(92,45,115,0.08);">
+                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px;">
+                            ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                                {img1_p}
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
+                            </div>
+                            <div style="text-align: center; width: 16%;">
+                                <span style="background-color: #5c2d73; color: white; padding: 5px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
+                                {img2_p}
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+    except:
+        pass
+
     golejadores_data = []
     try:
         res_gol = supabase.table("golejadores").select("*").order("dorsal", desc=False).execute()
@@ -257,77 +332,8 @@ def main():
     else:
         tab_videos, tab_calendari, tab_plantilla, tab_stats = st.tabs(["🎬 Videoteca", "📅 Calendari", "👥 Plantilla", "📊 Estadístiques"])
 
-    # PESTANYA 1: VÍDEOS, GALERIA DE FOTOS I PROPER PARTIT AUTOMÀTIC
+    # PESTANYA 1: VÍDEOS I GALERIA DE FOTOS
     with tab_videos:
-        # --- BUSCADOR AUTOMÀTIC DEL PROPER PARTIT ---
-        try:
-            res_cal_all = supabase.table("calendari").select("*").execute()
-            if res_cal_all.data:
-                llista_cal = sorted(res_cal_all.data, key=lambda x: int(x.get('jornada', 1) or 1))
-                avui = datetime.date.today()
-                proper_partit = None
-                
-                for p in llista_cal:
-                    d_str = p.get('data')
-                    if d_str:
-                        try:
-                            d_obj = datetime.datetime.strptime(d_str, "%Y-%m-%d").date()
-                            if d_obj >= avui:
-                                proper_partit = p
-                                break
-                        except:
-                            pass
-                
-                if not proper_partit and llista_cal:
-                    proper_partit = llista_cal[-1]
-
-                if proper_partit:
-                    j_prop = proper_partit.get('jornada', '-')
-                    data_prop = proper_partit.get('data', '-')
-                    hora_prop = proper_partit.get('hora', '-')
-                    rival_prop = proper_partit.get('rival', '-')
-                    lloc_prop = proper_partit.get('lloc', 'Casa')
-                    escut_prop = proper_partit.get('escut_rival_url', '')
-                    maps_prop = proper_partit.get('maps_url', '')
-
-                    if lloc_prop == "Fora":
-                        e1_nom = rival_prop
-                        e1_img = obtenir_imatge_base64(escut_prop)
-                        e2_nom = "C.F. Ginesta"
-                        e2_img = obtenir_imatge_base64(LOGO_URL)
-                    else:
-                        e1_nom = "C.F. Ginesta"
-                        e1_img = obtenir_imatge_base64(LOGO_URL)
-                        e2_nom = rival_prop
-                        e2_img = obtenir_imatge_base64(escut_prop)
-
-                    img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️️</div>"
-                    img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️</div>"
-                    maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
-
-                    st.markdown(f"""
-                        <div style="background: linear-gradient(135deg, #f7f3fb 0%, #ede4f5 100%); padding: 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 3px 3px 10px rgba(92,45,115,0.08);">
-                            <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px;">
-                                ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
-                                    {img1_p}
-                                    <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
-                                </div>
-                                <div style="text-align: center; width: 16%;">
-                                    <span style="background-color: #5c2d73; color: white; padding: 5px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
-                                </div>
-                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
-                                    <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
-                                    {img2_p}
-                                </div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-        except:
-            pass
-
         st.subheader("📺 Partits Gravats, Resultats i Galeria")
         partits = []
         try:
@@ -395,7 +401,7 @@ def main():
                         if escut_path and os.path.exists(escut_path):
                             st.image(escut_path, width=35)
                         else:
-                            st.write("🛡️")
+                            st.write("🛡️️")
 
             st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
             jornada_mostra = partit_actual.get('jornada')
@@ -424,13 +430,14 @@ def main():
                         if os.path.exists(f_path):
                             st.image(f_path, use_container_width=True)
 
-    # PESTANYA 2: CALENDARI PÚBLIC
+    # PESTANYA 2: CALENDARI PÚBLIC (Ordenat estrictament per JORNADA)
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = []
         try:
             res_cal = supabase.table("calendari").select("*").execute()
             calendari_data = res_cal.data
+            # Aquí es manté ordenat estrictament per número de jornada
             calendari_data = sorted(calendari_data, key=lambda x: int(x.get('jornada', 1) or 1))
         except:
             pass
@@ -626,7 +633,7 @@ def main():
             st.plotly_chart(fig_favor, use_container_width=True)
 
         with col_gols_contra:
-            st.markdown("##### 🛡️️ Gols en Contra")
+            st.markdown("##### 🛡️ Gols en Contra")
             fig_contra = px.area(
                 df_trams, 
                 x="Minuts", 
@@ -691,7 +698,7 @@ def main():
                         for t in trams_llista:
                             trams_gols_nous_fav[t] = st.number_input(f"Favor {t}", min_value=0, value=0, key=f"nou_fav_{t}")
                     with col_t2:
-                        st.markdown("**🛡️️ Gols en Contra per Tram**")
+                        st.markdown("**🛡️ Gols en Contra per Tram**")
                         for t in trams_llista:
                             trams_gols_nous_con[t] = st.number_input(f"Contra {t}", min_value=0, value=0, key=f"nou_con_{t}")
 
@@ -1389,7 +1396,7 @@ def main():
                             st.session_state[confirm_key] = True
                             st.rerun()
                     else:
-                        st.warning(f"⚠️️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
+                        st.warning(f"⚠️ Estàs segur que vols eliminar permanentment a **{nom_real}**?")
                         col_del1, col_del2 = st.columns(2)
                         with col_del1:
                             if st.button("Sí, eliminar", type="primary"):
@@ -1407,7 +1414,7 @@ def main():
 
             # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
-                st.markdown("#### ⏱️️ Actualització Ràpida de Gols per Minuts (+ / -)")
+                st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts (+ / -)")
                 tram_coll = st.selectbox("Selecciona el bloc de minuts a modificar:", trams_llista, key="select_tram_minuts")
                 actual_fav = dict_trams[tram_coll]["gols_favor"]
                 actual_con = dict_trams[tram_coll]["gols_contra"]
