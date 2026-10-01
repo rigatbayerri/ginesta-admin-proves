@@ -844,36 +844,57 @@ def main():
                                     st.session_state[confirm_key_p] = False
                                     st.rerun()
 
-            # PESTANYA ADMIN: CALENDARI (Amb actualització automàtica al seleccionar del desplegable)
+            # PESTANYA ADMIN: CALENDARI (Sistema unificat tipus "jugadores")
             with tab_adm_calendari:
-                st.markdown("#### 📅 Gestió del Calendari Oficial i Resultats")
-                sub_cal_nou, sub_cal_edit = st.tabs(["➕ Afegir Partits (Anada + Tornada Automàtica)", "✏️ Seleccionar i Modificar Partit Existent"])
+                st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
+                st.markdown("Selecciona una jornada existent per editar-la o modificar-la, o tria **'➕ Afegir nova jornada'** per crear-la.")
 
-                with sub_cal_nou:
-                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. Si jugueu a **Casa**, el programa posarà automàticament l'enllaç de l'estadi del Ginesta.")
-                    
-                    cal_jornada = st.number_input("Jornada (1 a 13)", min_value=1, max_value=13, value=1, key="cj")
-                    cal_rival = st.text_input("Rival", key="cr")
-                    cal_lloc = st.selectbox("Lloc a l'anada", ["Casa", "Fora"], key="cl")
-                    cal_escut = st.file_uploader("Escut del Rival (PNG)", type=["png", "jpg"], key="escut_cal")
+                cal_existents = []
+                try:
+                    res_c_ed = supabase.table("calendari").select("*").execute()
+                    cal_existents = sorted(res_c_ed.data, key=lambda x: int(x.get('jornada', 1) or 1))
+                except:
+                    pass
+
+                # Construïm les opcions del desplegable
+                opcions_calendari = ["➕ Afegir nova jornada (Anada + Tornada Automàtica)"]
+                dict_map_cal = {}
+                for c in cal_existents:
+                    j_val = c.get('jornada', 1)
+                    r_val = c.get('rival', 'Rival')
+                    d_val = c.get('data', '')
+                    txt = f"Jornada {j_val} vs {r_val} ({d_val})"
+                    opcions_calendari.append(txt)
+                    dict_map_cal[txt] = c
+
+                sel_accio_cal = st.selectbox("Selecciona opció o partit:", opcions_calendari, key="sel_unificat_calendari")
+
+                st.markdown("---")
+
+                if sel_accio_cal == "➕ Afegir nova jornada (Anada + Tornada Automàtica)":
+                    st.markdown("##### ➕ Creació de Nova Jornada (Anada i Tornada)")
+                    st.markdown("Introdueix els partits de la **1a volta (Jornades 1 a 13)**. El programa crearà automàticament la tornada.")
+
+                    cal_jornada = st.number_input("Jornada (1 a 13)", min_value=1, max_value=13, value=1, key="cj_nou")
+                    cal_rival = st.text_input("Rival", key="cr_nou")
+                    cal_lloc = st.selectbox("Lloc a l'anada", ["Casa", "Fora"], key="cl_nou")
+                    cal_escut = st.file_uploader("Escut del Rival (PNG)", type=["png", "jpg"], key="escut_cal_nou")
 
                     st.markdown("---")
                     st.markdown("🟢 **Partit d'Anada:**")
-                    cal_data = st.date_input("Data de l'anada", key="cd")
-                    cal_hora = st.text_input("Hora de l'anada", value="10:30", key="ch")
-                    
+                    cal_data = st.date_input("Data de l'anada", key="cd_nou")
+                    cal_hora = st.text_input("Hora de l'anada", value="10:30", key="ch_nou")
                     default_maps_anada = DIRECCIO_CASA if cal_lloc == "Casa" else ""
-                    cal_maps = st.text_input("Google Maps de l'estadi de l'anada", value=default_maps_anada, key="cmaps")
+                    cal_maps = st.text_input("Google Maps de l'estadi de l'anada", value=default_maps_anada, key="cmaps_nou")
 
                     st.markdown("🔵 **Partit de Tornada (Segona Volta):**")
-                    cal_data_volta = st.date_input("Data de la tornada", key="cd_volta")
-                    cal_hora_volta = st.text_input("Hora de la tornada", value="10:30", key="ch_volta")
-                    
+                    cal_data_volta = st.date_input("Data de la tornada", key="cd_volta_nou")
+                    cal_hora_volta = st.text_input("Hora de la tornada", value="10:30", key="ch_volta_nou")
                     lloc_tornada_preview = "Fora" if cal_lloc == "Casa" else "Casa"
                     default_maps_volta = DIRECCIO_CASA if lloc_tornada_preview == "Casa" else ""
-                    cal_maps_volta = st.text_input("Google Maps de l'estadi de la tornada", value=default_maps_volta, key="cmaps_volta")
+                    cal_maps_volta = st.text_input("Google Maps de l'estadi de la tornada", value=default_maps_volta, key="cmaps_volta_nou")
 
-                    if st.button("Afegir Jornada (Anada i Tornada Automàtica)"):
+                    if st.button("Guardar Nova Jornada (Anada i Tornada)"):
                         if cal_rival:
                             try:
                                 escut_cal_path = ""
@@ -919,84 +940,60 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-                with sub_cal_edit:
-                    cal_existents = []
+                else:
+                    # EDICIÓ DE PARTIT SELECCIONAT
+                    partit_carregat = dict_map_cal[sel_accio_cal]
+                    c_id = partit_carregat.get("id")
+
+                    st.markdown(f"##### ✏️ Editant Jornada {partit_carregat.get('jornada')} - Rival: {partit_carregat.get('rival')}")
+
+                    edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=26, value=int(partit_carregat.get("jornada", 1)), key=f"ec_j_{c_id}")
+                    edit_c_rival = st.text_input("Rival", value=partit_carregat.get("rival", ""), key=f"ec_r_{c_id}")
+                    
+                    data_str_ant = partit_carregat.get("data", str(datetime.date.today()))
                     try:
-                        res_c_ed = supabase.table("calendari").select("*").execute()
-                        cal_existents = sorted(res_c_ed.data, key=lambda x: int(x.get('jornada', 1) or 1))
+                        data_obj_ant = datetime.datetime.strptime(data_str_ant, "%Y-%m-%d").date()
                     except:
-                        pass
+                        data_obj_ant = datetime.date.today()
 
-                    if not cal_existents:
-                        st.warning("No hi ha partits al calendari per editar.")
-                    else:
-                        dict_cal_ed = {f"Jornada {c.get('jornada')} vs {c.get('rival')} ({c.get('data')})": c for c in cal_existents}
-                        
-                        st.markdown("Selecciona el partit per modificar les dades automàticament:")
-                        
-                        # Callback per netejar la clau d'Widget quan canvial el selectbox
-                        def actualitzar_seleccio_partit():
-                            st.session_state["partit_edit_carregat"] = st.session_state["sel_ed_cal_auto"]
+                    edit_c_data = st.date_input("Data del Partit", value=data_obj_ant, key=f"ec_d_{c_id}")
+                    edit_c_hora = st.text_input("Hora", value=partit_carregat.get("hora", ""), key=f"ec_h_{c_id}")
+                    
+                    lloc_actual = partit_carregat.get("lloc", "Casa")
+                    idx_lloc = 0 if lloc_actual == "Casa" else 1
+                    edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=idx_lloc, key=f"ec_ll_{c_id}")
+                    
+                    edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=partit_carregat.get("resultat", ""), key=f"ec_res_{c_id}")
+                    edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_{c_id}")
 
-                        sel_c_str = st.selectbox("Selecciona partit:", list(dict_cal_ed.keys()), key="sel_ed_cal_auto", on_change=actualitzar_seleccio_partit)
-                        
-                        if "partit_edit_carregat" not in st.session_state:
-                            st.session_state["partit_edit_carregat"] = list(dict_cal_ed.keys())[0]
+                    col_act1, col_act2 = st.columns(2)
+                    with col_act1:
+                        if st.button("💾 Guardar Canvis del Partit", key=f"btn_save_{c_id}"):
+                            try:
+                                supabase.table("calendari").update({
+                                    "jornada": int(edit_c_jornada),
+                                    "rival": edit_c_rival,
+                                    "data": str(edit_c_data),
+                                    "hora": edit_c_hora,
+                                    "lloc": edit_c_lloc,
+                                    "resultat": edit_c_resultat.strip(),
+                                    "maps_url": edit_c_maps.strip()
+                                }).eq("id", c_id).execute()
+                                st.success("✅ Partit del calendari actualitzat correctament!")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
 
-                        # Obtenim el partit seleccionat actualment
-                        partit_carregat = dict_cal_ed.get(st.session_state["sel_ed_cal_auto"], list(dict_cal_ed.values())[0])
-                        c_id = partit_carregat.get("id")
-
-                        st.markdown("---")
-                        st.markdown(f"**Editant Jornada {partit_carregat.get('jornada')} - Rival: {partit_carregat.get('rival')}**")
-
-                        edit_c_jornada = st.number_input("Jornada", min_value=1, max_value=26, value=int(partit_carregat.get("jornada", 1)), key=f"ec_j_{c_id}")
-                        edit_c_rival = st.text_input("Rival", value=partit_carregat.get("rival", ""), key=f"ec_r_{c_id}")
-                        
-                        data_str_ant = partit_carregat.get("data", str(datetime.date.today()))
-                        try:
-                            data_obj_ant = datetime.datetime.strptime(data_str_ant, "%Y-%m-%d").date()
-                        except:
-                            data_obj_ant = datetime.date.today()
-
-                        edit_c_data = st.date_input("Data del Partit", value=data_obj_ant, key=f"ec_d_{c_id}")
-                        edit_c_hora = st.text_input("Hora", value=partit_carregat.get("hora", ""), key=f"ec_h_{c_id}")
-                        
-                        lloc_actual = partit_carregat.get("lloc", "Casa")
-                        idx_lloc = 0 if lloc_actual == "Casa" else 1
-                        edit_c_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=idx_lloc, key=f"ec_ll_{c_id}")
-                        
-                        edit_c_resultat = st.text_input("Resultat Final (Ex: 3-1, buit si no jugat)", value=partit_carregat.get("resultat", ""), key=f"ec_res_{c_id}")
-                        edit_c_maps = st.text_input("Enllaç Google Maps (Estadi)", value=partit_carregat.get("maps_url", ""), key=f"ec_maps_{c_id}")
-
-                        col_act1, col_act2 = st.columns(2)
-                        with col_act1:
-                            if st.button("💾 Guardar Canvis del Partit", key=f"btn_save_{c_id}"):
-                                try:
-                                    supabase.table("calendari").update({
-                                        "jornada": int(edit_c_jornada),
-                                        "rival": edit_c_rival,
-                                        "data": str(edit_c_data),
-                                        "hora": edit_c_hora,
-                                        "lloc": edit_c_lloc,
-                                        "resultat": edit_c_resultat.strip(),
-                                        "maps_url": edit_c_maps.strip()
-                                    }).eq("id", c_id).execute()
-                                    st.success("✅ Partit del calendari actualitzat correctament!")
-                                    time.sleep(1)
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
-
-                        with col_act2:
-                            if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
-                                try:
-                                    supabase.table("calendari").delete().eq("id", c_id).execute()
-                                    st.success("🗑️ Partit eliminat del calendari.")
-                                    time.sleep(1)
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                    with col_act2:
+                        if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
+                            try:
+                                supabase.table("calendari").delete().eq("id", c_id).execute()
+                                st.success("🗑️ Partit eliminat del calendari.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
 
             # PESTANYA ADMIN: ESTADÍSTIQUES I MÈTRIQUES
             with tab_adm_stats:
