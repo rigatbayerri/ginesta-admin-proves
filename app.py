@@ -276,7 +276,7 @@ def main():
                                 <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
                             </div>
                             <div style="text-align: center; width: 16%;">
-                                <span style="background-color: #5c2d73; color: white; padding: 5px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
+                                <span style="background-color: #f7f3fb; color: #5c2d73; border: 2px solid #5c2d73; padding: 5px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
                                 <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
@@ -403,7 +403,7 @@ def main():
                                 <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq1_nom}</span>
                             </div>
                             <div style="text-align: center; width: 20%;">
-                                <span style="background-color: #f0eaf5; color: #1a1a1a; padding: 6px 14px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 1px solid #d5c8e3; display: inline-block;">{text_marcador}</span>
+                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 6px 14px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block;">{text_marcador}</span>
                             </div>
                             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; width: 40%;">
                                 <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq2_nom}</span>
@@ -443,7 +443,7 @@ def main():
             fotos_str = partit_actual.get('fotos_partit_urls', '')
             resultat_partit_actual = partit_actual.get('resultat', '')
             
-            # --- CAPÇALERA DESTACADA DEL PARTIT SELECCIONAT AMB RESULTAT ---
+            # --- CAPÇALERA DESTACADA DEL PARTIT SELECCIONAT AMB RESULTAT CLAR ---
             st.markdown("---")
             
             res_display_str = str(resultat_partit_actual).strip() if resultat_partit_actual and str(resultat_partit_actual).strip().lower() != "none" and str(resultat_partit_actual).strip() != "" else "VS"
@@ -477,7 +477,7 @@ def main():
                             <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq_1_n}</span>
                         </div>
                         <div style="text-align: center; width: 20%;">
-                            <span style="background-color: #5c2d73; color: white; padding: 6px 16px; border-radius: 8px; font-size: 16px; font-weight: 900; display: inline-block; box-shadow: 0px 2px 6px rgba(0,0,0,0.15);">{res_display_str}</span>
+                            <span style="background-color: #f7f3fb; color: #5c2d73; padding: 6px 16px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block; box-shadow: 0px 2px 6px rgba(92,45,115,0.12);">{res_display_str}</span>
                         </div>
                         <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 40%;">
                             <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq_2_n}</span>
