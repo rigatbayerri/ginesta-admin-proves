@@ -146,7 +146,7 @@ if not os.path.exists("escuts"):
 if not os.path.exists("fotos_partits"):
     os.makedirs("fotos_partits")
 
-# --- SISTEMA DE DOBLE CLAU D'ACCÉS ---
+# --- SISTEMA DE TRIPLE CLAU D'ACCÉS (Admin, Entrenadores, Famílies) ---
 def check_access():
     if "auth_level" not in st.session_state:
         st.session_state["auth_level"] = None
@@ -160,12 +160,15 @@ def check_access():
                 pass
                 
         st.title("🔒 Accés Restringit")
-        st.write("Espai privat per a les famílies i cos tècnic. Introdueix la contrasenya:")
+        st.write("Espai privat per a les famílies, entrenadores i cos tècnic. Introdueix la contrasenya:")
         
         input_pass = st.text_input("Contrasenya:", type="password")
         if st.button("Entrar"):
             if input_pass == "admin2026":
                 st.session_state["auth_level"] = "admin"
+                st.rerun()
+            elif input_pass == "coach2026":
+                st.session_state["auth_level"] = "coach"
                 st.rerun()
             elif input_pass == "ginesta2026":
                 st.session_state["auth_level"] = "family"
@@ -175,15 +178,19 @@ def check_access():
         return False
     return True
 
-if not check_access():
-    st.stop()
-
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.write(f"Mode actual: **{st.session_state['auth_level'].upper()}**")
-    if st.button("Tancar sessió"):
-        st.session_state["auth_level"] = None
-        st.rerun()
+    if st.session_state.get("auth_level"):
+        nivell_actual = st.session_state['auth_level'].upper()
+        if nivell_actual == "COACH":
+            nivell_actual = "ENTRENADORES"
+        elif nivell_actual == "FAMILY":
+            nivell_actual = "FAMÍLIES"
+            
+        st.write(f"Mode actual: **{nivell_actual}**")
+        if st.button("Tancar sessió"):
+            st.session_state["auth_level"] = None
+            st.rerun()
 
 # --- APLICACIÓ PRINCIPAL ---
 def main():
@@ -222,7 +229,6 @@ def main():
             avui = datetime.date.today()
             proper_partit = None
             
-            # Filtra per trobar el primer partit des d'avui endavant que NO tingui resultat definitiu
             for p in llista_cal_per_data:
                 d_obj = parse_data_partit(p)
                 res_val = str(p.get('resultat', '')).strip().lower()
@@ -232,7 +238,6 @@ def main():
                     proper_partit = p
                     break
             
-            # Si no en troba cap de pendent amb data futura/avui, agafa l'últim
             if not proper_partit and llista_cal_per_data:
                 proper_partit = llista_cal_per_data[-1]
 
@@ -336,7 +341,7 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS
+    # PESTANYES PRINCIPALS SEGONS ROL
     if st.session_state["auth_level"] == "admin":
         tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
     else:
@@ -473,10 +478,10 @@ def main():
                 else:
                     st.info("No hi ha fotos disponibles per a aquest partit.")
 
-    # PESTANYA 3: PLANTILLA
+    # PESTANYA 3: PLANTILLA (AMAGA TITULARITATS SI ÉS FAMÍLIA)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
-        st.markdown("Fitxes individuals, partits jugats i titularitats de cada jugadora.")
+        st.markdown("Fitxes individuals i estadístiques de cada jugadora.")
         st.markdown("---")
 
         cols = st.columns(2)
@@ -496,6 +501,12 @@ def main():
                 gols_realitzats_val = jugadora.get('gols', 0)
                 estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
 
+            # Mostrar titularitats només si és admin o coach
+            if st.session_state["auth_level"] in ["admin", "coach"]:
+                info_partits_html = f"⚽ Partits Jugats: <b>{partits_jugats_val}</b> &nbsp;|&nbsp; ⭐ Titularitats: <b>{titularitats_val}</b>"
+            else:
+                info_partits_html = f"⚽ Partits Jugats: <b>{partits_jugats_val}</b>"
+
             with cols[i % 2]:
                 with st.container():
                     st.markdown(f"""
@@ -508,7 +519,7 @@ def main():
                         </div>
                         <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
                         <div style="font-size: 11px; color: #1a1a1a;">
-                            ⚽ Partits Jugats: <b>{partits_jugats_val}</b> &nbsp;|&nbsp; ⭐ Titularitats: <b>{titularitats_val}</b>
+                            {info_partits_html}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1432,5 +1443,6 @@ def main():
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
+# --- EXECUCIÓ DE L'APLICACIÓ AMB CONTROL D'ACCÉS ---
 if check_access():
     main()
