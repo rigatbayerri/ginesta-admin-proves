@@ -432,7 +432,7 @@ def main():
                 j_str = f"J.{jornada_val}" if jornada_val and str(jornada_val).strip() else "J-"
                 titol_val = p.get('titol', 'Partit')
                 res_val = p.get('resultat')
-                res_str = str(res_val) if res_val and str(res_val).strip().lower() != "none" else "vs"
+                res_str = str(res_val).strip() if res_val and str(res_val).strip().lower() != "none" and str(res_val).strip() != "" else "vs"
                 opcions_partits[f"{j_str} - {titol_val} ({res_str})"] = p
 
             partit_seleccionat_str = st.selectbox("Selecciona un partit:", list(opcions_partits.keys()))
@@ -441,13 +441,52 @@ def main():
             rival = partit_actual.get('rival', 'Rival')
             lloc = partit_actual.get('lloc', 'Casa')
             fotos_str = partit_actual.get('fotos_partit_urls', '')
+            resultat_partit_actual = partit_actual.get('resultat', '')
             
+            # --- CAPÇALERA DESTACADA DEL PARTIT SELECCIONAT AMB RESULTAT ---
             st.markdown("---")
-            st.markdown(f"### 🏟️ {partit_actual.get('titol')}")
+            
+            res_display_str = str(resultat_partit_actual).strip() if resultat_partit_actual and str(resultat_partit_actual).strip().lower() != "none" and str(resultat_partit_actual).strip() != "" else "VS"
+            
+            # Determinar ordre d'equips segons si es juga a Casa o Fora
+            if lloc == "Fora":
+                eq_1_n = rival
+                eq_1_img = obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
+                eq_2_n = "C.F. Ginesta"
+                eq_2_img = obtenir_imatge_base64(LOGO_URL)
+            else:
+                eq_1_n = "C.F. Ginesta"
+                eq_1_img = obtenir_imatge_base64(LOGO_URL)
+                eq_2_n = rival
+                eq_2_img = obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
+
+            img1_v_html = f"<img src='{eq_1_img}' style='width: 50px; height: 50px; object-fit: contain;'>" if eq_1_img else "<div style='font-size: 30px;'>🛡️</div>"
+            img2_v_html = f"<img src='{eq_2_img}' style='width: 50px; height: 50px; object-fit: contain;'>" if eq_2_img else "<div style='font-size: 30px;'>🛡️</div>"
+            
             jornada_mostra = partit_actual.get('jornada')
             jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
-            st.markdown(f"📅 **Data:** {partit_actual.get('data')} &nbsp;|&nbsp; 🏆 **Jornada:** {jornada_txt_mostra} &nbsp;|&nbsp; 📍 **Lloc:** {lloc} &nbsp;|&nbsp; 🛡️ **Rival:** {rival}")
-            
+
+            st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f7f3fb 100%); padding: 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(92,45,115,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #e8dbf2; padding-bottom: 6px; margin-bottom: 10px;">
+                        <span>🏆 {partit_actual.get('titol')} &nbsp;|&nbsp; Jornada {jornada_txt_mostra} &nbsp;|&nbsp; 📅 {partit_actual.get('data')} &nbsp;|&nbsp; 📍 {lloc}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
+                            {img1_v_html}
+                            <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq_1_n}</span>
+                        </div>
+                        <div style="text-align: center; width: 20%;">
+                            <span style="background-color: #5c2d73; color: white; padding: 6px 16px; border-radius: 8px; font-size: 16px; font-weight: 900; display: inline-block; box-shadow: 0px 2px 6px rgba(0,0,0,0.15);">{res_display_str}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 40%;">
+                            <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq_2_n}</span>
+                            {img2_v_html}
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
             targetes_partit_str = partit_actual.get('targetes_partit', '')
             if targetes_partit_str:
                 st.markdown(f"🟨 **Targetes del partit:** {targetes_partit_str}")
