@@ -205,7 +205,7 @@ def main():
 
     st.divider()
 
-    # --- BANNER FIX GLOBAL: ORDENAT STRICTAMENT PER DATA (El més proper primer) ---
+    # --- BANNER FIX GLOBAL: BUSCA EL PROPER PARTIT SENSE RESULTAT (>= avui i sense resultat) ---
     try:
         res_cal_all = supabase.table("calendari").select("*").execute()
         if res_cal_all.data:
@@ -222,12 +222,17 @@ def main():
             avui = datetime.date.today()
             proper_partit = None
             
+            # Filtra per trobar el primer partit des d'avui endavant que NO tingui resultat definitiu
             for p in llista_cal_per_data:
                 d_obj = parse_data_partit(p)
-                if d_obj >= avui:
+                res_val = str(p.get('resultat', '')).strip().lower()
+                sense_resultat = (not res_val or res_val == "none" or res_val == "")
+                
+                if d_obj >= avui and sense_resultat:
                     proper_partit = p
                     break
             
+            # Si no en troba cap de pendent amb data futura/avui, agafa l'últim
             if not proper_partit and llista_cal_per_data:
                 proper_partit = llista_cal_per_data[-1]
 
@@ -1145,7 +1150,7 @@ def main():
                                     st.error(f"❌ Error: {e}")
 
                         with col_act2:
-                            if st.button("🗑️️ Eliminar Partit", key=f"btn_del_{c_id}"):
+                            if st.button("🗑️ Eliminar Partit", key=f"btn_del_{c_id}"):
                                 try:
                                     supabase.table("calendari").delete().eq("id", c_id).execute()
                                     st.success("🗑️ Partit eliminat del calendari.")
