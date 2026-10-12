@@ -341,11 +341,11 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS SEGONS ROL
+    # PESTANYES PRINCIPALS SEGONS ROL (INCLOU "AMISTOSOS")
     if st.session_state["auth_level"] == "admin":
-        tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
+        tab_calendari, tab_amistosos, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🤝 Amistosos", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
     else:
-        tab_calendari, tab_videos, tab_plantilla, tab_stats = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques"])
+        tab_calendari, tab_amistosos, tab_videos, tab_plantilla, tab_stats = st.tabs(["📅 Calendari", "🤝 Amistosos", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques"])
 
     # PESTANYA 1: CALENDARI PÚBLIC
     with tab_calendari:
@@ -413,18 +413,69 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 2: VIDEOTECA AMB SUBPESTANYES INTERNES (VÍDEO / RESUM DEL PARTIT / FOTOS)
+    # PESTANYA 2: AMISTOSOS (VERSIÓ LIGHT: PARTITS I LES 4 DIRECCIONS/UBICACIONS)
+    with tab_amistosos:
+        st.subheader("🤝 Partits Amistosos & Ubicacions")
+        st.markdown("Llistat de partits de preparació i accés directe als camps de joc.")
+        st.markdown("---")
+
+        partits_amistosos = []
+        try:
+            res_tots = supabase.table("partits").select("*").order("data", desc=True).execute()
+            # Filtrem aquells que continguin "amistós", "amistos" o "pretemporada"
+            partits_amistosos = [p for p in res_tots.data if "amistós" in str(p.get("titol", "")).lower() or "amistos" in str(p.get("titol", "")).lower() or "pretemporada" in str(p.get("titol", "")).lower() or "amistós" in str(p.get("jornada", "")).lower()]
+        except:
+            pass
+
+        if not partits_amistosos:
+            st.info("ℹ️ No hi ha partits amistosos registrats actualment.")
+        else:
+            for partit_am in partits_amistosos:
+                titol_am = partit_am.get('titol', 'Partit Amistós')
+                data_am = partit_am.get('data', '-')
+                rival_am = partit_am.get('rival', '-')
+                res_am = partit_am.get('resultat', 'VS')
+                lloc_am = partit_am.get('lloc', 'Casa')
+                escut_am = partit_am.get('escut_rival_url', '')
+                maps_am = partit_am.get('maps_url', '')
+
+                escut_am_b64 = obtenir_imatge_base64(escut_am)
+                img_am_html = f"<img src='{escut_am_b64}' style='width: 40px; height: 40px; object-fit: contain;'>" if escut_am_b64 else "🛡️"
+                maps_am_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_am}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_am and str(maps_am).startswith("http") else ""
+
+                st.markdown(f"""
+                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
+                            <span>🤝 {titol_am} &nbsp;|&nbsp; 📅 {data_am} &nbsp;|&nbsp; 📍 {lloc_am} {maps_am_html}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
+                                {img_am_html}
+                                <span style="font-weight: 900; font-size: 14px; color: #1a1a1a;">Rival: {rival_am}</span>
+                            </div>
+                            <div style="text-align: center; width: 20%;">
+                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block;">{res_am}</span>
+                            </div>
+                            <div style="text-align: right; width: 40%; font-size: 13px; font-weight: bold; color: #5c2d73;">
+                                C.F. Ginesta Cadet F11
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+    # PESTANYA 3: VIDEOTECA AMB SUBPESTANYES INTERNES (VÍDEO / RESUM DEL PARTIT / FOTOS)
     with tab_videos:
         st.subheader("📺 Videoteca & Galeria de Partits")
         partits = []
         try:
             response = supabase.table("partits").select("*").order("data", desc=True).execute()
-            partits = response.data
+            # Excloïm els amistosos/pretemporada per deixar la lliga neta
+            partits = [p for p in response.data if "amistós" not in str(p.get("titol", "")).lower() and "amistos" not in str(p.get("titol", "")).lower() and "pretemporada" not in str(p.get("titol", "")).lower()]
         except Exception as e:
             st.error(f"❌ Error: {e}")
 
         if not partits:
-            st.warning("Encara no hi ha partits registrats.")
+            st.warning("Encara no hi ha partits de lliga registrats.")
         else:
             opcions_partits = {}
             for p in partits:
@@ -528,7 +579,7 @@ def main():
                 else:
                     st.info("No hi ha fotos disponibles per a aquest partit.")
 
-    # PESTANYA 3: PLANTILLA (AMAGA TITULARITATS SI ÉS FAMÍLIA)
+    # PESTANYA 4: PLANTILLA (AMAGA TITULARITATS SI ÉS FAMÍLIA)
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
         st.markdown("Fitxes individuals i estadístiques de cada jugadora.")
@@ -576,7 +627,7 @@ def main():
 
                     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    # PESTANYA 4: ESTADÍSTIQUES
+    # PESTANYA 5: ESTADÍSTIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -701,7 +752,7 @@ def main():
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
-    # PESTANYA 5: ADMIN
+    # PESTANYA 6: ADMIN
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
@@ -713,7 +764,7 @@ def main():
 
                 with sub_p_nou:
                     nou_titol = st.text_input("Títol del Partit", key="t_nou")
-                    nova_jornada = st.text_input("Jornada (Ex: 1, 2, etc.)", value="1", key="j_nou")
+                    nova_jornada = st.text_input("Jornada (Ex: 1, 2, Amistós)", value="1", key="j_nou")
                     nova_data = st.date_input("Data", key="d_nou")
                     nom_rival = st.text_input("Nom Rival", key="r_nou")
                     resultat_partit = st.text_input("Resultat Final (Ex: 3-1)", key="res_nou")
