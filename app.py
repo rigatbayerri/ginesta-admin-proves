@@ -945,9 +945,9 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT
+            # PESTANYA ADMIN: CALENDARI UNIFICAT (AMB GESTIÓ D'ANADA I TORNADA RESTAURADA)
             with tab_adm_calendari:
-                st.markdown("#### 📅 Gestió Unificada del Calendari Oficial")
+                st.markdown("#### 📅 Gestió Unificada del Calendari Oficial (Anada i Tornada)")
                 cal_existents = []
                 try:
                     res_c_ed = supabase.table("calendari").select("*").execute()
@@ -1024,6 +1024,95 @@ def main():
                                 }, on_conflict="jornada").execute()
 
                                 st.success(f"✅ Jornades afegides correctament!")
+                                time.sleep(0.5)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
+                else:
+                    partit_carregat = dict_map_cal[sel_accio_cal]
+                    c_id = partit_carregat.get("id")
+                    jornada_actual_num = int(partit_carregat.get("jornada", 1))
+
+                    if jornada_actual_num <= 13:
+                        jornada_tornada_num = jornada_actual_num + 13
+                        partit_tornada_obj = next((item for item in cal_existents if int(item.get("jornada", 0)) == jornada_tornada_num), None)
+
+                        st.markdown(f"##### ✏️ Editant Jornada {jornada_actual_num} (Anada) i Jornada {jornada_tornada_num} (Tornada)")
+
+                        escut_actual_a = partit_carregat.get("escut_rival_url", "")
+                        if escut_actual_a and os.path.exists(escut_actual_a):
+                            st.image(escut_actual_a, width=40)
+                            st.caption("Escut actual del rival (es sincronitzarà a la tornada)")
+
+                        edit_arxiu_escut_nou = st.file_uploader("Canviar Escut del Rival", type=["png", "jpg"], key=f"up_esc_{c_id}")
+
+                        st.markdown("🟢 **Partit d'Anada:**")
+                        edit_r_anada = st.text_input("Rival (Anada)", value=partit_carregat.get("rival", ""), key=f"ec_r_a_{c_id}")
+                        
+                        d_str_a = partit_carregat.get("data", str(datetime.date.today()))
+                        try:
+                            d_obj_a = datetime.datetime.strptime(d_str_a, "%Y-%m-%d").date()
+                        except:
+                            d_obj_a = datetime.date.today()
+                        edit_d_anada = st.date_input("Data anada", value=d_obj_a, key=f"ec_d_a_{c_id}")
+                        edit_h_anada = st.text_input("Hora anada", value=partit_carregat.get("hora", ""), key=f"ec_h_a_{c_id}")
+                        
+                        lloc_a_ant = partit_carregat.get("lloc", "Casa")
+                        idx_la = 0 if lloc_a_ant == "Casa" else 1
+                        edit_lloc_a = st.selectbox("Lloc anada", ["Casa", "Fora"], index=idx_la, key=f"ec_ll_a_{c_id}")
+                        edit_res_a = st.text_input("Resultat anada", value=partit_carregat.get("resultat", ""), key=f"ec_res_a_{c_id}")
+                        edit_maps_a = st.text_input("Google Maps anada", value=DIRECCIO_CASA if edit_lloc_a == "Casa" else partit_carregat.get("maps_url", ""), key=f"ec_maps_a_{c_id}")
+
+                        st.markdown("---")
+                        st.markdown(f"🔵 **Partit de Tornada (Jornada {jornada_tornada_num}):**")
+                        t_id = partit_tornada_obj.get("id") if partit_tornada_obj else int(time.time()) + 99
+                        d_str_t = partit_tornada_obj.get("data", str(datetime.date.today())) if partit_tornada_obj else str(datetime.date.today())
+                        try:
+                            d_obj_t = datetime.datetime.strptime(d_str_t, "%Y-%m-%d").date()
+                        except:
+                            d_obj_t = datetime.date.today()
+
+                        edit_d_tornada = st.date_input("Data tornada", value=d_obj_t, key=f"ec_d_t_{t_id}")
+                        edit_h_tornada = st.text_input("Hora tornada", value=partit_tornada_obj.get("hora", "10:30") if partit_tornada_obj else "10:30", key=f"ec_h_t_{t_id}")
+                        
+                        lloc_t_ant = partit_tornada_obj.get("lloc", ("Fora" if lloc_a_ant == "Casa" else "Casa")) if partit_tornada_obj else ("Fora" if lloc_a_ant == "Casa" else "Casa")
+                        idx_lt = 0 if lloc_t_ant == "Casa" else 1
+                        edit_lloc_t = st.selectbox("Lloc tornada", ["Casa", "Fora"], index=idx_lt, key=f"ec_ll_t_{t_id}")
+                        edit_res_t = st.text_input("Resultat tornada", value=partit_tornada_obj.get("resultat", "") if partit_tornada_obj else "", key=f"ec_res_t_{t_id}")
+                        edit_maps_t = st.text_input("Google Maps tornada", value=DIRECCIO_CASA if edit_lloc_t == "Casa" else (partit_tornada_obj.get("maps_url", "") if partit_tornada_obj else ""), key=f"ec_maps_t_{t_id}")
+
+                        if st.button("💾 Guardar Canvis (Anada i Tornada)", key=f"btn_save_both_{c_id}"):
+                            try:
+                                escut_final_path = escut_actual_a
+                                if edit_arxiu_escut_nou is not None:
+                                    escut_final_path = os.path.join("escuts", edit_arxiu_escut_nou.name)
+                                    with open(escut_final_path, "wb") as f:
+                                        f.write(edit_arxiu_escut_nou.getbuffer())
+
+                                supabase.table("calendari").update({
+                                    "jornada": int(jornada_actual_num),
+                                    "rival": edit_r_anada,
+                                    "data": str(edit_d_anada),
+                                    "hora": edit_h_anada,
+                                    "lloc": edit_lloc_a,
+                                    "escut_rival_url": escut_final_path,
+                                    "resultat": edit_res_a.strip(),
+                                    "maps_url": DIRECCIO_CASA if edit_lloc_a == "Casa" else edit_maps_a.strip()
+                                }).eq("id", c_id).execute()
+
+                                supabase.table("calendari").upsert({
+                                    "id": t_id,
+                                    "jornada": int(jornada_tornada_num),
+                                    "rival": edit_r_anada,
+                                    "data": str(edit_d_tornada),
+                                    "hora": edit_h_tornada,
+                                    "lloc": edit_lloc_t,
+                                    "escut_rival_url": escut_final_path,
+                                    "resultat": edit_res_t.strip(),
+                                    "maps_url": DIRECCIO_CASA if edit_lloc_t == "Casa" else edit_maps_t.strip()
+                                }, on_conflict="jornada").execute()
+
+                                st.success("✅ Canvis guardats correctament (Anada i Tornada)!")
                                 time.sleep(0.5)
                                 st.rerun()
                             except Exception as e:
