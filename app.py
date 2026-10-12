@@ -194,7 +194,6 @@ with st.sidebar:
 
 # --- APLICACIÓ PRINCIPAL ---
 def main():
-    # Capçalera 100% centrada amb disseny creatiu tipus insígnia esportiva
     escut_b64 = obtenir_imatge_base64(LOGO_URL)
     st.markdown(f"""
         <div style="text-align: center; padding: 10px 0 20px 0;">
@@ -212,7 +211,7 @@ def main():
 
     st.divider()
 
-    # --- BANNER FIX GLOBAL: BUSCA EL PROPER PARTIT SENSE RESULTAT (>= avui i sense resultat) ---
+    # --- BANNER PROPER PARTIT ---
     try:
         res_cal_all = supabase.table("calendari").select("*").execute()
         if res_cal_all.data:
@@ -341,7 +340,7 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS SEGONS ROL
+    # PESTANYES PRINCIPALS
     if st.session_state["auth_level"] == "admin":
         tab_calendari, tab_amistosos, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🤝 Amistosos", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
     else:
@@ -413,10 +412,10 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 2: AMISTOSOS (VERSIÓ LIGHT: PARTITS I LES 4 DIRECCIONS/UBICACIONS)
+    # PESTANYA 2: AMISTOSOS (SIMPLIFICADA: RIVAL, ESCUT I VÍDEO)
     with tab_amistosos:
-        st.subheader("🤝 Partits Amistosos & Ubicacions")
-        st.markdown("Llistat de partits de preparació i accés directe als camps de joc.")
+        st.subheader("🤝 Partits Amistosos & Vídeos")
+        st.markdown("Partits de preparació i vídeos de la pretemporada.")
         st.markdown("---")
 
         partits_amistosos = []
@@ -431,36 +430,55 @@ def main():
         else:
             for partit_am in partits_amistosos:
                 titol_am = partit_am.get('titol', 'Partit Amistós')
-                data_am = partit_am.get('data', '-')
-                rival_am = partit_am.get('rival', '-')
-                res_am = partit_am.get('resultat', 'VS')
+                rival_am = partit_am.get('rival', 'Rival')
                 lloc_am = partit_am.get('lloc', 'Casa')
-                escut_am = partit_am.get('escut_rival_url', '')
+                escut_rival = partit_am.get('escut_rival_url', '')
                 maps_am = partit_am.get('maps_url', '')
+                video_am = partit_am.get('video_url') or partit_am.get('enllaç_video')
 
-                escut_am_b64 = obtenir_imatge_base64(escut_am)
-                img_am_html = f"<img src='{escut_am_b64}' style='width: 40px; height: 40px; object-fit: contain;'>" if escut_am_b64 else "🛡️"
-                maps_am_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_am}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_am and str(maps_am).startswith("http") else ""
+                if lloc_am == "Fora":
+                    e1_nom = rival_am
+                    e1_img = obtenir_imatge_base64(escut_rival)
+                    e2_nom = "C.F. Ginesta"
+                    e2_img = obtenir_imatge_base64(LOGO_URL)
+                else:
+                    e1_nom = "C.F. Ginesta"
+                    e1_img = obtenir_imatge_base64(LOGO_URL)
+                    e2_nom = rival_am
+                    e2_img = obtenir_imatge_base64(escut_rival)
+
+                img1_html = f"<img src='{e1_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e1_img else "<div style='font-size: 28px;'>🛡️</div>"
+                img2_html = f"<img src='{e2_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e2_img else "<div style='font-size: 28px;'>🛡️</div>"
+                
+                maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_am}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_am and str(maps_am).startswith("http") else ""
 
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
-                            <span>🤝 {titol_am} &nbsp;|&nbsp; 📅 {data_am} &nbsp;|&nbsp; 📍 {lloc_am} {maps_am_html}</span>
+                    <div style="background-color: white; padding: 14px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
+                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; margin-bottom: 10px; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px;">
+                            ⭐ {titol_am} &nbsp;|&nbsp; 📍 {lloc_am} {maps_html}
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
-                                {img_am_html}
-                                <span style="font-weight: 900; font-size: 14px; color: #1a1a1a;">Rival: {rival_am}</span>
+                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                                {img1_html}
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
                             </div>
-                            <div style="text-align: center; width: 20%;">
-                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block;">{res_am}</span>
+                            <div style="text-align: center; width: 16%;">
+                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; border: 1px solid #5c2d73;">VS</span>
                             </div>
-                            <div style="text-align: right; width: 40%; font-size: 13px; font-weight: bold; color: #5c2d73;">
-                                C.F. Ginesta Cadet F11
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
+                                {img2_html}
                             </div>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+
+                if video_am and str(video_am).startswith("http"):
+                    with st.expander(f"📺 Veure vídeo de {titol_am}"):
+                        try:
+                            st.video(video_am)
+                        except:
+                            st.warning("⚠️ No s'ha pogut carregar el vídeo.")
 
     # PESTANYA 3: VIDEOTECA (LLIGA)
     with tab_videos:
@@ -721,7 +739,7 @@ def main():
                     
                     arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
                     arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
-                    nou_video_url = st.text_input("Enllaç Vídeo Sencer (Opcional per amistosos)", key="v_url_nou")
+                    nou_video_url = st.text_input("Enllaç Vídeo Sencer", key="v_url_nou")
                     nou_resum_url = st.text_input("Enllaç Resum del Partit", key="r_url_nou")
                     maps_amistos_url = st.text_input("Google Maps (Ubicació del camp si jugueu a Fora)", key="maps_am_nou")
                     
@@ -794,7 +812,6 @@ def main():
                             st.error(f"❌ Error: {e}")
 
                 with sub_p_edit:
-                    # Càrrega ràpida de partits amb gestió de sessió per evitar recàrregues lentes
                     if "partits_admin_cache" not in st.session_state:
                         try:
                             res_p = supabase.table("partits").select("*").order("data", desc=True).execute()
@@ -842,7 +859,6 @@ def main():
                                     "maps_url": DIRECCIO_CASA if edit_lloc == "Casa" else edit_maps.strip()
                                 }
                                 supabase.table("partits").update(update_data).eq("id", edit_id).execute()
-                                # Netegem caché perquè recarregui a l'instant
                                 if "partits_admin_cache" in st.session_state:
                                     del st.session_state["partits_admin_cache"]
 
