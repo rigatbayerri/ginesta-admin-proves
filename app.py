@@ -146,7 +146,7 @@ if not os.path.exists("escuts"):
 if not os.path.exists("fotos_partits"):
     os.makedirs("fotos_partits")
 
-# --- SISTEMA DE TRIPLE CLAU D'ACCÉS (Admin, Entrenadores, Famílies) ---
+# --- SISTEMA D'ACCÉS AMB FORMULARI (PERMET PREMRE ENTER) ---
 def check_access():
     if "auth_level" not in st.session_state:
         st.session_state["auth_level"] = None
@@ -160,21 +160,24 @@ def check_access():
                 pass
                 
         st.title("🔒 Accés Restringit")
-        st.write("Espai privat per a les famílies, entrenadores i cos tècnic. Introdueix la contrasenya:")
+        st.write("Espai privat per a les famílies, entrenadores i cos tècnic. Introdueix la contrasenya (pots prémer Enter):")
         
-        input_pass = st.text_input("Contrasenya:", type="password")
-        if st.button("Entrar"):
-            if input_pass == "admin2026":
-                st.session_state["auth_level"] = "admin"
-                st.rerun()
-            elif input_pass == "coach2026":
-                st.session_state["auth_level"] = "coach"
-                st.rerun()
-            elif input_pass == "ginesta2026":
-                st.session_state["auth_level"] = "family"
-                st.rerun()
-            else:
-                st.error("❌ Contrasenya incorrecta.")
+        with st.form("form_login"):
+            input_pass = st.text_input("Contrasenya:", type="password")
+            submitted = st.form_submit_button("Entrar")
+            
+            if submitted:
+                if input_pass == "admin2026":
+                    st.session_state["auth_level"] = "admin"
+                    st.rerun()
+                elif input_pass == "coach2026":
+                    st.session_state["auth_level"] = "coach"
+                    st.rerun()
+                elif input_pass == "ginesta2026":
+                    st.session_state["auth_level"] = "family"
+                    st.rerun()
+                else:
+                    st.error("❌ Contrasenya incorrecta.")
         return False
     return True
 
@@ -201,9 +204,9 @@ def main():
                 <img src="{escut_b64}" style="width: 100px; height: 100px; object-fit: contain; display: block;">
             </div>
             <div style="font-size: 24px; font-weight: 900; color: #5c2d73; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;">
-                CADET F11
+                CADET F11 &nbsp;<span style="font-size: 13px; background-color: #5c2d73; color: white !important; padding: 3px 8px; border-radius: 6px; vertical-align: middle; letter-spacing: 1px;">FAN PAGE</span>
             </div>
-            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">
+            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
                 C.F. Ginesta
             </div>
         </div>
@@ -340,11 +343,11 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS
+    # PESTANYES PRINCIPALS REORGANITZADES (Calendari -> Vídeos -> Plantilla -> Estadístiques -> Amistosos)
     if st.session_state["auth_level"] == "admin":
-        tab_calendari, tab_amistosos, tab_videos, tab_plantilla, tab_stats, tab_admin = st.tabs(["📅 Calendari", "🤝 Amistosos", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "⚙️ Admin"])
+        tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos", "⚙️ Admin"])
     else:
-        tab_calendari, tab_amistosos, tab_videos, tab_plantilla, tab_stats = st.tabs(["📅 Calendari", "🤝 Amistosos", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques"])
+        tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos"])
 
     # PESTANYA 1: CALENDARI PÚBLIC
     with tab_calendari:
@@ -412,75 +415,7 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 2: AMISTOSOS (SIMPLIFICADA: RIVAL, ESCUT I VÍDEO)
-    with tab_amistosos:
-        st.subheader("🤝 Partits Amistosos & Vídeos")
-        st.markdown("Partits de preparació i vídeos de la pretemporada.")
-        st.markdown("---")
-
-        partits_amistosos = []
-        try:
-            res_tots = supabase.table("partits").select("*").order("data", desc=True).execute()
-            partits_amistosos = [p for p in res_tots.data if "amistós" in str(p.get("titol", "")).lower() or "amistos" in str(p.get("titol", "")).lower() or "pretemporada" in str(p.get("titol", "")).lower() or "amistós" in str(p.get("jornada", "")).lower()]
-        except:
-            pass
-
-        if not partits_amistosos:
-            st.info("ℹ️ No hi ha partits amistosos registrats actualment.")
-        else:
-            for partit_am in partits_amistosos:
-                titol_am = partit_am.get('titol', 'Partit Amistós')
-                rival_am = partit_am.get('rival', 'Rival')
-                lloc_am = partit_am.get('lloc', 'Casa')
-                escut_rival = partit_am.get('escut_rival_url', '')
-                maps_am = partit_am.get('maps_url', '')
-                video_am = partit_am.get('video_url') or partit_am.get('enllaç_video')
-
-                if lloc_am == "Fora":
-                    e1_nom = rival_am
-                    e1_img = obtenir_imatge_base64(escut_rival)
-                    e2_nom = "C.F. Ginesta"
-                    e2_img = obtenir_imatge_base64(LOGO_URL)
-                else:
-                    e1_nom = "C.F. Ginesta"
-                    e1_img = obtenir_imatge_base64(LOGO_URL)
-                    e2_nom = rival_am
-                    e2_img = obtenir_imatge_base64(escut_rival)
-
-                img1_html = f"<img src='{e1_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e1_img else "<div style='font-size: 28px;'>🛡️</div>"
-                img2_html = f"<img src='{e2_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e2_img else "<div style='font-size: 28px;'>🛡️</div>"
-                
-                maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_am}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_am and str(maps_am).startswith("http") else ""
-
-                st.markdown(f"""
-                    <div style="background-color: white; padding: 14px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
-                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; margin-bottom: 10px; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px;">
-                            ⭐ {titol_am} &nbsp;|&nbsp; 📍 {lloc_am} {maps_html}
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
-                                {img1_html}
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
-                            </div>
-                            <div style="text-align: center; width: 16%;">
-                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; border: 1px solid #5c2d73;">VS</span>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
-                                {img2_html}
-                            </div>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-
-                if video_am and str(video_am).startswith("http"):
-                    with st.expander(f"📺 Veure vídeo de {titol_am}"):
-                        try:
-                            st.video(video_am)
-                        except:
-                            st.warning("⚠️ No s'ha pogut carregar el vídeo.")
-
-    # PESTANYA 3: VIDEOTECA (LLIGA)
+    # PESTANYA 2: VIDEOTECA (LLIGA)
     with tab_videos:
         st.subheader("📺 Videoteca & Galeria de Partits")
         partits = []
@@ -590,7 +525,7 @@ def main():
                 else:
                     st.info("No hi ha fotos disponibles per a aquest partit.")
 
-    # PESTANYA 4: PLANTILLA
+    # PESTANYA 3: PLANTILLA
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
         st.markdown("Fitxes individuals i estadístiques de cada jugadora.")
@@ -636,7 +571,7 @@ def main():
                     """, unsafe_allow_html=True)
                     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    # PESTANYA 5: ESTADÍSTIQUES
+    # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -718,6 +653,74 @@ def main():
                 yaxis=dict(showgrid=True, gridcolor='#e0d8e8', tickfont=dict(color="#1a1a1a", size=11, weight="bold"))
             )
             st.plotly_chart(fig_contra, use_container_width=True)
+
+    # PESTANYA 5: AMISTOSOS (AL FINAL DE TOT)
+    with tab_amistosos:
+        st.subheader("🤝 Partits Amistosos & Vídeos")
+        st.markdown("Partits de preparació i vídeos de la pretemporada.")
+        st.markdown("---")
+
+        partits_amistosos = []
+        try:
+            res_tots = supabase.table("partits").select("*").order("data", desc=True).execute()
+            partits_amistosos = [p for p in res_tots.data if "amistós" in str(p.get("titol", "")).lower() or "amistos" in str(p.get("titol", "")).lower() or "pretemporada" in str(p.get("titol", "")).lower() or "amistós" in str(p.get("jornada", "")).lower()]
+        except:
+            pass
+
+        if not partits_amistosos:
+            st.info("ℹ️ No hi ha partits amistosos registrats actualment.")
+        else:
+            for partit_am in partits_amistosos:
+                titol_am = partit_am.get('titol', 'Partit Amistós')
+                rival_am = partit_am.get('rival', 'Rival')
+                lloc_am = partit_am.get('lloc', 'Casa')
+                escut_rival = partit_am.get('escut_rival_url', '')
+                maps_am = partit_am.get('maps_url', '')
+                video_am = partit_am.get('video_url') or partit_am.get('enllaç_video')
+
+                if lloc_am == "Fora":
+                    e1_nom = rival_am
+                    e1_img = obtenir_imatge_base64(escut_rival)
+                    e2_nom = "C.F. Ginesta"
+                    e2_img = obtenir_imatge_base64(LOGO_URL)
+                else:
+                    e1_nom = "C.F. Ginesta"
+                    e1_img = obtenir_imatge_base64(LOGO_URL)
+                    e2_nom = rival_am
+                    e2_img = obtenir_imatge_base64(escut_rival)
+
+                img1_html = f"<img src='{e1_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e1_img else "<div style='font-size: 28px;'>🛡️</div>"
+                img2_html = f"<img src='{e2_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e2_img else "<div style='font-size: 28px;'>🛡️</div>"
+                
+                maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_am}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_am and str(maps_am).startswith("http") else ""
+
+                st.markdown(f"""
+                    <div style="background-color: white; padding: 14px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
+                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; margin-bottom: 10px; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px;">
+                            ⭐ {titol_am} &nbsp;|&nbsp; 📍 {lloc_am} {maps_html}
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                                {img1_html}
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
+                            </div>
+                            <div style="text-align: center; width: 16%;">
+                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; border: 1px solid #5c2d73;">VS</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
+                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
+                                {img2_html}
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+                if video_am and str(video_am).startswith("http"):
+                    with st.expander(f"📺 Veure vídeo de {titol_am}"):
+                        try:
+                            st.video(video_am)
+                        except:
+                            st.warning("⚠️ No s'ha pogut carregar el vídeo.")
 
     # PESTANYA 6: ADMIN
     if st.session_state["auth_level"] == "admin":
@@ -945,7 +948,7 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT (AMB GESTIÓ D'ANADA I TORNADA RESTAURADA)
+            # PESTANYA ADMIN: CALENDARI UNIFICAT
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial (Anada i Tornada)")
                 cal_existents = []
