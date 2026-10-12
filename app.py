@@ -203,13 +203,10 @@ def main():
             <div style="display: inline-block; padding: 12px; background: white; border-radius: 50%; box-shadow: 0px 4px 15px rgba(92,45,115,0.15); border: 2px solid #f0eaf5; margin-bottom: 10px;">
                 <img src="{escut_b64}" style="width: 100px; height: 100px; object-fit: contain; display: block;">
             </div>
-            <div style="font-size: 26px; font-weight: 900; color: #5c2d73; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;">
+            <div style="font-size: 24px; font-weight: 900; color: #5c2d73; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;">
                 CADET F11
             </div>
-            <div style="font-size: 16px; font-weight: 800; background-color: #5c2d73; color: white !important; padding: 6px 16px; border-radius: 8px; display: inline-block; letter-spacing: 3px; margin-top: 8px; box-shadow: 0px 3px 8px rgba(92,45,115,0.25);">
-                FAN PAGE
-            </div>
-            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px;">
+            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">
                 C.F. Ginesta
             </div>
         </div>
