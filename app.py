@@ -413,7 +413,7 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 2: VIDEOTECA AMB SUBPESTANYES INTERNES (VÍDEOS / FOTOS)
+    # PESTANYA 2: VIDEOTECA AMB SUBPESTANYES INTERNES (VÍDEO / RESUM DEL PARTIT / FOTOS)
     with tab_videos:
         st.subheader("📺 Videoteca & Galeria de Partits")
         partits = []
@@ -493,7 +493,8 @@ def main():
 
             st.markdown("---")
 
-            sub_vid, sub_fot = st.tabs(["📺 Vídeo del Partit", "📸 Galeria de Fotos"])
+            # --- SUBPESTANYES DE LA VIDEOTECA (INCLOU "RESUM DEL PARTIT") ---
+            sub_vid, sub_resum, sub_fot = st.tabs(["📺 Vídeo del Partit", "🎬 Resum del Partit", "📸 Galeria de Fotos"])
 
             with sub_vid:
                 video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
@@ -504,6 +505,16 @@ def main():
                         st.warning("⚠️ L'enllaç del vídeo no és compatible o no està accessible.")
                 else:
                     st.warning("⚠️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
+
+            with sub_resum:
+                resum_url = partit_actual.get('resum_youtube_url')
+                if resum_url and str(resum_url).startswith("http"):
+                    try:
+                        st.video(resum_url)
+                    except Exception:
+                        st.warning("⚠️ L'enllaç del resum no és vàlid o no està accessible.")
+                else:
+                    st.info("ℹ️ Encara no hi ha cap resum en vídeo d'aquest partit disponible.")
 
             with sub_fot:
                 if fotos_str:
@@ -710,7 +721,8 @@ def main():
                     
                     arxiu_escut = st.file_uploader("Escut Rival (PNG)", type=["png", "jpg"], key="esc_vid")
                     arxius_fotos = st.file_uploader("📸 Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_multiples")
-                    nou_video_url = st.text_input("Enllaç Vídeo", key="v_url_nou")
+                    nou_video_url = st.text_input("Enllaç Vídeo Sencer", key="v_url_nou")
+                    nou_resum_url = st.text_input("Enllaç Resum del Partit", key="r_url_nou")
                     
                     st.markdown("---")
                     st.markdown("##### ⏱️ Registrar Gols per Trams en aquest Partit")
@@ -823,6 +835,7 @@ def main():
                                     "escut_rival_url": escut_path_saved,
                                     "fotos_partit_urls": ",".join(rutes_fotos),
                                     "video_url": nou_video_url,
+                                    "resum_youtube_url": nou_resum_url,
                                     "targetes_partit": text_targetes_guardar
                                 }).execute()
 
@@ -877,7 +890,8 @@ def main():
                         edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key="ed_r")
                         edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key="ed_res")
                         edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key="ed_ll")
-                        edit_video = st.text_input("Enllaç Vídeo", value=p_edit.get('video_url', ''), key="ed_v")
+                        edit_video = st.text_input("Enllaç Vídeo Sencer", value=p_edit.get('video_url', ''), key="ed_v")
+                        edit_resum = st.text_input("Enllaç Resum del Partit", value=p_edit.get('resum_youtube_url', ''), key="ed_resum")
                         
                         edit_arxiu_escut = st.file_uploader("Canviar Escut Rival", type=["png", "jpg"], key="ed_esc")
                         edit_arxius_fotos = st.file_uploader("Afegir/Canviar Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="ed_fotos")
@@ -891,7 +905,8 @@ def main():
                                     "rival": edit_rival,
                                     "resultat": edit_resultat,
                                     "lloc": edit_lloc,
-                                    "video_url": edit_video
+                                    "video_url": edit_video,
+                                    "resum_youtube_url": edit_resum
                                 }
                                 if edit_arxiu_escut is not None:
                                     escut_path_saved = os.path.join("escuts", edit_arxiu_escut.name)
@@ -1319,8 +1334,7 @@ def main():
                                         "gols_encaixats": gols_encaixats_actuals + 1, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
                                     st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                                except Exception as e: st.error(f"❌ Error: {e}")
                             if st.button("➖ Restar Gol Encaixat") and gols_encaixats_actuals > 0:
                                 try:
                                     supabase.table("golejadores").upsert({
@@ -1329,8 +1343,7 @@ def main():
                                         "gols_encaixats": gols_encaixats_actuals - 1, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
                                     st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                                except Exception as e: st.error(f"❌ Error: {e}")
                     else:
                         c_bt1, c_bt2, c_bt3 = st.columns(3)
                         with c_bt1:
@@ -1343,8 +1356,7 @@ def main():
                                     }, on_conflict="nom").execute()
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                     st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                                except Exception as e: st.error(f"❌ Error: {e}")
                             if st.button("➖ Restar 1 Gol") and gols_actuals > 0:
                                 try:
                                     supabase.table("golejadores").upsert({
@@ -1354,8 +1366,7 @@ def main():
                                     }, on_conflict="nom").execute()
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                     st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                                except Exception as e: st.error(f"❌ Error: {e}")
 
                     with c_bt2:
                         if st.button("🟨 Sumar Groga"):
@@ -1370,8 +1381,7 @@ def main():
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                            except Exception as e: st.error(f"❌ Error: {e}")
                         if st.button("➖ Restar Groga") and grogues_actuals > 0:
                             try:
                                 supabase.table("golejadores").upsert({
@@ -1380,8 +1390,7 @@ def main():
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                            except Exception as e: st.error(f"❌ Error: {e}")
 
                     with c_bt3:
                         if st.button("🟥 Sumar Vermella") and vermelles_actuals == 0:
@@ -1392,8 +1401,7 @@ def main():
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                            except Exception as e: st.error(f"❌ Error: {e}")
                         if st.button("➖ Restar Vermella") and vermelles_actuals > 0:
                             try:
                                 supabase.table("golejadores").upsert({
@@ -1402,11 +1410,9 @@ def main():
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
+                            except Exception as e: st.error(f"❌ Error: {e}")
 
                     st.markdown("---")
-                    st.markdown("##### 🗑️ Zona de Perill (Eliminar Jugadora)")
                     confirm_key = f"confirm_del_{nom_real}"
                     if confirm_key not in st.session_state:
                         st.session_state[confirm_key] = False
@@ -1425,8 +1431,7 @@ def main():
                                     sincronitzar_estadistiques_generals(n_partits, porteries_zero, gols_propia_porta, gols_contra_total)
                                     st.session_state[confirm_key] = False
                                     st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                                except Exception as e: st.error(f"❌ Error: {e}")
                         with col_del2:
                             if st.button("Cancel·lar"):
                                 st.session_state[confirm_key] = False
@@ -1449,8 +1454,7 @@ def main():
                                 "tram": tram_coll, "gols_favor": actual_fav + 1, "gols_contra": actual_con
                             }, on_conflict="tram").execute()
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                        except Exception as e: st.error(f"❌ Error: {e}")
                 with c_f2:
                     if st.button(f"➖ Restar Favor ({tram_coll})", key="btn_res_fav") and actual_fav > 0:
                         try:
@@ -1458,8 +1462,7 @@ def main():
                                 "tram": tram_coll, "gols_favor": actual_fav - 1, "gols_contra": actual_con
                             }, on_conflict="tram").execute()
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                        except Exception as e: st.error(f"❌ Error: {e}")
 
                 st.markdown("---")
                 c_c1, c_c2 = st.columns(2)
@@ -1470,8 +1473,7 @@ def main():
                                 "tram": tram_coll, "gols_favor": actual_fav, "gols_contra": actual_con + 1
                             }, on_conflict="tram").execute()
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                        except Exception as e: st.error(f"❌ Error: {e}")
                 with c_c2:
                     if st.button(f"➖ Restar Contra ({tram_coll})", key="btn_res_con") and actual_con > 0:
                         try:
@@ -1479,8 +1481,7 @@ def main():
                                 "tram": tram_coll, "gols_favor": actual_fav, "gols_contra": actual_con - 1
                             }, on_conflict="tram").execute()
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {e}")
+                        except Exception as e: st.error(f"❌ Error: {e}")
 
 # --- EXECUCIÓ DE L'APLICACIÓ AMB CONTROL D'ACCÉS ---
 if check_access():
