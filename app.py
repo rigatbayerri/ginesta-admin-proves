@@ -206,10 +206,10 @@ def main():
             <div style="font-size: 26px; font-weight: 900; color: #5c2d73; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;">
                 CADET F11
             </div>
-            <div style="font-size: 16px; font-weight: 800; background-color: #5c2d73; color: white !important; padding: 4px 14px; border-radius: 8px; display: inline-block; letter-spacing: 2px; margin-top: 6px; box-shadow: 0px 2px 5px rgba(92,45,115,0.2);">
+            <div style="font-size: 16px; font-weight: 800; background-color: #5c2d73; color: white !important; padding: 6px 16px; border-radius: 8px; display: inline-block; letter-spacing: 3px; margin-top: 8px; box-shadow: 0px 3px 8px rgba(92,45,115,0.25);">
                 FAN PAGE
             </div>
-            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">
+            <div style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px;">
                 C.F. Ginesta
             </div>
         </div>
