@@ -557,7 +557,8 @@ def main():
 
             with sub_fot:
                 if fotos_str:
-                    lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
+                    # Netejar duplicats automàticament
+                    lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f.strip()]))
                     if lletres_fotos:
                         for f_path in lletres_fotos:
                             if f_path.startswith("http"):
@@ -953,11 +954,24 @@ def main():
                             st.image(escut_actual_edit, width=50)
                         
                         edit_nou_escut = st.file_uploader("Canviar Escut del Rival (Opcional)", type=["png", "jpg"], key=f"ed_esc_{edit_id}_{edit_rival_safe}")
-                        edit_noves_fotos = st.file_uploader("📸 Afegir Noves Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"ed_fotos_{edit_id}_{edit_rival_safe}")
                         
+                        # --- GESTIÓ I ELIMINACIÓ DE FOTOS INDIVIDUALS ---
                         fotos_actuals_str = p_edit.get('fotos_partit_urls', '')
-                        if fotos_actuals_str:
-                            st.caption(f"Fotos actuals registrades: {len(fotos_actuals_str.split(','))} fitxer(s)")
+                        llista_fotos_actuals = list(dict.fromkeys([f.strip() for f in fotos_actuals_str.split(",") if f.strip()]))
+                        
+                        fotos_a_conservar = []
+                        if llista_fotos_actuals:
+                            st.markdown("📸 **Fotos actuals (marca la casella per eliminar la foto que no vulguis):**")
+                            for f_idx, f_url in enumerate(llista_fotos_actuals):
+                                cols_f = st.columns([1, 4])
+                                with cols_f[0]:
+                                    st.image(f_url, width=70)
+                                with cols_f[1]:
+                                    eliminar_foto = st.checkbox(f"🗑️ Eliminar aquesta foto", key=f"del_foto_{edit_id}_{edit_rival_safe}_{f_idx}")
+                                    if not eliminar_foto:
+                                        fotos_a_conservar.append(f_url)
+                        
+                        edit_noves_fotos = st.file_uploader("📸 Afegir Noves Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"ed_fotos_{edit_id}_{edit_rival_safe}")
 
                         edit_video = st.text_input("Enllaç Vídeo Sencer", value=p_edit.get('video_url', ''), key=f"ed_v_{edit_id}_{edit_rival_safe}")
                         edit_resum = st.text_input("Enllaç Resum del Partit", value=p_edit.get('resum_youtube_url', ''), key=f"ed_resum_{edit_id}_{edit_rival_safe}")
@@ -970,11 +984,12 @@ def main():
                                 if edit_nou_escut is not None:
                                     escut_final_url = pujar_fitxer_a_supabase(edit_nou_escut, "escuts")
 
-                                llista_fotos_finals = [f.strip() for f in fotos_actuals_str.split(",") if f.strip()]
+                                # Combinar les fotos que es conserven amb les noves pujades (evitant duplicats)
+                                llista_fotos_finals = list(fotos_a_conservar)
                                 if edit_noves_fotos:
                                     for foto in edit_noves_fotos[:5]:
                                         url_f = pujar_fitxer_a_supabase(foto, "fotos_partits")
-                                        if url_f:
+                                        if url_f and url_f not in llista_fotos_finals:
                                             llista_fotos_finals.append(url_f)
 
                                 update_data = {
