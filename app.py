@@ -142,12 +142,13 @@ def init_supabase():
 
 supabase = init_supabase()
 
-# --- FUNCIÓ PER PUJAR FITXERS A SUPABASE STORAGE ---
+# --- FUNCIÓ PER PUJAR FITXERS A SUPABASE STORAGE (CORREGIDA) ---
 def pujar_fitxer_a_supabase(file_obj, folder_name):
     if file_obj is None:
         return ""
     try:
-        file_bytes = file_obj.getbuffer()
+        # Llegir els bytes reals del fitxer de Streamlit sense donar error de memoryview
+        file_bytes = file_obj.read()
         file_name = f"{int(time.time())}_{file_obj.name}"
         file_path = f"{folder_name}/{file_name}"
         
