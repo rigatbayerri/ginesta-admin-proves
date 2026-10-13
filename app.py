@@ -434,7 +434,7 @@ def main():
                     eq1_nom = "C.F. Ginesta"
                     eq1_img_b64 = obtenir_imatge_base64(LOGO_URL)
                     eq2_nom = rival
-                    eq2_img_b64 = obtenir_imatge_base64(escut_path)0
+                    eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
                 img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
                 img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
