@@ -434,7 +434,7 @@ def main():
                     eq1_nom = "C.F. Ginesta"
                     eq1_img_b64 = obtenir_imatge_base64(LOGO_URL)
                     eq2_nom = rival
-                    eq2_img_b64 = obtenir_imatge_base64(escut_path)
+                    eq2_img_b64 = obtenir_imatge_base64(escut_path)0
 
                 img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
                 img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
@@ -969,6 +969,17 @@ def main():
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error al actualitzar: {e}")
+
+                        st.markdown("---")
+                        if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}"):
+                            try:
+                                supabase.table("partits").delete().eq("id", edit_id).execute()
+                                st.cache_data.clear()
+                                st.success("🗑️ Partit eliminat.")
+                                time.sleep(0.5)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
 
                         st.markdown("---")
                         if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}"):
