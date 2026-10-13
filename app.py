@@ -142,12 +142,11 @@ def init_supabase():
 
 supabase = init_supabase()
 
-# --- FUNCIÓ PER PUJAR FITXERS A SUPABASE STORAGE (CORREGIDA) ---
+# --- FUNCIÓ PER PUJAR FITXERS A SUPABASE STORAGE ---
 def pujar_fitxer_a_supabase(file_obj, folder_name):
     if file_obj is None:
         return ""
     try:
-        # Llegir els bytes reals del fitxer de Streamlit sense donar error de memoryview
         file_bytes = file_obj.read()
         file_name = f"{int(time.time())}_{file_obj.name}"
         file_path = f"{folder_name}/{file_name}"
@@ -830,12 +829,10 @@ def main():
 
                     if st.button("Guardar Partit i Actualitzar Estadístiques"):
                         try:
-                            # Pujar escut a Supabase Storage
                             escut_path_saved = ""
                             if arxiu_escut is not None:
                                 escut_path_saved = pujar_fitxer_a_supabase(arxiu_escut, "escuts")
 
-                            # Pujar fotos a Supabase Storage
                             rutes_fotos = []
                             if arxius_fotos:
                                 for foto in arxius_fotos[:5]:
@@ -920,7 +917,7 @@ def main():
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
-               with sub_p_edit:
+                with sub_p_edit:
                     partits_existents = tots_partits_db
 
                     if not partits_existents:
@@ -933,7 +930,6 @@ def main():
                             titol_val = p.get('titol', 'Partit')
                             res_val = p.get('resultat')
                             res_str = str(res_val) if res_val and str(res_val).strip().lower() != "none" else "vs"
-                            # Afegim l'índex per garantir clau única al selectbox
                             dict_edit_partits[f"[{idx}] {j_str} - {titol_val} ({res_str})"] = p
 
                         sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p_unic")
@@ -948,7 +944,6 @@ def main():
                         edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key=f"ed_res_{edit_id}_{edit_rival_safe}")
                         edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key=f"ed_ll_{edit_id}_{edit_rival_safe}")
                         
-                        # --- GESTIÓ D'ESCUT I FOTOS EN EDITAR ---
                         st.markdown("---")
                         st.markdown("##### 🖼️ Gestió d'Imatges (Escut i Fotos)")
                         
@@ -1007,27 +1002,6 @@ def main():
                         if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}_{edit_rival_safe}"):
                             try:
                                 supabase.table("partits").delete().eq("id", p_edit.get('id')).execute()
-                                st.cache_data.clear()
-                                st.success("🗑️ Partit eliminat.")
-                                time.sleep(0.5)
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
-                        st.markdown("---")
-                        if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}"):
-                            try:
-                                supabase.table("partits").delete().eq("id", edit_id).execute()
-                                st.cache_data.clear()
-                                st.success("🗑️ Partit eliminat.")
-                                time.sleep(0.5)
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ Error: {e}")
-
-                        st.markdown("---")
-                        if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}"):
-                            try:
-                                supabase.table("partits").delete().eq("id", edit_id).execute()
                                 st.cache_data.clear()
                                 st.success("🗑️ Partit eliminat.")
                                 time.sleep(0.5)
