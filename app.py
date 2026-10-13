@@ -19,6 +19,7 @@ LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINEST
 DIRECCIO_CASA = "https://maps.app.goo.gl/qq7hJCHrqQv4ZVAB7"
 
 # Funció infal·lible per convertir qualsevol imatge (local o web) a Base64
+@st.cache_data(ttl=3600)
 def obtenir_imatge_base64(path_o_url):
     if not path_o_url:
         return ""
@@ -146,6 +147,47 @@ if not os.path.exists("escuts"):
 if not os.path.exists("fotos_partits"):
     os.makedirs("fotos_partits")
 
+# --- FUNCIONS AMB CATXÈ PER ACCELERAR SUPABASE ---
+@st.cache_data(ttl=60)
+def obtenir_calendari_db():
+    try:
+        res = supabase.table("calendari").select("*").execute()
+        return res.data
+    except:
+        return []
+
+@st.cache_data(ttl=60)
+def obtenir_golejadores_db():
+    try:
+        res = supabase.table("golejadores").select("*").order("dorsal", desc=False).execute()
+        return res.data
+    except:
+        return []
+
+@st.cache_data(ttl=60)
+def obtenir_estadistiques_generals_db():
+    try:
+        res = supabase.table("estadistiques_generals").select("*").execute()
+        return res.data
+    except:
+        return []
+
+@st.cache_data(ttl=60)
+def obtenir_partits_db():
+    try:
+        res = supabase.table("partits").select("*").order("data", desc=True).execute()
+        return res.data
+    except:
+        return []
+
+@st.cache_data(ttl=60)
+def obtenir_trams_gols_db():
+    try:
+        res = supabase.table("trams_gols").select("*").execute()
+        return res.data
+    except:
+        return []
+
 # --- SISTEMA D'ACCÉS AMB FORMULARI (PERMET PREMRE ENTER) ---
 def check_access():
     if "auth_level" not in st.session_state:
@@ -211,12 +253,17 @@ def main():
             </div>
         </div>
     """, unsafe_allow_html=True)
+
     st.divider()
+
+    # --- CARREGAR DADES AMB CATXÈ ---
+    calendari_all_data = obtenir_calendari_db()
+    golejadores_data = obtenir_golejadores_db()
+    res_extra_data = obtenir_estadistiques_generals_db()
 
     # --- BANNER PROPER PARTIT ---
     try:
-        res_cal_all = supabase.table("calendari").select("*").execute()
-        if res_cal_all.data:
+        if calendari_all_data:
             def parse_data_partit(p):
                 d_str = p.get('data')
                 if not d_str:
@@ -226,7 +273,7 @@ def main():
                 except:
                     return datetime.date.max
 
-            llista_cal_per_data = sorted(res_cal_all.data, key=parse_data_partit)
+            llista_cal_per_data = sorted(calendari_all_data, key=parse_data_partit)
             avui = datetime.date.today()
             proper_partit = None
             
@@ -289,13 +336,6 @@ def main():
     except:
         pass
 
-    golejadores_data = []
-    try:
-        res_gol = supabase.table("golejadores").select("*").order("dorsal", desc=False).execute()
-        golejadores_data = res_gol.data
-    except:
-        pass
-
     if not golejadores_data:
         golejadores_data = [
             {"nom": "Clàudia", "dorsal": 10, "gols": 8, "rol": "Jugadora", "grogues": 1, "vermelles": 0, "gols_encaixats": 0, "titularitats": 10, "partits_jugats": 12},
@@ -309,17 +349,13 @@ def main():
 
     golejadores_data = sorted(golejadores_data, key=lambda x: int(x.get('dorsal', 0) or 0))
 
-    try:
-        res_extra = supabase.table("estadistiques_generals").select("*").execute()
-        if res_extra.data:
-            st_data = res_extra.data[0]
-            n_partits = st_data.get("partits_jugats", 12)
-            porteries_zero = st_data.get("porteries_zero", 7)
-            gols_propia_porta = st_data.get("gols_propia_porta", 0)
-            gols_contra_total = st_data.get("gols_contra", 5)
-        else:
-            n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
-    except:
+    if res_extra_data:
+        st_data = res_extra_data[0]
+        n_partits = st_data.get("partits_jugats", 12)
+        porteries_zero = st_data.get("porteries_zero", 7)
+        gols_propia_porta = st_data.get("gols_propia_porta", 0)
+        gols_contra_total = st_data.get("gols_contra", 5)
+    else:
         n_partits, porteries_zero, gols_propia_porta, gols_contra_total = 12, 7, 1, 5
 
     gols_jugadores_total = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
@@ -339,10 +375,11 @@ def main():
                 "porteries_zero": int(noves_p_zero),
                 "gols_propia_porta": int(nous_propia)
             }).execute()
+            st.cache_data.clear() # Netejar catxè en modificar
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS REORGANITZADES (Calendari -> Vídeos -> Plantilla -> Estadístiques -> Amistosos)
+    # PESTANYES PRINCIPALS
     if st.session_state["auth_level"] == "admin":
         tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos", "⚙️ Admin"])
     else:
@@ -351,13 +388,7 @@ def main():
     # PESTANYA 1: CALENDARI PÚBLIC
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
-        calendari_data = []
-        try:
-            res_cal = supabase.table("calendari").select("*").execute()
-            calendari_data = res_cal.data
-            calendari_data = sorted(calendari_data, key=lambda x: int(x.get('jornada', 1) or 1))
-        except:
-            pass
+        calendari_data = sorted(calendari_all_data, key=lambda x: int(x.get('jornada', 1) or 1))
 
         if not calendari_data:
             st.warning("No hi ha partits al calendari.")
@@ -417,12 +448,8 @@ def main():
     # PESTANYA 2: VIDEOTECA (LLIGA)
     with tab_videos:
         st.subheader("📺 Videoteca & Galeria de Partits")
-        partits = []
-        try:
-            response = supabase.table("partits").select("*").order("data", desc=True).execute()
-            partits = [p for p in response.data if "amistós" not in str(p.get("titol", "")).lower() and "amistos" not in str(p.get("titol", "")).lower() and "pretemporada" not in str(p.get("titol", "")).lower()]
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+        tots_partits_db = obtenir_partits_db()
+        partits = [p for p in tots_partits_db if "amistós" not in str(p.get("titol", "")).lower() and "amistos" not in str(p.get("titol", "")).lower() and "pretemporada" not in str(p.get("titol", "")).lower()]
 
         if not partits:
             st.warning("Encara no hi ha partits de lliga registrats.")
@@ -574,12 +601,7 @@ def main():
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
-        trams_data_db = []
-        try:
-            res_trams = supabase.table("trams_gols").select("*").execute()
-            trams_data_db = res_trams.data
-        except:
-            pass
+        trams_data_db = obtenir_trams_gols_db()
 
         dict_trams = {t: {"gols_favor": 0, "gols_contra": 0} for t in trams_llista}
         for item in trams_data_db:
@@ -659,12 +681,8 @@ def main():
         st.markdown("Partits de preparació i vídeos de la pretemporada.")
         st.markdown("---")
 
-        partits_amistosos = []
-        try:
-            res_tots = supabase.table("partits").select("*").order("data", desc=True).execute()
-            partits_amistosos = [p for p in res_tots.data if "amistós" in str(p.get("titol", "")).lower() or "amistos" in str(p.get("titol", "")).lower() or "pretemporada" in str(p.get("titol", "")).lower() or "amistós" in str(p.get("jornada", "")).lower()]
-        except:
-            pass
+        tots_partits_amistosos_db = obtenir_partits_db()
+        partits_amistosos = [p for p in tots_partits_amistosos_db if "amistós" in str(p.get("titol", "")).lower() or "amistos" in str(p.get("titol", "")).lower() or "pretemporada" in str(p.get("titol", "")).lower() or "amistós" in str(p.get("jornada", "")).lower()]
 
         if not partits_amistosos:
             st.info("ℹ️ No hi ha partits amistosos registrats actualment.")
@@ -877,6 +895,7 @@ def main():
                                     }, on_conflict="tram").execute()
 
                             st.session_state["targetes_partit_nou"] = []
+                            st.cache_data.clear() # Netejar catxè
                             st.success("🎉 Partit guardat i estadístiques actualitzades!")
                             time.sleep(1)
                             st.rerun()
@@ -884,12 +903,7 @@ def main():
                             st.error(f"❌ Error: {e}")
 
                 with sub_p_edit:
-                    partits_existents = []
-                    try:
-                        res_p = supabase.table("partits").select("*").order("data", desc=True).execute()
-                        partits_existents = res_p.data
-                    except:
-                        pass
+                    partits_existents = tots_partits_db
 
                     if not partits_existents:
                         st.warning("No hi ha partits per editar.")
@@ -931,6 +945,7 @@ def main():
                                     "maps_url": DIRECCIO_CASA if edit_lloc == "Casa" else edit_maps.strip()
                                 }
                                 supabase.table("partits").update(update_data).eq("id", edit_id).execute()
+                                st.cache_data.clear()
                                 st.success("✅ Partit actualitzat correctament!")
                                 time.sleep(0.5)
                                 st.rerun()
@@ -941,6 +956,7 @@ def main():
                         if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}"):
                             try:
                                 supabase.table("partits").delete().eq("id", edit_id).execute()
+                                st.cache_data.clear()
                                 st.success("🗑️ Partit eliminat.")
                                 time.sleep(0.5)
                                 st.rerun()
@@ -950,12 +966,7 @@ def main():
             # PESTANYA ADMIN: CALENDARI UNIFICAT
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial (Anada i Tornada)")
-                cal_existents = []
-                try:
-                    res_c_ed = supabase.table("calendari").select("*").execute()
-                    cal_existents = sorted(res_c_ed.data, key=lambda x: int(x.get('jornada', 1) or 1))
-                except:
-                    pass
+                cal_existents = sorted(calendari_all_data, key=lambda x: int(x.get('jornada', 1) or 1))
 
                 opcions_calendari = ["➕ Afegir nova jornada (Anada + Tornada Automàtica)"]
                 dict_map_cal = {}
@@ -1025,6 +1036,7 @@ def main():
                                     "resultat": ""
                                 }, on_conflict="jornada").execute()
 
+                                st.cache_data.clear()
                                 st.success(f"✅ Jornades afegides correctament!")
                                 time.sleep(0.5)
                                 st.rerun()
@@ -1114,6 +1126,7 @@ def main():
                                     "maps_url": DIRECCIO_CASA if edit_lloc_t == "Casa" else edit_maps_t.strip()
                                 }, on_conflict="jornada").execute()
 
+                                st.cache_data.clear()
                                 st.success("✅ Canvis guardats correctament (Anada i Tornada)!")
                                 time.sleep(0.5)
                                 st.rerun()
@@ -1213,6 +1226,7 @@ def main():
                                 "partits_jugats": int(nous_partits_jugats),
                                 "titularitats": int(noves_titularitats)
                             }, on_conflict="nom").execute()
+                            st.cache_data.clear()
                             st.success("✅ Dades actualitzades correctament!")
                             st.rerun()
                         except Exception as e:
@@ -1229,6 +1243,7 @@ def main():
                                         "grogues": grogues_actuals, "vermelles": vermelles_actuals,
                                         "gols_encaixats": gols_encaixats_actuals + 1, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
+                                    st.cache_data.clear()
                                     st.rerun()
                                 except Exception as e: st.error(f"❌ Error: {e}")
                             if st.button("➖ Restar Gol Encaixat") and gols_encaixats_actuals > 0:
@@ -1238,6 +1253,7 @@ def main():
                                         "grogues": grogues_actuals, "vermelles": vermelles_actuals,
                                         "gols_encaixats": gols_encaixats_actuals - 1, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                     }, on_conflict="nom").execute()
+                                    st.cache_data.clear()
                                     st.rerun()
                                 except Exception as e: st.error(f"❌ Error: {e}")
                     else:
@@ -1276,6 +1292,7 @@ def main():
                                     "grogues": nova_g, "vermelles": nova_v,
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
+                                st.cache_data.clear()
                                 st.rerun()
                             except Exception as e: st.error(f"❌ Error: {e}")
                         if st.button("➖ Restar Groga") and grogues_actuals > 0:
@@ -1285,6 +1302,7 @@ def main():
                                     "grogues": grogues_actuals - 1, "vermelles": vermelles_actuals,
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
+                                st.cache_data.clear()
                                 st.rerun()
                             except Exception as e: st.error(f"❌ Error: {e}")
 
@@ -1296,6 +1314,7 @@ def main():
                                     "grogues": grogues_actuals, "vermelles": 1,
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
+                                st.cache_data.clear()
                                 st.rerun()
                             except Exception as e: st.error(f"❌ Error: {e}")
                         if st.button("➖ Restar Vermella") and vermelles_actuals > 0:
@@ -1305,6 +1324,7 @@ def main():
                                     "grogues": grogues_actuals, "vermelles": 0,
                                     "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
                                 }, on_conflict="nom").execute()
+                                st.cache_data.clear()
                                 st.rerun()
                             except Exception as e: st.error(f"❌ Error: {e}")
 
@@ -1319,10 +1339,12 @@ def main():
                 with c_f1:
                     if st.button(f"➕ Sumar Favor ({tram_coll})"):
                         supabase.table("trams_gols").upsert({"tram": tram_coll, "gols_favor": actual_fav + 1, "gols_contra": actual_con}, on_conflict="tram").execute()
+                        st.cache_data.clear()
                         st.rerun()
                 with c_f2:
                     if st.button(f"➖ Restar Favor ({tram_coll})") and actual_fav > 0:
                         supabase.table("trams_gols").upsert({"tram": tram_coll, "gols_favor": actual_fav - 1, "gols_contra": actual_con}, on_conflict="tram").execute()
+                        st.cache_data.clear()
                         st.rerun()
 
 # --- EXECUCIÓ DE L'APLICACIÓ AMB CONTROL D'ACCÉS ---
