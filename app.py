@@ -142,10 +142,26 @@ def init_supabase():
 
 supabase = init_supabase()
 
-if not os.path.exists("escuts"):
-    os.makedirs("escuts")
-if not os.path.exists("fotos_partits"):
-    os.makedirs("fotos_partits")
+# --- FUNCIÓ PER PUJAR FITXERS A SUPABASE STORAGE ---
+def pujar_fitxer_a_supabase(file_obj, folder_name):
+    if file_obj is None:
+        return ""
+    try:
+        file_bytes = file_obj.getbuffer()
+        file_name = f"{int(time.time())}_{file_obj.name}"
+        file_path = f"{folder_name}/{file_name}"
+        
+        supabase.storage.from_("ginesta-media").upload(
+            path=file_path,
+            file=file_bytes,
+            file_options={"content-type": file_obj.type}
+        )
+        
+        public_url = supabase.storage.from_("ginesta-media").get_public_url(file_path)
+        return public_url
+    except Exception as e:
+        st.error(f"❌ Error al pujar el fitxer a Supabase: {e}")
+        return ""
 
 # --- FUNCIONS AMB CATXÈ PER ACCELERAR SUPABASE ---
 @st.cache_data(ttl=60)
@@ -375,7 +391,7 @@ def main():
                 "porteries_zero": int(noves_p_zero),
                 "gols_propia_porta": int(nous_propia)
             }).execute()
-            st.cache_data.clear() # Netejar catxè en modificar
+            st.cache_data.clear()
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
@@ -544,7 +560,9 @@ def main():
                     lletres_fotos = [f.strip() for f in fotos_str.split(",") if f.strip()]
                     if lletres_fotos:
                         for f_path in lletres_fotos:
-                            if os.path.exists(f_path):
+                            if f_path.startswith("http"):
+                                st.image(f_path, use_container_width=True)
+                            elif os.path.exists(f_path):
                                 st.image(f_path, use_container_width=True)
                     else:
                         st.info("No hi ha fotos disponibles per a aquest partit.")
@@ -675,7 +693,7 @@ def main():
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
-    # PESTANYA 5: AMISTOSOS (AL FINAL DE TOT)
+    # PESTANYA 5: AMISTOSOS
     with tab_amistosos:
         st.subheader("🤝 Partits Amistosos & Vídeos")
         st.markdown("Partits de preparació i vídeos de la pretemporada.")
@@ -811,19 +829,18 @@ def main():
 
                     if st.button("Guardar Partit i Actualitzar Estadístiques"):
                         try:
+                            # Pujar escut a Supabase Storage
                             escut_path_saved = ""
                             if arxiu_escut is not None:
-                                escut_path_saved = os.path.join("escuts", arxiu_escut.name)
-                                with open(escut_path_saved, "wb") as f:
-                                    f.write(arxiu_escut.getbuffer())
+                                escut_path_saved = pujar_fitxer_a_supabase(arxiu_escut, "escuts")
 
+                            # Pujar fotos a Supabase Storage
                             rutes_fotos = []
                             if arxius_fotos:
                                 for foto in arxius_fotos[:5]:
-                                    f_path = os.path.join("fotos_partits", foto.name)
-                                    with open(f_path, "wb") as f:
-                                        f.write(foto.getbuffer())
-                                    rutes_fotos.append(f_path)
+                                    url_foto = pujar_fitxer_a_supabase(foto, "fotos_partits")
+                                    if url_foto:
+                                        rutes_fotos.append(url_foto)
 
                             maps_final_save = DIRECCIO_CASA if condicio_lloc == "Casa" else maps_amistos_url.strip()
 
@@ -895,8 +912,8 @@ def main():
                                     }, on_conflict="tram").execute()
 
                             st.session_state["targetes_partit_nou"] = []
-                            st.cache_data.clear() # Netejar catxè
-                            st.success("🎉 Partit guardat i estadístiques actualitzades!")
+                            st.cache_data.clear()
+                            st.success("🎉 Partit guardat i fotos pujades a Supabase Storage!")
                             time.sleep(1)
                             st.rerun()
                         except Exception as e:
@@ -1004,10 +1021,7 @@ def main():
                             try:
                                 escut_cal_path = ""
                                 if cal_escut is not None:
-                                    escut_path = os.path.join("escuts", cal_escut.name)
-                                    with open(escut_path, "wb") as f:
-                                        f.write(cal_escut.getbuffer())
-                                    escut_cal_path = escut_path
+                                    escut_cal_path = pujar_fitxer_a_supabase(cal_escut, "escuts")
 
                                 supabase.table("calendari").upsert({
                                     "id": int(time.time()),
@@ -1054,7 +1068,7 @@ def main():
                         st.markdown(f"##### ✏️ Editant Jornada {jornada_actual_num} (Anada) i Jornada {jornada_tornada_num} (Tornada)")
 
                         escut_actual_a = partit_carregat.get("escut_rival_url", "")
-                        if escut_actual_a and os.path.exists(escut_actual_a):
+                        if escut_actual_a:
                             st.image(escut_actual_a, width=40)
                             st.caption("Escut actual del rival (es sincronitzarà a la tornada)")
 
@@ -1099,9 +1113,7 @@ def main():
                             try:
                                 escut_final_path = escut_actual_a
                                 if edit_arxiu_escut_nou is not None:
-                                    escut_final_path = os.path.join("escuts", edit_arxiu_escut_nou.name)
-                                    with open(escut_final_path, "wb") as f:
-                                        f.write(edit_arxiu_escut_nou.getbuffer())
+                                    escut_final_path = pujar_fitxer_a_supabase(edit_arxiu_escut_nou, "escuts")
 
                                 supabase.table("calendari").update({
                                     "jornada": int(jornada_actual_num),
