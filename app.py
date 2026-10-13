@@ -920,56 +920,99 @@ def main():
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
 
-                with sub_p_edit:
+               with sub_p_edit:
                     partits_existents = tots_partits_db
 
                     if not partits_existents:
                         st.warning("No hi ha partits per editar.")
                     else:
                         dict_edit_partits = {}
-                        for p in partits_existents:
+                        for idx, p in enumerate(partits_existents):
                             jornada_val = p.get('jornada')
                             j_str = f"J.{jornada_val}" if jornada_val and str(jornada_val).strip() else "J-"
                             titol_val = p.get('titol', 'Partit')
                             res_val = p.get('resultat')
                             res_str = str(res_val) if res_val and str(res_val).strip().lower() != "none" else "vs"
-                            dict_edit_partits[f"{j_str} - {titol_val} ({res_str})"] = p
+                            # Afegim l'índex per garantir clau única al selectbox
+                            dict_edit_partits[f"[{idx}] {j_str} - {titol_val} ({res_str})"] = p
 
-                        sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p")
+                        sel_partit_str = st.selectbox("Selecciona el partit a modificar/esborrar:", list(dict_edit_partits.keys()), key="sel_ed_p_unic")
                         p_edit = dict_edit_partits[sel_partit_str]
 
-                        edit_id = p_edit.get('id')
-                        edit_titol = st.text_input("Títol (Posa 'Amistós' per moure'l a Amistosos)", value=p_edit.get('titol', ''), key=f"ed_t_{edit_id}")
-                        edit_jornada = st.text_input("Jornada", value=str(p_edit.get('jornada') or "1"), key=f"ed_j_{edit_id}")
-                        edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key=f"ed_r_{edit_id}")
-                        edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key=f"ed_res_{edit_id}")
-                        edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key=f"ed_ll_{edit_id}")
-                        edit_video = st.text_input("Enllaç Vídeo Sencer", value=p_edit.get('video_url', ''), key=f"ed_v_{edit_id}")
-                        edit_resum = st.text_input("Enllaç Resum del Partit", value=p_edit.get('resum_youtube_url', ''), key=f"ed_resum_{edit_id}")
-                        edit_targetes_text = st.text_input("Targetes del partit (Ex: Clàudia - Groga)", value=p_edit.get('targetes_partit', ''), key=f"ed_tarj_{edit_id}")
-                        edit_maps = st.text_input("Google Maps (Ubicació)", value=p_edit.get('maps_url', ''), key=f"ed_maps_{edit_id}")
+                        edit_id = p_edit.get('id') or "sense_id"
+                        edit_rival_safe = str(p_edit.get('rival', 'rival'))[:10].replace(" ", "_")
+                        
+                        edit_titol = st.text_input("Títol (Posa 'Amistós' per moure'l a Amistosos)", value=p_edit.get('titol', ''), key=f"ed_t_{edit_id}_{edit_rival_safe}")
+                        edit_jornada = st.text_input("Jornada", value=str(p_edit.get('jornada') or "1"), key=f"ed_j_{edit_id}_{edit_rival_safe}")
+                        edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key=f"ed_r_{edit_id}_{edit_rival_safe}")
+                        edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key=f"ed_res_{edit_id}_{edit_rival_safe}")
+                        edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key=f"ed_ll_{edit_id}_{edit_rival_safe}")
+                        
+                        # --- GESTIÓ D'ESCUT I FOTOS EN EDITAR ---
+                        st.markdown("---")
+                        st.markdown("##### 🖼️ Gestió d'Imatges (Escut i Fotos)")
+                        
+                        escut_actual_edit = p_edit.get('escut_rival_url', '')
+                        if escut_actual_edit:
+                            st.write("Escut actual del rival:")
+                            st.image(escut_actual_edit, width=50)
+                        
+                        edit_nou_escut = st.file_uploader("Canviar Escut del Rival (Opcional)", type=["png", "jpg"], key=f"ed_esc_{edit_id}_{edit_rival_safe}")
+                        edit_noves_fotos = st.file_uploader("📸 Afegir Noves Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"ed_fotos_{edit_id}_{edit_rival_safe}")
+                        
+                        fotos_actuals_str = p_edit.get('fotos_partit_urls', '')
+                        if fotos_actuals_str:
+                            st.caption(f"Fotos actuals registrades: {len(fotos_actuals_str.split(','))} fitxer(s)")
 
-                        if st.button("Actualitzar Partit"):
+                        edit_video = st.text_input("Enllaç Vídeo Sencer", value=p_edit.get('video_url', ''), key=f"ed_v_{edit_id}_{edit_rival_safe}")
+                        edit_resum = st.text_input("Enllaç Resum del Partit", value=p_edit.get('resum_youtube_url', ''), key=f"ed_resum_{edit_id}_{edit_rival_safe}")
+                        edit_targetes_text = st.text_input("Targetes del partit (Ex: Clàudia - Groga)", value=p_edit.get('targetes_partit', ''), key=f"ed_tarj_{edit_id}_{edit_rival_safe}")
+                        edit_maps = st.text_input("Google Maps (Ubicació)", value=p_edit.get('maps_url', ''), key=f"ed_maps_{edit_id}_{edit_rival_safe}")
+
+                        if st.button("Actualitzar Partit", key=f"btn_act_partit_{edit_id}_{edit_rival_safe}"):
                             try:
+                                escut_final_url = escut_actual_edit
+                                if edit_nou_escut is not None:
+                                    escut_final_url = pujar_fitxer_a_supabase(edit_nou_escut, "escuts")
+
+                                llista_fotos_finals = [f.strip() for f in fotos_actuals_str.split(",") if f.strip()]
+                                if edit_noves_fotos:
+                                    for foto in edit_noves_fotos[:5]:
+                                        url_f = pujar_fitxer_a_supabase(foto, "fotos_partits")
+                                        if url_f:
+                                            llista_fotos_finals.append(url_f)
+
                                 update_data = {
                                     "titol": edit_titol,
                                     "jornada": edit_jornada.strip(),
                                     "rival": edit_rival,
                                     "resultat": edit_resultat,
                                     "lloc": edit_lloc,
+                                    "escut_rival_url": escut_final_url,
+                                    "fotos_partit_urls": ",".join(llista_fotos_finals),
                                     "video_url": edit_video,
                                     "resum_youtube_url": edit_resum,
                                     "targetes_partit": edit_targetes_text,
                                     "maps_url": DIRECCIO_CASA if edit_lloc == "Casa" else edit_maps.strip()
                                 }
-                                supabase.table("partits").update(update_data).eq("id", edit_id).execute()
+                                supabase.table("partits").update(update_data).eq("id", p_edit.get('id')).execute()
                                 st.cache_data.clear()
-                                st.success("✅ Partit actualitzat correctament!")
+                                st.success("✅ Partit i imatges actualitzats correctament!")
                                 time.sleep(0.5)
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Error al actualitzar: {e}")
 
+                        st.markdown("---")
+                        if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}_{edit_rival_safe}"):
+                            try:
+                                supabase.table("partits").delete().eq("id", p_edit.get('id')).execute()
+                                st.cache_data.clear()
+                                st.success("🗑️ Partit eliminat.")
+                                time.sleep(0.5)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {e}")
                         st.markdown("---")
                         if st.button("🗑️ Eliminar aquest partit completament", key=f"btn_del_p_{edit_id}"):
                             try:
