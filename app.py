@@ -557,8 +557,7 @@ def main():
 
             with sub_fot:
                 if fotos_str:
-                    # Netejar duplicats automàticament
-                    lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f.strip()]))
+                    lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f and f.strip()]))
                     if lletres_fotos:
                         for f_path in lletres_fotos:
                             if f_path.startswith("http"):
@@ -955,9 +954,8 @@ def main():
                         
                         edit_nou_escut = st.file_uploader("Canviar Escut del Rival (Opcional)", type=["png", "jpg"], key=f"ed_esc_{edit_id}_{edit_rival_safe}")
                         
-                        # --- GESTIÓ I ELIMINACIÓ DE FOTOS INDIVIDUALS ---
-                        fotos_actuals_str = p_edit.get('fotos_partit_urls', '')
-                        llista_fotos_actuals = list(dict.fromkeys([f.strip() for f in fotos_actuals_str.split(",") if f.strip()]))
+                        fotos_actuals_str = p_edit.get('fotos_partit_urls', '') or ''
+                        llista_fotos_actuals = list(dict.fromkeys([f.strip() for f in fotos_actuals_str.split(",") if f and f.strip()]))
                         
                         fotos_a_conservar = []
                         if llista_fotos_actuals:
@@ -984,7 +982,6 @@ def main():
                                 if edit_nou_escut is not None:
                                     escut_final_url = pujar_fitxer_a_supabase(edit_nou_escut, "escuts")
 
-                                # Combinar les fotos que es conserven amb les noves pujades (evitant duplicats)
                                 llista_fotos_finals = list(fotos_a_conservar)
                                 if edit_noves_fotos:
                                     for foto in edit_noves_fotos[:5]:
@@ -993,17 +990,17 @@ def main():
                                             llista_fotos_finals.append(url_f)
 
                                 update_data = {
-                                    "titol": edit_titol,
-                                    "jornada": edit_jornada.strip(),
-                                    "rival": edit_rival,
-                                    "resultat": edit_resultat,
-                                    "lloc": edit_lloc,
-                                    "escut_rival_url": escut_final_url,
+                                    "titol": str(edit_titol or "").strip(),
+                                    "jornada": str(edit_jornada or "").strip(),
+                                    "rival": str(edit_rival or "").strip(),
+                                    "resultat": str(edit_resultat or "").strip(),
+                                    "lloc": str(edit_lloc or "Casa").strip(),
+                                    "escut_rival_url": str(escut_final_url or "").strip(),
                                     "fotos_partit_urls": ",".join(llista_fotos_finals),
-                                    "video_url": edit_video,
-                                    "resum_youtube_url": edit_resum,
-                                    "targetes_partit": edit_targetes_text,
-                                    "maps_url": DIRECCIO_CASA if edit_lloc == "Casa" else edit_maps.strip()
+                                    "video_url": str(edit_video or "").strip(),
+                                    "resum_youtube_url": str(edit_resum or "").strip(),
+                                    "targetes_partit": str(edit_targetes_text or "").strip(),
+                                    "maps_url": DIRECCIO_CASA if edit_lloc == "Casa" else str(edit_maps or "").strip()
                                 }
                                 supabase.table("partits").update(update_data).eq("id", p_edit.get('id')).execute()
                                 st.cache_data.clear()
