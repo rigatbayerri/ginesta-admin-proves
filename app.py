@@ -18,7 +18,6 @@ st.set_page_config(
 LOGO_URL = "https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png"
 DIRECCIO_CASA = "https://maps.app.goo.gl/qq7hJCHrqQv4ZVAB7"
 
-# Funció infal·lible per convertir qualsevol imatge (local o web) a Base64
 @st.cache_data(ttl=3600)
 def obtenir_imatge_base64(path_o_url):
     if not path_o_url:
@@ -37,7 +36,6 @@ def obtenir_imatge_base64(path_o_url):
         pass
     return path_o_url
 
-# Injectar manifest web i etiquetes d'Apple
 st.markdown(f"""
     <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{{
       'name': 'C.F. Ginesta Cadet F11',
@@ -56,7 +54,6 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
 """, unsafe_allow_html=True)
 
-# --- ESTIL I COLORS CORPORATIUS ---
 st.markdown("""
     <style>
     .stApp {
@@ -132,7 +129,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- CONFIGURACIÓ DE SUPABASE ---
 SUPABASE_URL = "https://bufdixztdxrzyrdmueuk.supabase.co"
 SUPABASE_KEY = "sb_publishable_HTicRAPZhBwmC_rcpnMIbQ_Ooy7DurR"
 
@@ -142,7 +138,6 @@ def init_supabase():
 
 supabase = init_supabase()
 
-# --- FUNCIÓ PER PUJAR FITXERS A SUPABASE STORAGE ---
 def pujar_fitxer_a_supabase(file_obj, folder_name):
     if file_obj is None:
         return ""
@@ -163,7 +158,6 @@ def pujar_fitxer_a_supabase(file_obj, folder_name):
         st.error(f"❌ Error al pujar el fitxer a Supabase: {e}")
         return ""
 
-# --- FUNCIONS AMB CATXÈ PER ACCELERAR SUPABASE ---
 @st.cache_data(ttl=60)
 def obtenir_calendari_db():
     try:
@@ -204,7 +198,6 @@ def obtenir_trams_gols_db():
     except:
         return []
 
-# --- SISTEMA D'ACCÉS AMB FORMULARI (PERMET PREMRE ENTER) ---
 def check_access():
     if "auth_level" not in st.session_state:
         st.session_state["auth_level"] = None
@@ -239,7 +232,6 @@ def check_access():
         return False
     return True
 
-# --- BARRA LATERAL ---
 with st.sidebar:
     if st.session_state.get("auth_level"):
         nivell_actual = st.session_state['auth_level'].upper()
@@ -253,7 +245,6 @@ with st.sidebar:
             st.session_state["auth_level"] = None
             st.rerun()
 
-# --- APLICACIÓ PRINCIPAL ---
 def main():
     escut_b64 = obtenir_imatge_base64(LOGO_URL)
     st.markdown(f"""
@@ -272,12 +263,10 @@ def main():
 
     st.divider()
 
-    # --- CARREGAR DADES AMB CATXÈ ---
     calendari_all_data = obtenir_calendari_db()
     golejadores_data = obtenir_golejadores_db()
     res_extra_data = obtenir_estadistiques_generals_db()
 
-    # --- BANNER PROPER PARTIT ---
     try:
         if calendari_all_data:
             def parse_data_partit(p):
@@ -395,13 +384,11 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS
     if st.session_state["auth_level"] == "admin":
         tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos", "⚙️ Admin"])
     else:
         tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos"])
 
-    # PESTANYA 1: CALENDARI PÚBLIC
     with tab_calendari:
         st.subheader("📅 Calendari Oficial")
         calendari_data = sorted(calendari_all_data, key=lambda x: int(x.get('jornada', 1) or 1))
@@ -461,7 +448,6 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
 
-    # PESTANYA 2: VIDEOTECA (LLIGA)
     with tab_videos:
         st.subheader("📺 Videoteca & Galeria de Partits")
         tots_partits_db = obtenir_partits_db()
@@ -561,17 +547,18 @@ def main():
                     if lletres_fotos:
                         st.markdown("""
                             <style>
-                            .photo-card {
+                            .photo-box {
                                 background: #ffffff;
                                 border-radius: 12px;
                                 overflow: hidden;
                                 border: 1px solid #e0d8e8;
                                 transition: transform 0.2s ease, box-shadow 0.2s ease;
-                                margin-bottom: 16px;
+                                margin-bottom: 10px;
                                 box-shadow: 0 4px 12px rgba(92, 45, 115, 0.06);
                                 text-align: center;
+                                padding: 6px;
                             }
-                            .photo-card:hover {
+                            .photo-box:hover {
                                 transform: translateY(-3px);
                                 box-shadow: 0 8px 20px rgba(92, 45, 115, 0.15);
                                 border-color: #5c2d73;
@@ -591,10 +578,8 @@ def main():
                                 f_b64 = obtenir_imatge_base64(f_path)
                                 if f_b64:
                                     st.markdown(f"""
-                                        <div class="photo-card">
-                                            <div style="background-color: #1a1a1a; padding: 4px;">
-                                                <img src='{f_b64}' style='width: 100%; height: 160px; object-fit: contain; display: block;'>
-                                            </div>
+                                        <div class="photo-box">
+                                            <img src='{f_b64}' style='width: 100%; height: 160px; object-fit: contain; display: block;'>
                                         </div>
                                     """, unsafe_allow_html=True)
                                     
@@ -622,7 +607,6 @@ def main():
                 else:
                     st.info("No hi ha fotos disponibles per a aquest partit.")
 
-    # PESTANYA 3: PLANTILLA
     with tab_plantilla:
         st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
         st.markdown("Fitxes individuals i estadístiques de cada jugadora.")
@@ -668,7 +652,6 @@ def main():
                     """, unsafe_allow_html=True)
                     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
@@ -746,7 +729,6 @@ def main():
             )
             st.plotly_chart(fig_contra, use_container_width=True)
 
-    # PESTANYA 5: AMISTOSOS
     with tab_amistosos:
         st.subheader("🤝 Partits Amistosos & Vídeos")
         st.markdown("Partits de preparació i vídeos de la pretemporada.")
@@ -810,7 +792,6 @@ def main():
                         except:
                             st.warning("⚠️ No s'ha pogut carregar el vídeo.")
 
-    # PESTANYA 6: ADMIN
     if st.session_state["auth_level"] == "admin":
         with tab_admin:
             st.subheader("⚙️ Panell d'Administració")
@@ -1078,7 +1059,6 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-            # PESTANYA ADMIN: CALENDARI UNIFICAT
             with tab_adm_calendari:
                 st.markdown("#### 📅 Gestió Unificada del Calendari Oficial (Anada i Tornada)")
                 cal_existents = sorted(calendari_all_data, key=lambda x: int(x.get('jornada', 1) or 1))
@@ -1245,7 +1225,6 @@ def main():
                             except Exception as e:
                                 st.error(f"❌ Error: {e}")
 
-            # PESTANYA ADMIN: ESTADÍSTIQUES I MÈTRIQUES & GESTIÓ DE JUGADORES
             with tab_adm_stats:
                 st.markdown("#### 📈 Mètriques Generals")
                 with st.form("form_metriques"):
@@ -1440,7 +1419,6 @@ def main():
                                     st.rerun()
                                 except Exception as e: st.error(f"❌ Error: {e}")
 
-            # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
                 st.markdown("#### ⏱️ Actualització Ràpida de Gols per Minuts")
                 tram_coll = st.selectbox("Selecciona el bloc de minuts:", trams_llista, key="select_tram_minuts")
@@ -1459,6 +1437,5 @@ def main():
                         st.cache_data.clear()
                         st.rerun()
 
-# --- EXECUCIÓ DE L'APLICACIÓ AMB CONTROL D'ACCÉS ---
 if check_access():
     main()
