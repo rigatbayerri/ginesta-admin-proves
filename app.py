@@ -325,26 +325,26 @@ def main():
                     e2_nom = rival_prop
                     e2_img = obtenir_imatge_base64(escut_prop)
 
-                img1_p = f"<img src='{e1_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e1_img else "<div style='font-size: 35px;'>🛡️</div>"
-                img2_p = f"<img src='{e2_img}' style='width: 55px; height: 55px; object-fit: contain;'>" if e2_img else "<div style='font-size: 35px;'>🛡️</div>"
+                img1_p = f"<img src='{e1_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if e1_img else "<div style='font-size: 32px;'>🛡️</div>"
+                img2_p = f"<img src='{e2_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if e2_img else "<div style='font-size: 32px;'>🛡️</div>"
                 maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
 
                 st.markdown(f"""
                     <div style="background: linear-gradient(135deg, #f7f3fb 0%, #ede4f5 100%); padding: 14px 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 3px 3px 10px rgba(92,45,115,0.08);">
-                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px;">
+                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px; text-align: center;">
                             ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                            <div style="text-align: center; width: 38%;">
                                 {img1_p}
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
+                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{e1_nom}</div>
                             </div>
-                            <div style="text-align: center; width: 16%;">
-                                <span style="background-color: #f7f3fb; color: #5c2d73; border: 2px solid #5c2d73; padding: 5px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
+                            <div style="text-align: center; width: 24%;">
+                                <span style="background-color: #f7f3fb; color: #5c2d73; border: 2px solid #5c2d73; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
+                            <div style="text-align: center; width: 38%;">
                                 {img2_p}
+                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{e2_nom}</div>
                             </div>
                         </div>
                     </div>
@@ -435,27 +435,27 @@ def main():
                     eq2_nom = rival
                     eq2_img_b64 = obtenir_imatge_base64(escut_path)
 
-                img1_html = f"<img src='{eq1_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq1_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
-                img2_html = f"<img src='{eq2_img_b64}' style='width: 65px; height: 65px; object-fit: contain;'>" if eq2_img_b64 else "<div style='font-size: 40px;'>🛡️</div>"
+                img1_html = f"<img src='{eq1_img_b64}' style='width: 55px; height: 55px; object-fit: contain; margin-bottom: 4px;'>" if eq1_img_b64 else "<div style='font-size: 35px;'>🛡️</div>"
+                img2_html = f"<img src='{eq2_img_b64}' style='width: 55px; height: 55px; object-fit: contain; margin-bottom: 4px;'>" if eq2_img_b64 else "<div style='font-size: 35px;'>🛡️</div>"
 
                 maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_url}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar (Google Maps)</a>" if maps_url and str(maps_url).startswith("http") else ""
 
                 st.markdown(f"""
-                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 10px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 8px;">
-                            <span>Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora} {maps_html}</span>
+                    <div style="background-color: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
+                        <div style="text-align: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px; margin-bottom: 10px;">
+                            Jornada {jornada} &nbsp;|&nbsp; 📅 {data} &nbsp;|&nbsp; ⏰ {hora} {maps_html}
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 12px; width: 40%;">
+                            <div style="text-align: center; width: 38%;">
                                 {img1_html}
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq1_nom}</span>
+                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{eq1_nom}</div>
                             </div>
-                            <div style="text-align: center; width: 20%;">
-                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 6px 14px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block;">{text_marcador}</span>
+                            <div style="text-align: center; width: 24%;">
+                                <span style="background-color: #f7f3fb; color: #5c2d73; padding: 6px 14px; border-radius: 8px; font-size: 15px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block;">{text_marcador}</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; width: 40%;">
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq2_nom}</span>
+                            <div style="text-align: center; width: 38%;">
                                 {img2_html}
+                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{eq2_nom}</div>
                             </div>
                         </div>
                     </div>
@@ -501,28 +501,28 @@ def main():
                 eq_2_n = rival
                 eq_2_img = obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
 
-            img1_v_html = f"<img src='{eq_1_img}' style='width: 50px; height: 50px; object-fit: contain;'>" if eq_1_img else "<div style='font-size: 30px;'>🛡️</div>"
-            img2_v_html = f"<img src='{eq_2_img}' style='width: 50px; height: 50px; object-fit: contain;'>" if eq_2_img else "<div style='font-size: 30px;'>🛡️</div>"
+            img1_v_html = f"<img src='{eq_1_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if eq_1_img else "<div style='font-size: 30px;'>🛡️</div>"
+            img2_v_html = f"<img src='{eq_2_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if eq_2_img else "<div style='font-size: 30px;'>🛡️</div>"
             
             jornada_mostra = partit_actual.get('jornada')
             jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
 
             st.markdown(f"""
                 <div style="background: linear-gradient(135deg, #ffffff 0%, #f7f3fb 100%); padding: 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(92,45,115,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #e8dbf2; padding-bottom: 6px; margin-bottom: 10px;">
-                        <span>🏆 {partit_actual.get('titol')} &nbsp;|&nbsp; Jornada {jornada_txt_mostra} &nbsp;|&nbsp; 📅 {partit_actual.get('data')} &nbsp;|&nbsp; 📍 {lloc}</span>
+                    <div style="text-align: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #e8dbf2; padding-bottom: 6px; margin-bottom: 10px;">
+                        🏆 {partit_actual.get('titol')} &nbsp;|&nbsp; Jornada {jornada_txt_mostra} &nbsp;|&nbsp; 📅 {partit_actual.get('data')} &nbsp;|&nbsp; 📍 {lloc}
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
+                        <div style="text-align: center; width: 38%;">
                             {img1_v_html}
-                            <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{eq_1_n}</span>
+                            <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{eq_1_n}</div>
                         </div>
-                        <div style="text-align: center; width: 20%;">
+                        <div style="text-align: center; width: 24%;">
                             <span style="background-color: #f7f3fb; color: #5c2d73; padding: 6px 16px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block; box-shadow: 0px 2px 6px rgba(92,45,115,0.12);">{res_display_str}</span>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 40%;">
-                            <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{eq_2_n}</span>
+                        <div style="text-align: center; width: 38%;">
                             {img2_v_html}
+                            <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{eq_2_n}</div>
                         </div>
                     </div>
                 </div>
@@ -724,27 +724,27 @@ def main():
                     e2_nom = rival_am
                     e2_img = obtenir_imatge_base64(escut_rival)
 
-                img1_html = f"<img src='{e1_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e1_img else "<div style='font-size: 28px;'>🛡️</div>"
-                img2_html = f"<img src='{e2_img}' style='width: 45px; height: 45px; object-fit: contain;'>" if e2_img else "<div style='font-size: 28px;'>🛡️</div>"
+                img1_html = f"<img src='{e1_img}' style='width: 45px; height: 45px; object-fit: contain; margin-bottom: 4px;'>" if e1_img else "<div style='font-size: 28px;'>🛡️</div>"
+                img2_html = f"<img src='{e2_img}' style='width: 45px; height: 45px; object-fit: contain; margin-bottom: 4px;'>" if e2_img else "<div style='font-size: 28px;'>🛡️</div>"
                 
                 maps_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_am}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_am and str(maps_am).startswith("http") else ""
 
                 st.markdown(f"""
                     <div style="background-color: white; padding: 14px 16px; border-radius: 12px; border: 1px solid #e0d8e8; margin-bottom: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.04);">
-                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; margin-bottom: 10px; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px;">
+                        <div style="text-align: center; font-size: 13px; font-weight: bold; color: #5c2d73; margin-bottom: 10px; border-bottom: 1px solid #f2ecf8; padding-bottom: 6px;">
                             ⭐ {titol_am} &nbsp;|&nbsp; 📍 {lloc_am} {maps_html}
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 42%;">
+                            <div style="text-align: center; width: 38%;">
                                 {img1_html}
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a;">{e1_nom}</span>
+                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{e1_nom}</div>
                             </div>
-                            <div style="text-align: center; width: 16%;">
+                            <div style="text-align: center; width: 24%;">
                                 <span style="background-color: #f7f3fb; color: #5c2d73; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; border: 1px solid #5c2d73;">VS</span>
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 42%;">
-                                <span style="font-weight: 900; font-size: 15px; color: #1a1a1a; text-align: right;">{e2_nom}</span>
+                            <div style="text-align: center; width: 38%;">
                                 {img2_html}
+                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{e2_nom}</div>
                             </div>
                         </div>
                     </div>
@@ -881,18 +881,18 @@ def main():
                             text_targetes_guardar = ", ".join(llista_text_targetes) if llista_text_targetes else ""
 
                             supabase.table("partits").insert({
-                                "titol": nou_titol,
-                                "jornada": nova_jornada.strip(),
+                                "titol": str(nou_titol or "").strip(),
+                                "jornada": str(nova_jornada or "").strip(),
                                 "data": str(nova_data),
-                                "rival": nom_rival,
-                                "resultat": resultat_partit,
-                                "lloc": condicio_lloc,
-                                "escut_rival_url": escut_path_saved,
+                                "rival": str(nom_rival or "").strip(),
+                                "resultat": str(resultat_partit or "").strip(),
+                                "lloc": str(condicio_lloc or "Casa").strip(),
+                                "escut_rival_url": str(escut_path_saved or "").strip(),
                                 "fotos_partit_urls": ",".join(rutes_fotos),
-                                "video_url": nou_video_url,
-                                "resum_youtube_url": nou_resum_url,
-                                "maps_url": maps_final_save,
-                                "targetes_partit": text_targetes_guardar
+                                "video_url": str(nou_video_url or "").strip(),
+                                "resum_youtube_url": str(nou_resum_url or "").strip(),
+                                "maps_url": str(maps_final_save or "").strip(),
+                                "targetes_partit": str(text_targetes_guardar or "").strip()
                             }).execute()
 
                             for t in trams_llista:
@@ -938,16 +938,16 @@ def main():
                         edit_id = p_edit.get('id') or "sense_id"
                         edit_rival_safe = str(p_edit.get('rival', 'rival'))[:10].replace(" ", "_")
                         
-                        edit_titol = st.text_input("Títol (Posa 'Amistós' per moure'l a Amistosos)", value=p_edit.get('titol', ''), key=f"ed_t_{edit_id}_{edit_rival_safe}")
+                        edit_titol = st.text_input("Títol (Posa 'Amistós' per moure'l a Amistosos)", value=p_edit.get('titol', '') or '', key=f"ed_t_{edit_id}_{edit_rival_safe}")
                         edit_jornada = st.text_input("Jornada", value=str(p_edit.get('jornada') or "1"), key=f"ed_j_{edit_id}_{edit_rival_safe}")
-                        edit_rival = st.text_input("Rival", value=p_edit.get('rival', ''), key=f"ed_r_{edit_id}_{edit_rival_safe}")
-                        edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', ''), key=f"ed_res_{edit_id}_{edit_rival_safe}")
+                        edit_rival = st.text_input("Rival", value=p_edit.get('rival', '') or '', key=f"ed_r_{edit_id}_{edit_rival_safe}")
+                        edit_resultat = st.text_input("Resultat", value=p_edit.get('resultat', '') or '', key=f"ed_res_{edit_id}_{edit_rival_safe}")
                         edit_lloc = st.selectbox("Lloc", ["Casa", "Fora"], index=0 if p_edit.get('lloc', 'Casa')=='Casa' else 1, key=f"ed_ll_{edit_id}_{edit_rival_safe}")
                         
                         st.markdown("---")
                         st.markdown("##### 🖼️ Gestió d'Imatges (Escut i Fotos)")
                         
-                        escut_actual_edit = p_edit.get('escut_rival_url', '')
+                        escut_actual_edit = p_edit.get('escut_rival_url', '') or ''
                         if escut_actual_edit:
                             st.write("Escut actual del rival:")
                             st.image(escut_actual_edit, width=50)
@@ -971,10 +971,10 @@ def main():
                         
                         edit_noves_fotos = st.file_uploader("📸 Afegir Noves Fotos de Celebració (Màxim 5)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"ed_fotos_{edit_id}_{edit_rival_safe}")
 
-                        edit_video = st.text_input("Enllaç Vídeo Sencer", value=p_edit.get('video_url', ''), key=f"ed_v_{edit_id}_{edit_rival_safe}")
-                        edit_resum = st.text_input("Enllaç Resum del Partit", value=p_edit.get('resum_youtube_url', ''), key=f"ed_resum_{edit_id}_{edit_rival_safe}")
-                        edit_targetes_text = st.text_input("Targetes del partit (Ex: Clàudia - Groga)", value=p_edit.get('targetes_partit', ''), key=f"ed_tarj_{edit_id}_{edit_rival_safe}")
-                        edit_maps = st.text_input("Google Maps (Ubicació)", value=p_edit.get('maps_url', ''), key=f"ed_maps_{edit_id}_{edit_rival_safe}")
+                        edit_video = st.text_input("Enllaç Vídeo Sencer", value=p_edit.get('video_url', '') or '', key=f"ed_v_{edit_id}_{edit_rival_safe}")
+                        edit_resum = st.text_input("Enllaç Resum del Partit", value=p_edit.get('resum_youtube_url', '') or '', key=f"ed_resum_{edit_id}_{edit_rival_safe}")
+                        edit_targetes_text = st.text_input("Targetes del partit (Ex: Clàudia - Groga)", value=p_edit.get('targetes_partit', '') or '', key=f"ed_tarj_{edit_id}_{edit_rival_safe}")
+                        edit_maps = st.text_input("Google Maps (Ubicació)", value=p_edit.get('maps_url', '') or '', key=f"ed_maps_{edit_id}_{edit_rival_safe}")
 
                         if st.button("Actualitzar Partit", key=f"btn_act_partit_{edit_id}_{edit_rival_safe}"):
                             try:
