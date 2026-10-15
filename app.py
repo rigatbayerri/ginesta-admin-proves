@@ -10,7 +10,7 @@ import datetime
 
 # --- CONFIGURACIÓ DE LA PÀGINA ---
 st.set_page_config(
-    page_title="Videoteca & Estadístiques - C.F. Ginesta",
+    page_title="C.F. Ginesta · Cadet F11",
     page_icon="https://files.fcf.cat/escudos/clubes/escudos/00100_0001239324_GINESTA.png",
     layout="wide"
 )
@@ -56,116 +56,104 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-title" content="C.F. Ginesta">
 """, unsafe_allow_html=True)
 
-# --- ESTIL I COLORS CORPORATIUS: REDISSENY VISUAL V2 ---
+# --- SISTEMA VISUAL: GINESTA MATCHDAY ---
 st.markdown("""
 <style>
 :root {
-  --ginesta: #5c2d73;
-  --ginesta-dark: #3d1b50;
-  --ginesta-light: #efe7f5;
-  --ginesta-pale: #f8f5fb;
-  --ink: #211827;
-  --muted: #746b7b;
-  --line: #e8e0ed;
-  --surface: #ffffff;
+  --club: #5c2d73; --club-deep: #321341; --club-mid: #795094;
+  --club-soft: #eee5f4; --club-pale: #faf7fc; --ink: #241b2b;
+  --muted: #74697d; --line: #e7deed; --paper: #ffffff;
+  --green: #287c55; --amber: #ad6a17;
 }
-.stApp { background: #f7f5fa; color: var(--ink); }
-[data-testid="stAppViewContainer"] > .main .block-container {
-  max-width: 1440px; padding-top: 1.5rem; padding-bottom: 3rem;
-}
-/* Typography: preserve readable contrast without overriding every span. */
-h1, h2, h3, h4, h5, h6 { color: var(--ginesta-dark); letter-spacing: -0.025em; }
+.stApp { background: #f7f5f9; color: var(--ink); }
+[data-testid="stAppViewContainer"] > .main .block-container { max-width: 1500px; padding: 1.45rem 2rem 3rem; }
+[data-testid="stHeader"] { background: rgba(247,245,249,.9); }
+h1,h2,h3,h4 { color: var(--club-deep); letter-spacing: -.035em; }
 p, label, [data-testid="stMarkdownContainer"] { color: var(--ink); }
 [data-testid="stCaptionContainer"] { color: var(--muted); }
-/* Premium buttons */
+/* Primary actions */
 .stButton > button, div.stFormSubmitButton > button {
-  border: 1px solid var(--ginesta) !important; border-radius: 11px !important;
-  background: var(--ginesta) !important; color: #fff !important;
-  font-weight: 700 !important; min-height: 2.65rem; padding: .55rem 1rem !important;
-  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-  box-shadow: 0 3px 9px rgba(92,45,115,.12);
+  border: 1px solid var(--club) !important; border-radius: 11px !important;
+  background: var(--club) !important; color: white !important; font-weight: 750 !important;
+  min-height: 2.65rem; padding: .55rem 1rem !important;
+  box-shadow: 0 4px 12px rgba(50,19,65,.13); transition: .16s ease;
 }
-.stButton > button *, div.stFormSubmitButton > button * { color: #fff !important; }
-.stButton > button:hover, div.stFormSubmitButton > button:hover {
-  background: var(--ginesta-dark) !important; border-color: var(--ginesta-dark) !important;
-  box-shadow: 0 5px 14px rgba(61,27,80,.2); transform: translateY(-1px);
-}
+.stButton > button:hover, div.stFormSubmitButton > button:hover { background: var(--club-deep) !important; border-color: var(--club-deep) !important; transform: translateY(-1px); box-shadow: 0 7px 17px rgba(50,19,65,.2); }
 .stButton > button:focus, div.stFormSubmitButton > button:focus { outline: 3px solid #d8c2e5 !important; }
-/* Inputs */
-.stTextInput input, .stNumberInput input, .stDateInput input, .stTimeInput input,
-.stTextArea textarea {
-  background: #fff !important; color: var(--ink) !important;
-  border: 1px solid #d8c9e1 !important; border-radius: 10px !important;
+/* Fields */
+.stTextInput input,.stNumberInput input,.stDateInput input,.stTimeInput input,.stTextArea textarea {
+  background: white !important; color: var(--ink) !important; border: 1px solid #d8c9e1 !important; border-radius: 10px !important;
 }
-.stTextInput input:focus, .stNumberInput input:focus, .stDateInput input:focus,
-.stTextArea textarea:focus { border-color: var(--ginesta) !important; box-shadow: 0 0 0 2px #eadff0 !important; }
-/* Selects */
-div[data-baseweb="select"] > div {
-  background: #fff !important; border: 1px solid #d8c9e1 !important; border-radius: 10px !important;
-}
-div[data-baseweb="select"] span, div[data-baseweb="select"] svg { color: var(--ink) !important; fill: var(--ink) !important; }
-div[data-baseweb="popover"] div[role="option"] { background: #fff !important; color: var(--ink) !important; }
-div[data-baseweb="popover"] div[role="option"] * { color: var(--ink) !important; }
-/* Tabs */
-button[data-baseweb="tab"] { font-weight: 700 !important; color: #716579 !important; }
-button[data-baseweb="tab"][aria-selected="true"] { color: var(--ginesta) !important; }
-div[data-baseweb="tab-highlight"] { background-color: var(--ginesta) !important; height: 3px !important; }
-/* Cleaner separators and metrics */
+.stTextInput input:focus,.stNumberInput input:focus,.stDateInput input:focus,.stTextArea textarea:focus { border-color: var(--club) !important; box-shadow: 0 0 0 2px #eadff0 !important; }
+div[data-baseweb="select"] > div { background: white !important; border: 1px solid #d8c9e1 !important; border-radius: 10px !important; }
+div[data-baseweb="select"] span,div[data-baseweb="select"] svg { color: var(--ink) !important; fill: var(--ink) !important; }
+div[data-baseweb="popover"] div[role="option"] { background: white !important; color: var(--ink) !important; }
+/* Navigation */
+div[data-testid="stTabs"] > div[role="tablist"] { gap: 7px; border-bottom: 1px solid var(--line); padding: 7px 5px 11px; }
+button[data-baseweb="tab"] { background: white !important; border: 1px solid var(--line) !important; border-radius: 11px !important; padding: 10px 15px !important; color: var(--muted) !important; font-weight: 750 !important; }
+button[data-baseweb="tab"][aria-selected="true"] { color: white !important; background: var(--club) !important; border-color: var(--club) !important; box-shadow: 0 4px 12px rgba(92,45,115,.18); }
+button[data-baseweb="tab"] [data-testid="stMarkdownContainer"] { color: inherit !important; }
+div[data-baseweb="tab-highlight"] { display: none !important; }
+/* Metrics / panels */
+[data-testid="stMetric"] { background: white; border: 1px solid var(--line); border-radius: 16px; padding: 17px 19px; box-shadow: 0 5px 18px rgba(42,23,52,.045); }
+[data-testid="stMetricLabel"] { color: var(--muted) !important; font-size: .82rem; font-weight: 700; }
+[data-testid="stMetricValue"] { color: var(--club-deep) !important; font-weight: 850; letter-spacing: -.04em; }
+[data-testid="stMetricDelta"] > div { color: var(--club) !important; }
+[data-testid="stExpander"] { border: 1px solid var(--line); border-radius: 13px; background: white; }
+[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 16px; }
+[data-testid="stAlert"] { border-radius: 13px; }
 hr { border-color: var(--line) !important; }
-[data-testid="stMetric"] {
-  background: #fff; border: 1px solid var(--line); border-radius: 14px;
-  padding: 16px 18px; box-shadow: 0 3px 12px rgba(41,24,50,.035);
-}
-[data-testid="stMetricLabel"] { color: var(--muted) !important; font-weight: 600; }
-[data-testid="stMetricValue"] { color: var(--ginesta-dark) !important; font-weight: 800; }
-[data-testid="stMetricDelta"] svg { display: none !important; }
-[data-testid="stMetricDelta"] > div { color: var(--ginesta) !important; background: transparent !important; font-weight: 650 !important; padding: 0 !important; }
-/* Containers and expanders */
-[data-testid="stExpander"] { border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 14px; }
-[data-testid="stAlert"] { border-radius: 12px; }
-/* Sidebar */
 section[data-testid="stSidebar"] { background: #f0eaf5; border-right: 1px solid #e5d9ec; }
 section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { color: var(--ink); }
-/* New masthead */
-.ginesta-hero {
-  position: relative; overflow: hidden; display: flex; align-items: center; gap: 24px;
-  padding: 26px 30px; margin: 0 0 22px; border-radius: 22px;
-  color: white; background: linear-gradient(120deg, #321341 0%, #5c2d73 58%, #80519a 100%);
-  box-shadow: 0 12px 30px rgba(61,27,80,.18);
+/* Hero and overview */
+.ginesta-hero { position:relative; overflow:hidden; display:flex; align-items:center; gap:26px; padding:30px 34px; margin:0 0 20px; border-radius:24px; color:white; background:linear-gradient(115deg,#281034 0%,#4b205f 48%,#795094 100%); box-shadow:0 16px 34px rgba(50,19,65,.2); }
+.ginesta-hero:before { content:""; position:absolute; width:360px; height:360px; right:-95px; top:-185px; border:48px solid rgba(255,255,255,.07); border-radius:50%; }
+.ginesta-hero:after { content:""; position:absolute; width:180px; height:180px; right:150px; bottom:-145px; border:25px solid rgba(255,255,255,.055); border-radius:50%; }
+.ginesta-crest { flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:106px; height:106px; padding:9px; border-radius:25px; background:white; box-shadow:0 7px 20px rgba(0,0,0,.2); z-index:1; }
+.ginesta-crest img { width:100%; height:100%; object-fit:contain; }
+.ginesta-eyebrow { color:#e9d9f1; font-size:11px; font-weight:850; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:8px; }
+.ginesta-title { color:white; font-size:clamp(30px,3.3vw,46px); font-weight:950; line-height:1; letter-spacing:-1.8px; }
+.ginesta-subtitle { color:#f1e8f6; font-size:14px; margin-top:10px; }
+.ginesta-chip { display:inline-block; margin-top:15px; padding:6px 11px; border:1px solid rgba(255,255,255,.32); border-radius:999px; color:white; background:rgba(255,255,255,.1); font-size:10px; font-weight:850; letter-spacing:1px; }
+.section-kicker { color:var(--club-mid); text-transform:uppercase; font-size:10px; font-weight:850; letter-spacing:1.7px; margin-bottom:5px; }
+.section-heading { color:var(--club-deep); font-size:24px; font-weight:900; letter-spacing:-.7px; margin:0 0 4px; }
+.section-copy { color:var(--muted); font-size:13px; margin-bottom:15px; }
+.overview-panel { background:white; border:1px solid var(--line); border-radius:17px; padding:18px 20px; box-shadow:0 5px 18px rgba(42,23,52,.04); height:100%; }
+.overview-panel-title { font-size:14px; color:var(--club-deep); font-weight:850; margin-bottom:13px; }
+.scorer-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #f0eaf4; }
+.scorer-row:last-child { border-bottom:0; }
+.scorer-number { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:10px; color:var(--club); background:var(--club-soft); font-size:12px; font-weight:900; }
+.scorer-name { flex:1; font-size:12px; font-weight:800; color:var(--ink); }
+.scorer-role { color:var(--muted); font-size:10px; margin-top:2px; }
+.scorer-goals { background:var(--club); color:white; min-width:34px; text-align:center; border-radius:8px; padding:5px 7px; font-size:12px; font-weight:900; }
+.quick-stat { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid #f0eaf4; font-size:12px; }
+.quick-stat:last-child { border-bottom:0; }
+.quick-stat span { color:var(--muted); }
+.quick-stat strong { color:var(--club-deep); font-size:15px; }
+.match-feature { background:linear-gradient(135deg,#fff 0%,#f3ebf8 100%); border:1px solid #d9c6e5; border-radius:18px; padding:18px 22px; margin:0 0 24px; box-shadow:0 7px 20px rgba(92,45,115,.07); }
+.match-feature-label { text-align:center; color:var(--club); text-transform:uppercase; font-size:10px; font-weight:900; letter-spacing:1.6px; margin-bottom:13px; }
+.match-feature-teams { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.match-feature-team { flex:1; text-align:center; min-width:0; }
+.match-feature-team img { width:60px; height:60px; object-fit:contain; margin-bottom:7px; }
+.match-feature-team div { color:var(--ink); font-weight:900; font-size:13px; line-height:1.25; }
+.match-feature-vs { background:var(--club); color:white; border-radius:11px; padding:9px 13px; font-weight:950; font-size:12px; box-shadow:0 4px 12px rgba(92,45,115,.2); }
+.player-card { background:white; padding:18px; border-radius:15px; border:1px solid var(--line); border-top:3px solid var(--club); margin-bottom:12px; box-shadow:0 5px 16px rgba(42,23,52,.045); }
+@media(max-width:768px) {
+ [data-testid="stAppViewContainer"] > .main .block-container { padding:1rem .8rem 2rem; }
+ .ginesta-hero { gap:15px; padding:20px 17px; border-radius:18px; }
+ .ginesta-crest { width:70px; height:70px; padding:6px; border-radius:17px; }
+ .ginesta-eyebrow { font-size:9px; letter-spacing:1.3px; }
+ .ginesta-title { font-size:28px; }
+ .ginesta-subtitle { font-size:12px; }
+ .ginesta-chip { font-size:9px; margin-top:10px; }
+ h1 { font-size:1.6rem !important; } h2 { font-size:1.3rem !important; } h3 { font-size:1.1rem !important; }
+ button[data-baseweb="tab"] { padding:8px 10px !important; font-size:12px !important; }
+ .match-feature { padding:15px 11px; }
+ .match-feature-team img { width:44px; height:44px; }
+ .match-feature-team div { font-size:11px; }
+ .overview-panel { padding:15px; }
 }
-.ginesta-hero:after {
-  content: ""; position: absolute; width: 250px; height: 250px; right: -65px; top: -115px;
-  border: 34px solid rgba(255,255,255,.075); border-radius: 50%; pointer-events: none;
-}
-.ginesta-crest {
-  flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
-  width: 104px; height: 104px; padding: 9px; border-radius: 50%;
-  background: #fff; box-shadow: 0 4px 18px rgba(0,0,0,.18); z-index: 1;
-}
-.ginesta-crest img { width: 100%; height: 100%; object-fit: contain; }
-.ginesta-eyebrow { color: #e9d9f1; font-size: 11px; font-weight: 800; letter-spacing: 2.2px; text-transform: uppercase; margin-bottom: 7px; }
-.ginesta-title { color: #fff; font-size: clamp(27px, 3vw, 40px); font-weight: 900; line-height: 1.04; letter-spacing: -1.2px; }
-.ginesta-subtitle { color: #f1e8f6; font-size: 14px; margin-top: 8px; }
-.ginesta-chip { display: inline-block; margin-top: 14px; padding: 5px 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; color: #fff; background: rgba(255,255,255,.1); font-size: 11px; font-weight: 750; letter-spacing: .6px; }
-@media (max-width: 768px) {
-  [data-testid="stAppViewContainer"] > .main .block-container { padding: 1rem .8rem 2rem; }
-  .ginesta-hero { gap: 14px; padding: 19px 17px; border-radius: 17px; }
-  .ginesta-crest { width: 72px; height: 72px; padding: 6px; }
-  .ginesta-eyebrow { font-size: 9px; letter-spacing: 1.4px; }
-  .ginesta-title { font-size: 27px; }
-  .ginesta-subtitle { font-size: 12px; }
-  .ginesta-chip { font-size: 10px; margin-top: 10px; }
-  h1 { font-size: 1.55rem !important; }
-  h2 { font-size: 1.25rem !important; }
-  h3 { font-size: 1.08rem !important; }
-  [data-testid="stMetric"] { padding: 12px; }
-}
-@media (max-width: 420px) {
-  .ginesta-hero { align-items: flex-start; gap: 12px; padding: 16px 13px; }
-  .ginesta-crest { width: 58px; height: 58px; }
-  .ginesta-title { font-size: 23px; }
-}
+@media(max-width:420px) { .ginesta-hero { align-items:flex-start; gap:11px; padding:16px 12px; } .ginesta-crest { width:56px; height:56px; } .ginesta-title { font-size:23px; } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -366,24 +354,14 @@ def main():
                 maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
 
                 st.markdown(f"""
-                    <div style="background: linear-gradient(135deg, #f7f3fb 0%, #ede4f5 100%); padding: 14px 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 3px 3px 10px rgba(92,45,115,0.08);">
-                        <div style="font-size: 13px; font-weight: bold; color: #5c2d73; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #dcd0e8; padding-bottom: 4px; text-align: center;">
-                            ⚡ Proper Partit &nbsp;|&nbsp; Jornada {j_prop} &nbsp;|&nbsp; 📅 {data_prop} &nbsp;|&nbsp; ⏰ {hora_prop} {maps_p_html}
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="text-align: center; width: 38%;">
-                                {img1_p}
-                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{e1_nom}</div>
-                            </div>
-                            <div style="text-align: center; width: 24%;">
-                                <span style="background-color: #f7f3fb; color: #5c2d73; border: 2px solid #5c2d73; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">VS</span>
-                            </div>
-                            <div style="text-align: center; width: 38%;">
-                                {img2_p}
-                                <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{e2_nom}</div>
-                            </div>
-                        </div>
-                    </div>
+                    <section class="match-feature">
+                      <div class="match-feature-label">⚡ Proper partit · Jornada {j_prop} · {data_prop} · {hora_prop} {maps_p_html}</div>
+                      <div class="match-feature-teams">
+                        <div class="match-feature-team">{img1_p}<div>{e1_nom}</div></div>
+                        <div class="match-feature-vs">VS</div>
+                        <div class="match-feature-team">{img2_p}<div>{e2_nom}</div></div>
+                      </div>
+                    </section>
                 """, unsafe_allow_html=True)
     except:
         pass
@@ -416,6 +394,48 @@ def main():
     total_grogues = sum(int(j.get('grogues', 0) or 0) for j in golejadores_data)
     total_vermelles = sum(int(j.get('vermelles', 0) or 0) for j in golejadores_data)
 
+    # --- NOU PANELL DE TEMPORADA: RESUM VISUAL SENSE MODIFICAR DADES ---
+    st.markdown("""
+      <div class="section-kicker">Match centre · 2026/27</div>
+      <div class="section-heading">El Ginesta, d'una ullada</div>
+      <div class="section-copy">Un resum ràpid de la temporada abans d'entrar a cada secció.</div>
+    """, unsafe_allow_html=True)
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.metric("Partits jugats", n_partits)
+    with k2:
+        st.metric("Gols a favor", g_favor_total)
+    with k3:
+        st.metric("Gols encaixats", gols_contra_total)
+    with k4:
+        st.metric("Porteries a zero", porteries_zero)
+
+    panell_gols, panell_equip = st.columns([1.15, 1])
+    with panell_gols:
+        jugadores_gol = [j for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora']
+        mejores_goleadoras = sorted(jugadores_gol, key=lambda j: int(j.get('gols', 0) or 0), reverse=True)[:3]
+        scorer_rows = []
+        for pos, j in enumerate(mejores_goleadoras, start=1):
+            nom = str(j.get('nom', 'Jugadora'))
+            dorsal = j.get('dorsal', '-')
+            gols = int(j.get('gols', 0) or 0)
+            scorer_rows.append(f'<div class="scorer-row"><div class="scorer-number">{pos:02d}</div><div class="scorer-name">{nom}<div class="scorer-role">Dorsal #{dorsal}</div></div><div class="scorer-goals">{gols} ⚽</div></div>')
+        if not scorer_rows:
+            scorer_rows.append('<div class="section-copy">Encara no hi ha dades de golejadores.</div>')
+        st.markdown('<div class="overview-panel"><div class="overview-panel-title">🏆 Golejadores destacades</div>' + ''.join(scorer_rows) + '</div>', unsafe_allow_html=True)
+    with panell_equip:
+        promig_gols = (g_favor_total / n_partits) if n_partits else 0
+        percentatge_zero = (porteries_zero / n_partits * 100) if n_partits else 0
+        resum_html = (
+            '<div class="overview-panel"><div class="overview-panel-title">📈 Resum col·lectiu</div>'
+            f'<div class="quick-stat"><span>Mitjana de gols per partit</span><strong>{promig_gols:.2f}</strong></div>'
+            f'<div class="quick-stat"><span>Partits amb porteria a zero</span><strong>{percentatge_zero:.0f}%</strong></div>'
+            f'<div class="quick-stat"><span>Targetes grogues</span><strong>{total_grogues}</strong></div>'
+            f'<div class="quick-stat"><span>Targetes vermelles</span><strong>{total_vermelles}</strong></div></div>'
+        )
+        st.markdown(resum_html, unsafe_allow_html=True)
+    st.markdown("<div style='height:22px'></div>", unsafe_allow_html=True)
+
     def sincronitzar_estadistiques_generals(nous_partits, noves_p_zero, nous_propia, nous_contra):
         try:
             actual_gols_jugadores = sum(int(j.get('gols', 0) or 0) for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora')
@@ -432,6 +452,11 @@ def main():
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
     # PESTANYES PRINCIPALS
+    st.markdown("""
+      <div class="section-kicker">Explora l'equip</div>
+      <div class="section-heading">Seccions del club</div>
+      <div class="section-copy">Calendari, vídeos, plantilla i dades de la temporada en una navegació unificada.</div>
+    """, unsafe_allow_html=True)
     if st.session_state["auth_level"] == "admin":
         tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos", "⚙️ Admin"])
     else:
@@ -445,6 +470,17 @@ def main():
         if not calendari_data:
             st.warning("No hi ha partits al calendari.")
         else:
+            filt_col1, filt_col2 = st.columns([2, 1])
+            with filt_col1:
+                cerca_calendari = st.text_input("Cerca rival o jornada", placeholder="Escriu el nom d'un equip…", key="cerca_calendari")
+            with filt_col2:
+                filtre_camp = st.selectbox("Localització", ["Tots", "Casa", "Fora"], key="filtre_camp")
+            if cerca_calendari.strip():
+                term = cerca_calendari.strip().casefold()
+                calendari_data = [p for p in calendari_data if term in str(p.get('rival', '')).casefold() or term in str(p.get('jornada', '')).casefold()]
+            if filtre_camp != "Tots":
+                calendari_data = [p for p in calendari_data if str(p.get('lloc', 'Casa')).casefold() == filtre_camp.casefold()]
+            st.caption(f"{len(calendari_data)} partit(s) al resultat del filtre")
             for partit in calendari_data:
                 jornada = partit.get('jornada', '-')
                 data = partit.get('data', '-')
@@ -636,7 +672,7 @@ def main():
             with cols[i % 2]:
                 with st.container():
                     st.markdown(f"""
-                    <div style="background-color: white; padding: 15px; border-radius: 12px; border-left: 6px solid #5c2d73; margin-bottom: 10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.06);">
+                    <div class="player-card">
                         <div style="font-size: 18px; font-weight: 900; color: #5c2d73; text-transform: uppercase;">
                             #{dorsal_val} — {nom_jugadora} <span style="font-size: 11px; background-color: #f7f5fa; padding: 2px 6px; border-radius: 4px; color: #333; border: 1px solid #ddd;">{rol}</span>
                         </div>
