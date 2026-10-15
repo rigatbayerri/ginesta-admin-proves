@@ -547,26 +547,24 @@ def main():
                     if lletres_fotos:
                         st.markdown("""
                             <style>
-                            .photo-box {
-                                background: #ffffff;
+                            .photo-card-clean {
+                                background: #1a1a1a;
                                 border-radius: 12px;
                                 overflow: hidden;
                                 border: 1px solid #e0d8e8;
-                                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                                position: relative;
                                 margin-bottom: 10px;
-                                box-shadow: 0 4px 12px rgba(92, 45, 115, 0.06);
-                                text-align: center;
-                                padding: 6px;
+                                box-shadow: 0 4px 12px rgba(92, 45, 115, 0.08);
+                                transition: transform 0.2s ease;
                             }
-                            .photo-box:hover {
+                            .photo-card-clean:hover {
                                 transform: translateY(-3px);
-                                box-shadow: 0 8px 20px rgba(92, 45, 115, 0.15);
                                 border-color: #5c2d73;
                             }
                             </style>
                         """, unsafe_allow_html=True)
 
-                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>📸 Fes clic a qualsevol imatge per veure-la a pantalla completa:</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 12px;'>📸 Fes clic al botó integrat a la foto per obrir-la en gran:</p>", unsafe_allow_html=True)
 
                         if "selected_photo" not in st.session_state:
                             st.session_state.selected_photo = None
@@ -578,20 +576,21 @@ def main():
                                 f_b64 = obtenir_imatge_base64(f_path)
                                 if f_b64:
                                     st.markdown(f"""
-                                        <div class="photo-box">
+                                        <div class="photo-card-clean">
                                             <img src='{f_b64}' style='width: 100%; height: 160px; object-fit: contain; display: block;'>
                                         </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    if st.button("🔍 Ampliar", key=f"btn_zoom_{idx}_{partit_actual.get('id', 0)}"):
+                                    # Botó molt discret i elegant integrat just sota/sobre la imatge
+                                    if st.button("🔍 Veure en gran", key=f"btn_zoom_{idx}_{partit_actual.get('id', 0)}"):
                                         st.session_state.selected_photo = f_path
                                         st.rerun()
 
                         if st.session_state.get("selected_photo"):
                             st.markdown("---")
                             st.markdown("""
-                                <div style="background: linear-gradient(135deg, #5c2d73 0%, #3a1c49 100%); padding: 15px; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px;">
-                                    <h3 style="color: white !important; margin: 0; font-size: 18px;">✨ Vista a Pantalla Completa</h3>
+                                <div style="background: linear-gradient(135deg, #5c2d73 0%, #3a1c49 100%); padding: 12px 15px; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px;">
+                                    <h3 style="color: white !important; margin: 0; font-size: 16px;">✨ Imatge a Pantalla Completa</h3>
                                 </div>
                             """, unsafe_allow_html=True)
                             
