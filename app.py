@@ -950,7 +950,9 @@ def main():
                         escut_actual_edit = p_edit.get('escut_rival_url', '') or ''
                         if escut_actual_edit:
                             st.write("Escut actual del rival:")
-                            st.image(escut_actual_edit, width=50)
+                            escut_edit_b64 = obtenir_imatge_base64(escut_actual_edit)
+                            if escut_edit_b64:
+                                st.markdown(f"<img src='{escut_edit_b64}' style='width: 50px; height: 50px; object-fit: contain;'>", unsafe_allow_html=True)
                         
                         edit_nou_escut = st.file_uploader("Canviar Escut del Rival (Opcional)", type=["png", "jpg"], key=f"ed_esc_{edit_id}_{edit_rival_safe}")
                         
@@ -963,7 +965,9 @@ def main():
                             for f_idx, f_url in enumerate(llista_fotos_actuals):
                                 cols_f = st.columns([1, 4])
                                 with cols_f[0]:
-                                    st.image(f_url, width=70)
+                                    f_b64 = obtenir_imatge_base64(f_url)
+                                    if f_b64:
+                                        st.markdown(f"<img src='{f_b64}' style='width: 70px; height: 70px; object-fit: cover; border-radius: 6px;'>", unsafe_allow_html=True)
                                 with cols_f[1]:
                                     eliminar_foto = st.checkbox(f"🗑️ Eliminar aquesta foto", key=f"del_foto_{edit_id}_{edit_rival_safe}_{f_idx}")
                                     if not eliminar_foto:
@@ -1110,7 +1114,9 @@ def main():
 
                         escut_actual_a = partit_carregat.get("escut_rival_url", "")
                         if escut_actual_a:
-                            st.image(escut_actual_a, width=40)
+                            escut_cal_b64 = obtenir_imatge_base64(escut_actual_a)
+                            if escut_cal_b64:
+                                st.markdown(f"<img src='{escut_cal_b64}' style='width: 40px; height: 40px; object-fit: contain;'>", unsafe_allow_html=True)
                             st.caption("Escut actual del rival (es sincronitzarà a la tornada)")
 
                         edit_arxiu_escut_nou = st.file_uploader("Canviar Escut del Rival", type=["png", "jpg"], key=f"up_esc_{c_id}")
