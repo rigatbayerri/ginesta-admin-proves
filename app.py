@@ -559,76 +559,64 @@ def main():
                 if fotos_str:
                     lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f and f.strip()]))
                     if lletres_fotos:
-                        st.markdown("📸 **Clica sobre qualsevol foto per obrir l'àlbum a pantalla completa:**")
-                        
-                        # Generar llista de base64 per injectar a JavaScript
-                        b64_list = [obtenir_imatge_base64(f) for f in lletres_fotos]
-                        
-                        # HTML + CSS + JS per a l'àlbum modal amb fletxes
-                        thumbnails_html = ""
-                        for idx, b64_img in enumerate(b64_list):
-                            thumbnails_html += f"""
-                                <div onclick="openModal({idx})" style="cursor: pointer; background: white; border: 2px solid #5c2d73; border-radius: 10px; overflow: hidden; box-shadow: 2px 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 140px;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                                    <img src="{b64_img}" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+                        st.markdown("""
+                            <style>
+                            .photo-card {
+                                background: white;
+                                border-radius: 12px;
+                                overflow: hidden;
+                                border: 1px solid #e0d8e8;
+                                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                                margin-bottom: 16px;
+                                box-shadow: 0 4px 12px rgba(92, 45, 115, 0.06);
+                            }
+                            .photo-card:hover {
+                                transform: translateY(-3px);
+                                box-shadow: 0 8px 20px rgba(92, 45, 115, 0.15);
+                                border-color: #5c2d73;
+                            }
+                            </style>
+                        """, unsafe_allow_html=True)
+
+                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>📸 Fes clic a qualsevol imatge per ampliar-la a pantalla completa:</p>", unsafe_allow_html=True)
+
+                        if "selected_photo" not in st.session_state:
+                            st.session_state.selected_photo = None
+
+                        cols_galeria = st.columns(3)
+                        for idx, f_path in enumerate(lletres_fotos):
+                            col_actual = cols_galeria[idx % 3]
+                            with col_actual:
+                                f_b64 = obtenir_imatge_base64(f_path)
+                                if f_b64:
+                                    st.markdown(f"""
+                                        <div class="photo-card">
+                                            <img src='{f_b64}' style='width: 100%; height: 160px; object-fit: cover; display: block;'>
+                                            <div style='padding: 8px 12px; font-size: 12px; font-weight: bold; color: #5c2d73; text-align: center; background: #faf7fc;'>
+                                                Foto #{idx + 1}
+                                            </div>
+                                        </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    if st.button(f"🔍 Ampliar #{idx + 1}", key=f"btn_zoom_{idx}_{partit_actual.get('id', 0)}"):
+                                        st.session_state.selected_photo = f_path
+                                        st.rerun()
+
+                        if st.session_state.get("selected_photo"):
+                            st.markdown("---")
+                            st.markdown("""
+                                <div style="background: linear-gradient(135deg, #5c2d73 0%, #3a1c49 100%); padding: 15px; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px;">
+                                    <h3 style="color: white !important; margin: 0; font-size: 18px;">✨ Vista Ampliada</h3>
                                 </div>
-                            """
-
-                        slides_js_array = str(b64_list).replace("'", '"')
-
-                        album_component = f"""
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 10px;">
-                                {thumbnails_html}
-                            </div>
-
-                            <div id="photoModal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; flex-direction: column;">
-                                <span onclick="closeModal()" style="position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 1000000;">&times;</span>
-                                <div style="position: relative; max-width: 90%; max-height: 80vh; display: flex; align-items: center; justify-content: center;">
-                                    <button onclick="changeSlide(-1)" style="position: absolute; left: -50px; background: #5c2d73; color: white; border: none; font-size: 24px; padding: 12px 16px; cursor: pointer; border-radius: 50%; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">&#10094;</button>
-                                    <img id="modalImg" src="" style="max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
-                                    <button onclick="changeSlide(1)" style="position: absolute; right: -50px; background: #5c2d73; color: white; border: none; font-size: 24px; padding: 12px 16px; cursor: pointer; border-radius: 50%; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">&#10095;</button>
-                                </div>
-                                <div id="modalCounter" style="color: white; margin-top: 15px; font-size: 16px; font-weight: bold; letter-spacing: 1px;"></div>
-                            </div>
-
-                            <script>
-                                const images = {slides_js_array};
-                                let currentIndex = 0;
-
-                                function openModal(index) {{
-                                    currentIndex = index;
-                                    updateModalImage();
-                                    document.getElementById('photoModal').style.display = 'flex';
-                                }}
-
-                                function closeModal() {{
-                                    document.getElementById('photoModal').style.display = 'none';
-                                }}
-
-                                function changeSlide(direction) {{
-                                    currentIndex += direction;
-                                    if (currentIndex >= images.length) {{
-                                        currentIndex = 0;
-                                    }} else if (currentIndex < 0) {{
-                                        currentIndex = images.length - 1;
-                                    }}
-                                    updateModalImage();
-                                }}
-
-                                function updateModalImage() {{
-                                    document.getElementById('modalImg').src = images[currentIndex];
-                                    document.getElementById('modalCounter').innerText = (currentIndex + 1) + ' / ' + images.length;
-                                }}
-
-                                document.addEventListener('keydown', function(event) {{
-                                    if (document.getElementById('photoModal').style.display === 'flex') {{
-                                        if (event.key === 'ArrowRight') {{ changeSlide(1); }}
-                                        if (event.key === 'ArrowLeft') {{ changeSlide(-1); }}
-                                        if (event.key === 'Escape') {{ closeModal(); }}
-                                    }}
-                                }});
-                            </script>
-                        """
-                        st.markdown(album_component, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
+                            
+                            st.image(st.session_state.selected_photo, use_container_width=True)
+                            
+                            col_tancars, _ = st.columns([1, 4])
+                            with col_tancars:
+                                if st.button("❌ Tancar vista"):
+                                    st.session_state.selected_photo = None
+                                    st.rerun()
                     else:
                         st.info("No hi ha fotos disponibles per a aquest partit.")
                 else:
@@ -1404,53 +1392,53 @@ def main():
                                     st.rerun()
                                 except Exception as e: st.error(f"❌ Error: {e}")
 
-                    with c_bt2:
-                        if st.button("🟨 Sumar Groga"):
-                            try:
-                                nova_g = grogues_actuals + 1
-                                nova_v = vermelles_actuals
-                                if nova_g % 2 == 0 and nova_v == 0:
-                                    nova_v = 1
-                                supabase.table("golejadores").upsert({
-                                    "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
-                                    "grogues": nova_g, "vermelles": nova_v,
-                                    "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
-                                }, on_conflict="nom").execute()
-                                st.cache_data.clear()
-                                st.rerun()
-                            except Exception as e: st.error(f"❌ Error: {e}")
-                        if st.button("➖ Restar Groga") and grogues_actuals > 0:
-                            try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
-                                    "grogues": grogues_actuals - 1, "vermelles": vermelles_actuals,
-                                    "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
-                                }, on_conflict="nom").execute()
-                                st.cache_data.clear()
-                                st.rerun()
-                            except Exception as e: st.error(f"❌ Error: {e}")
+                        with c_bt2:
+                            if st.button("🟨 Sumar Groga"):
+                                try:
+                                    nova_g = grogues_actuals + 1
+                                    nova_v = vermelles_actuals
+                                    if nova_g % 2 == 0 and nova_v == 0:
+                                        nova_v = 1
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
+                                        "grogues": nova_g, "vermelles": nova_v,
+                                        "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
+                                    }, on_conflict="nom").execute()
+                                    st.cache_data.clear()
+                                    st.rerun()
+                                except Exception as e: st.error(f"❌ Error: {e}")
+                            if st.button("➖ Restar Groga") and grogues_actuals > 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
+                                        "grogues": grogues_actuals - 1, "vermelles": vermelles_actuals,
+                                        "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
+                                    }, on_conflict="nom").execute()
+                                    st.cache_data.clear()
+                                    st.rerun()
+                                except Exception as e: st.error(f"❌ Error: {e}")
 
-                    with c_bt3:
-                        if st.button("🟥 Sumar Vermella") and vermelles_actuals == 0:
-                            try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
-                                    "grogues": grogues_actuals, "vermelles": 1,
-                                    "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
-                                }, on_conflict="nom").execute()
-                                st.cache_data.clear()
-                                st.rerun()
-                            except Exception as e: st.error(f"❌ Error: {e}")
-                        if st.button("➖ Restar Vermella") and vermelles_actuals > 0:
-                            try:
-                                supabase.table("golejadores").upsert({
-                                    "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
-                                    "grogues": grogues_actuals, "vermelles": 0,
-                                    "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
-                                }, on_conflict="nom").execute()
-                                st.cache_data.clear()
-                                st.rerun()
-                            except Exception as e: st.error(f"❌ Error: {e}")
+                        with c_bt3:
+                            if st.button("🟥 Sumar Vermella") and vermelles_actuals == 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
+                                        "grogues": grogues_actuals, "vermelles": 1,
+                                        "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
+                                    }, on_conflict="nom").execute()
+                                    st.cache_data.clear()
+                                    st.rerun()
+                                except Exception as e: st.error(f"❌ Error: {e}")
+                            if st.button("➖ Restar Vermella") and vermelles_actuals > 0:
+                                try:
+                                    supabase.table("golejadores").upsert({
+                                        "nom": nom_real, "dorsal": dorsal_actual, "gols": gols_actuals, "rol": rol_actual,
+                                        "grogues": grogues_actuals, "vermelles": 0,
+                                        "gols_encaixats": gols_encaixats_actuals, "partits_jugats": partits_jugats_actuals, "titularitats": titularitats_actuals
+                                    }, on_conflict="nom").execute()
+                                    st.cache_data.clear()
+                                    st.rerun()
+                                except Exception as e: st.error(f"❌ Error: {e}")
 
             # PESTANYA ADMIN: TRAMS
             with tab_adm_trams:
