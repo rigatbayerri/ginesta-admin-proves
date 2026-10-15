@@ -88,6 +88,22 @@ p, label, [data-testid="stMarkdownContainer"] { color: var(--ink); }
 div[data-baseweb="select"] > div { background: white !important; border: 1px solid #d8c9e1 !important; border-radius: 10px !important; }
 div[data-baseweb="select"] span,div[data-baseweb="select"] svg { color: var(--ink) !important; fill: var(--ink) !important; }
 div[data-baseweb="popover"] div[role="option"] { background: white !important; color: var(--ink) !important; }
+/* Sidebar navigation */
+section[data-testid="stSidebar"] { background:linear-gradient(180deg,#f3edf7 0%,#eee6f3 100%); border-right:1px solid #dfd0e8; }
+section[data-testid="stSidebar"] > div { padding-top:1.25rem; }
+.sidebar-brand { text-align:center; padding:8px 8px 22px; margin-bottom:16px; border-bottom:1px solid #ddcde7; }
+.sidebar-brand img { object-fit:contain; filter:drop-shadow(0 5px 8px rgba(50,19,65,.12)); }
+.sidebar-brand-title { color:var(--club-deep); font-size:17px; font-weight:950; letter-spacing:1.2px; margin-top:8px; }
+.sidebar-brand-subtitle { color:var(--muted); font-size:9px; font-weight:850; letter-spacing:1.25px; margin-top:4px; }
+.sidebar-menu-label { color:#8a7596; font-size:10px; font-weight:900; letter-spacing:1.8px; padding:4px 10px 9px; }
+section[data-testid="stSidebar"] div[role="radiogroup"] { gap:7px; }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label { background:rgba(255,255,255,.64); border:1px solid #e5d9ec; border-radius:12px; padding:10px 12px; margin:0; transition:all .15s ease; }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover { background:white; border-color:#cbb4d9; }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) { background:var(--club); border-color:var(--club); box-shadow:0 5px 14px rgba(92,45,115,.18); }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) p { color:white !important; font-weight:850; }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) div { color:white !important; }
+.sidebar-footer { margin-top:28px; padding:15px 10px; text-align:center; border-top:1px solid #ddcde7; color:#8a7596; font-size:9px; font-weight:900; letter-spacing:1.8px; line-height:1.8; }
+.sidebar-footer span { font-size:11px; font-weight:600; letter-spacing:0; }
 /* Navigation */
 div[data-testid="stTabs"] > div[role="tablist"] { gap: 7px; border-bottom: 1px solid var(--line); padding: 7px 5px 11px; }
 button[data-baseweb="tab"] { background: white !important; border: 1px solid var(--line) !important; border-radius: 11px !important; padding: 10px 15px !important; color: var(--muted) !important; font-weight: 750 !important; }
@@ -152,6 +168,7 @@ section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { color: va
  .match-feature-team img { width:44px; height:44px; }
  .match-feature-team div { font-size:11px; }
  .overview-panel { padding:15px; }
+ section[data-testid="stSidebar"] { min-width:245px; }
 }
 @media(max-width:420px) { .ginesta-hero { align-items:flex-start; gap:11px; padding:16px 12px; } .ginesta-crest { width:56px; height:56px; } .ginesta-title { font-size:23px; } }
 </style>
@@ -451,19 +468,33 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # PESTANYES PRINCIPALS
-    st.markdown("""
-      <div class="section-kicker">Explora l'equip</div>
-      <div class="section-heading">Seccions del club</div>
-      <div class="section-copy">Calendari, vídeos, plantilla i dades de la temporada en una navegació unificada.</div>
-    """, unsafe_allow_html=True)
+    # NAVEGACIÓ PRINCIPAL: MENÚ LATERAL RESPONSIVE
+    seccions_menu = ["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos"]
     if st.session_state["auth_level"] == "admin":
-        tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos, tab_admin = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos", "⚙️ Admin"])
-    else:
-        tab_calendari, tab_videos, tab_plantilla, tab_stats, tab_amistosos = st.tabs(["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos"])
+        seccions_menu.append("⚙️ Admin")
+
+    with st.sidebar:
+        st.markdown('<div class="sidebar-brand">', unsafe_allow_html=True)
+        st.image(LOGO_URL, width=92)
+        st.markdown('<div class="sidebar-brand-title">C.F. GINESTA</div><div class="sidebar-brand-subtitle">CADET F11 · TEMPORADA 2026/27</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-menu-label">MENÚ PRINCIPAL</div>', unsafe_allow_html=True)
+        seccio_principal = st.radio(
+            "Navegació principal",
+            seccions_menu,
+            key="ginesta_seccio_principal",
+            label_visibility="collapsed"
+        )
+        st.markdown('<div class="sidebar-footer">MATCH CENTRE<br><span>Una passió, un equip.</span></div>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="section-kicker">C.F. Ginesta · Cadet F11</div>'
+        f'<div class="section-heading">{seccio_principal}</div>'
+        '<div class="section-copy">Consulta la informació de l’equip des del menú lateral. La secció seleccionada es manté ressaltada mentre navegues.</div>',
+        unsafe_allow_html=True
+    )
 
     # PESTANYA 1: CALENDARI PÚBLIC
-    with tab_calendari:
+    if seccio_principal == "📅 Calendari":
         st.subheader("📅 Calendari Oficial")
         calendari_data = sorted(calendari_all_data, key=lambda x: int(x.get('jornada', 1) or 1))
 
@@ -534,7 +565,7 @@ def main():
                 """, unsafe_allow_html=True)
 
     # PESTANYA 2: VIDEOTECA (LLIGA)
-    with tab_videos:
+    if seccio_principal == "🎬 Videoteca":
         st.markdown('<div class="section-kicker">Match archive</div><div class="section-heading">Videoteca del Ginesta</div><div class="section-copy">Troba ràpidament un partit i accedeix al vídeo, al resum o a les fotografies.</div>', unsafe_allow_html=True)
         tots_partits_db = obtenir_partits_db()
         partits = [p for p in tots_partits_db if "amistós" not in str(p.get("titol", "")).lower() and "amistos" not in str(p.get("titol", "")).lower() and "pretemporada" not in str(p.get("titol", "")).lower()]
@@ -683,7 +714,7 @@ def main():
                         st.info("No hi ha fotografies disponibles per a aquest partit.")
 
     # PESTANYA 3: PLANTILLA
-    with tab_plantilla:
+    if seccio_principal == "👥 Plantilla":
         st.markdown("<div class='section-kicker'>Team roster</div><div class='section-heading'>La plantilla del Ginesta</div><div class='section-copy'>Consulta les dades individuals, el rendiment i la disciplina de cada integrant de l'equip.</div>", unsafe_allow_html=True)
 
         filtre_cols = st.columns([2, 1, 1])
@@ -763,7 +794,7 @@ def main():
                                 st.caption("Estadística de porteria segons les dades registrades.")
 
     # PESTANYA 4: ESTADÍSTIQUES
-    with tab_stats:
+    if seccio_principal == "📊 Estadístiques":
         st.subheader("📊 Resum i Estadístiques de l'Equip")
         trams_llista = ["0'-10'", "10'-20'", "20'-30'", "30'-40'", "40'-50'", "50'-60'", "60'-70'", "70'-80'"]
         trams_data_db = obtenir_trams_gols_db()
@@ -841,7 +872,7 @@ def main():
             st.plotly_chart(fig_contra, use_container_width=True)
 
     # PESTANYA 5: AMISTOSOS
-    with tab_amistosos:
+    if seccio_principal == "🤝 Amistosos":
         st.subheader("🤝 Partits Amistosos & Vídeos")
         st.markdown("Partits de preparació i vídeos de la pretemporada.")
         st.markdown("---")
@@ -906,7 +937,7 @@ def main():
 
     # PESTANYA 6: ADMIN
     if st.session_state["auth_level"] == "admin":
-        with tab_admin:
+        if seccio_principal == "⚙️ Admin":
             st.subheader("⚙️ Panell d'Administració")
             tab_adm_partits, tab_adm_calendari, tab_adm_stats, tab_adm_trams = st.tabs(["🎬 Vídeos & Fotos", "📅 Calendari", "📊 Mètriques & Jugadores", "⏱️ Trams"])
 
