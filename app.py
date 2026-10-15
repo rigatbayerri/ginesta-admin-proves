@@ -562,13 +562,14 @@ def main():
                         st.markdown("""
                             <style>
                             .photo-card {
-                                background: white;
+                                background: #ffffff;
                                 border-radius: 12px;
                                 overflow: hidden;
                                 border: 1px solid #e0d8e8;
                                 transition: transform 0.2s ease, box-shadow 0.2s ease;
                                 margin-bottom: 16px;
                                 box-shadow: 0 4px 12px rgba(92, 45, 115, 0.06);
+                                text-align: center;
                             }
                             .photo-card:hover {
                                 transform: translateY(-3px);
@@ -578,7 +579,7 @@ def main():
                             </style>
                         """, unsafe_allow_html=True)
 
-                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>📸 Fes clic a qualsevol imatge per ampliar-la a pantalla completa:</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>📸 Fes clic a qualsevol imatge per veure-la completa a mida gran:</p>", unsafe_allow_html=True)
 
                         if "selected_photo" not in st.session_state:
                             st.session_state.selected_photo = None
@@ -591,8 +592,10 @@ def main():
                                 if f_b64:
                                     st.markdown(f"""
                                         <div class="photo-card">
-                                            <img src='{f_b64}' style='width: 100%; height: 160px; object-fit: cover; display: block;'>
-                                            <div style='padding: 8px 12px; font-size: 12px; font-weight: bold; color: #5c2d73; text-align: center; background: #faf7fc;'>
+                                            <div style="background-color: #1a1a1a; padding: 4px;">
+                                                <img src='{f_b64}' style='width: 100%; height: 150px; object-fit: contain; display: block;'>
+                                            </div>
+                                            <div style='padding: 8px 12px; font-size: 12px; font-weight: bold; color: #5c2d73; background: #faf7fc;'>
                                                 Foto #{idx + 1}
                                             </div>
                                         </div>
@@ -606,7 +609,7 @@ def main():
                             st.markdown("---")
                             st.markdown("""
                                 <div style="background: linear-gradient(135deg, #5c2d73 0%, #3a1c49 100%); padding: 15px; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px;">
-                                    <h3 style="color: white !important; margin: 0; font-size: 18px;">✨ Vista Ampliada</h3>
+                                    <h3 style="color: white !important; margin: 0; font-size: 18px;">✨ Vista Completa</h3>
                                 </div>
                             """, unsafe_allow_html=True)
                             
