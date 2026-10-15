@@ -579,7 +579,7 @@ def main():
                             </style>
                         """, unsafe_allow_html=True)
 
-                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>📸 Fes clic a qualsevol imatge per veure-la completa a mida gran:</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>📸 Fes clic a qualsevol imatge per veure-la a pantalla completa:</p>", unsafe_allow_html=True)
 
                         if "selected_photo" not in st.session_state:
                             st.session_state.selected_photo = None
@@ -593,15 +593,12 @@ def main():
                                     st.markdown(f"""
                                         <div class="photo-card">
                                             <div style="background-color: #1a1a1a; padding: 4px;">
-                                                <img src='{f_b64}' style='width: 100%; height: 150px; object-fit: contain; display: block;'>
-                                            </div>
-                                            <div style='padding: 8px 12px; font-size: 12px; font-weight: bold; color: #5c2d73; background: #faf7fc;'>
-                                                Foto #{idx + 1}
+                                                <img src='{f_b64}' style='width: 100%; height: 160px; object-fit: contain; display: block;'>
                                             </div>
                                         </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    if st.button(f"🔍 Ampliar #{idx + 1}", key=f"btn_zoom_{idx}_{partit_actual.get('id', 0)}"):
+                                    if st.button("🔍 Ampliar", key=f"btn_zoom_{idx}_{partit_actual.get('id', 0)}"):
                                         st.session_state.selected_photo = f_path
                                         st.rerun()
 
@@ -609,7 +606,7 @@ def main():
                             st.markdown("---")
                             st.markdown("""
                                 <div style="background: linear-gradient(135deg, #5c2d73 0%, #3a1c49 100%); padding: 15px; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px;">
-                                    <h3 style="color: white !important; margin: 0; font-size: 18px;">✨ Vista Completa</h3>
+                                    <h3 style="color: white !important; margin: 0; font-size: 18px;">✨ Vista a Pantalla Completa</h3>
                                 </div>
                             """, unsafe_allow_html=True)
                             
