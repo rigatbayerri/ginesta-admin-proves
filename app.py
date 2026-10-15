@@ -171,6 +171,50 @@ section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { color: va
  section[data-testid="stSidebar"] { min-width:245px; }
 }
 @media(max-width:420px) { .ginesta-hero { align-items:flex-start; gap:11px; padding:16px 12px; } .ginesta-crest { width:56px; height:56px; } .ginesta-title { font-size:23px; } }
+
+/* --- ACABAT VISUAL V6: més net, consistent i responsive --- */
+[data-testid="stAppViewContainer"] > .main .block-container { padding-top: 1.1rem; }
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 { line-height: 1.2; }
+[data-testid="stImage"] img { border-radius: 14px; }
+[data-testid="stVerticalBlockBorderWrapper"] {
+  border-color: #e5d9ec !important;
+  box-shadow: 0 5px 18px rgba(42,23,52,.045);
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+[data-testid="stVerticalBlockBorderWrapper"]:hover {
+  border-color: #cbb4d9 !important;
+  box-shadow: 0 9px 24px rgba(50,19,65,.085);
+}
+[data-testid="stPlotlyChart"] { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 8px; }
+[data-testid="stDataFrame"], [data-testid="stTable"] { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+[data-testid="stFileUploader"] section { border-radius: 13px; border-color: #d8c9e1; background: #fcf9fd; }
+[data-testid="stForm"] { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: rgba(255,255,255,.72); }
+.stCaption, [data-testid="stCaptionContainer"] { line-height: 1.5; }
+/* Menú lateral amb més aire i jerarquia */
+section[data-testid="stSidebar"] > div { padding: 1.15rem .85rem 1.5rem; }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label { min-height: 44px; }
+section[data-testid="stSidebar"] div[role="radiogroup"] > label p { font-weight: 720; }
+/* Targetes i capçaleres de secció */
+.section-heading { line-height: 1.18; }
+.section-copy { max-width: 850px; line-height: 1.6; }
+.match-feature { border-color: #d7c3e2; box-shadow: 0 10px 26px rgba(50,19,65,.075); }
+.match-feature-vs { min-width: 54px; text-align: center; }
+.player-card { transition: transform .16s ease, box-shadow .16s ease; }
+.player-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(42,23,52,.09); }
+@media (max-width: 768px) {
+  [data-testid="stAppViewContainer"] > .main .block-container { padding: .85rem .7rem 1.8rem; }
+  [data-testid="stVerticalBlockBorderWrapper"] { border-radius: 13px; }
+  [data-testid="stPlotlyChart"] { padding: 2px; }
+  [data-testid="stMetric"] { padding: 12px 13px; }
+  section[data-testid="stSidebar"] > div { padding-left: .6rem; padding-right: .6rem; }
+  .section-heading { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -709,7 +753,7 @@ def main():
                         cols_fotos = st.columns(3)
                         for idx_foto, f_path in enumerate(fotos_valides):
                             with cols_fotos[idx_foto % 3]:
-                                st.image(f_path, use_container_width=True)
+                                st.image(f_path, caption=f"Fotografia {idx_foto + 1}", use_container_width=True)
                     else:
                         st.info("No hi ha fotografies disponibles per a aquest partit.")
 
