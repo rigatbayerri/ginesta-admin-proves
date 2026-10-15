@@ -535,157 +535,232 @@ def main():
 
     # PESTANYA 2: VIDEOTECA (LLIGA)
     with tab_videos:
-        st.subheader("📺 Videoteca & Galeria de Partits")
+        st.markdown('<div class="section-kicker">Match archive</div><div class="section-heading">Videoteca del Ginesta</div><div class="section-copy">Troba ràpidament un partit i accedeix al vídeo, al resum o a les fotografies.</div>', unsafe_allow_html=True)
         tots_partits_db = obtenir_partits_db()
         partits = [p for p in tots_partits_db if "amistós" not in str(p.get("titol", "")).lower() and "amistos" not in str(p.get("titol", "")).lower() and "pretemporada" not in str(p.get("titol", "")).lower()]
 
         if not partits:
-            st.warning("Encara no hi ha partits de lliga registrats.")
+            st.info("Encara no hi ha partits de lliga registrats.")
         else:
-            opcions_partits = {}
+            def etiqueta_partit(p):
+                jornada = str(p.get('jornada') or '-').strip()
+                titol = str(p.get('titol') or p.get('rival') or 'Partit').strip()
+                resultat = str(p.get('resultat') or 'vs').strip()
+                data = str(p.get('data') or '').strip()
+                return f"J.{jornada} · {titol} · {resultat}" + (f" · {data}" if data else "")
+
+            # Cerca i filtres només afecten la visualització; no canvien les dades guardades.
+            filtres = st.columns([2, 1, 1])
+            with filtres[0]:
+                cerca_partit = st.text_input("Cerca un partit", placeholder="Rival, jornada o resultat…", key="ginesta_video_search")
+            with filtres[1]:
+                filtre_lloc = st.selectbox("Localització", ["Tots", "Casa", "Fora"], key="ginesta_video_location")
+            with filtres[2]:
+                filtre_media = st.selectbox("Material", ["Tot el material", "Amb vídeo", "Amb fotos"], key="ginesta_video_media")
+
+            partits_filtrats = []
             for p in partits:
-                jornada_val = p.get('jornada')
-                j_str = f"J.{jornada_val}" if jornada_val and str(jornada_val).strip() else "J-"
-                titol_val = p.get('titol', 'Partit')
-                res_val = p.get('resultat')
-                res_str = str(res_val).strip() if res_val and str(res_val).strip().lower() != "none" and str(res_val).strip() != "" else "vs"
-                opcions_partits[f"{j_str} - {titol_val} ({res_str})"] = p
+                text_cerca = " ".join(str(p.get(k, '') or '') for k in ('titol', 'rival', 'jornada', 'resultat', 'data')).lower()
+                if cerca_partit.strip() and cerca_partit.strip().lower() not in text_cerca:
+                    continue
+                lloc_partit = str(p.get('lloc') or 'Casa').strip()
+                if filtre_lloc != "Tots" and lloc_partit.lower() != filtre_lloc.lower():
+                    continue
+                te_video = bool(str(p.get('video_url') or p.get('enllaç_video') or '').startswith('http') or str(p.get('resum_youtube_url') or '').startswith('http'))
+                te_fotos = bool(str(p.get('fotos_partit_urls') or '').strip())
+                if filtre_media == "Amb vídeo" and not te_video:
+                    continue
+                if filtre_media == "Amb fotos" and not te_fotos:
+                    continue
+                partits_filtrats.append(p)
 
-            partit_seleccionat_str = st.selectbox("Selecciona un partit:", list(opcions_partits.keys()))
-            partit_actual = opcions_partits[partit_seleccionat_str]
-            
-            rival = partit_actual.get('rival', 'Rival')
-            lloc = partit_actual.get('lloc', 'Casa')
-            fotos_str = partit_actual.get('fotos_partit_urls', '')
-            resultat_partit_actual = partit_actual.get('resultat', '')
-            
-            st.markdown("---")
-            res_display_str = str(resultat_partit_actual).strip() if resultat_partit_actual and str(resultat_partit_actual).strip().lower() != "none" and str(resultat_partit_actual).strip() != "" else "VS"
-            
-            if lloc == "Fora":
-                eq_1_n = rival
-                eq_1_img = obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
-                eq_2_n = "C.F. Ginesta"
-                eq_2_img = obtenir_imatge_base64(LOGO_URL)
+            st.caption(f"{len(partits_filtrats)} partits trobats · {sum(1 for p in partits_filtrats if str(p.get('video_url') or p.get('enllaç_video') or p.get('resum_youtube_url') or '').startswith('http'))} amb vídeo")
+            if not partits_filtrats:
+                st.info("No hi ha partits que coincideixin amb aquests filtres. Prova de canviar la cerca.")
             else:
-                eq_1_n = "C.F. Ginesta"
-                eq_1_img = obtenir_imatge_base64(LOGO_URL)
-                eq_2_n = rival
-                eq_2_img = obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
+                # Targetes de galeria amb accés directe al partit.
+                st.markdown("#### 🗂️ Explora l'arxiu")
+                targetes_per_fila = 3
+                for offset in range(0, len(partits_filtrats), targetes_per_fila):
+                    fila = st.columns(targetes_per_fila)
+                    for col_idx, p in enumerate(partits_filtrats[offset:offset + targetes_per_fila]):
+                        label = etiqueta_partit(p)
+                        video_url_card = p.get('video_url') or p.get('enllaç_video') or p.get('resum_youtube_url')
+                        fotos_card = [f.strip() for f in str(p.get('fotos_partit_urls') or '').split(',') if f.strip()]
+                        with fila[col_idx]:
+                            with st.container(border=True):
+                                escut_card = p.get('escut_rival_url')
+                                primera_foto = next((f for f in fotos_card if f.startswith('http') or os.path.exists(f)), None)
+                                if primera_foto:
+                                    st.image(primera_foto, use_container_width=True)
+                                elif escut_card and str(escut_card).startswith('http'):
+                                    st.image(escut_card, width=58)
+                                else:
+                                    st.markdown("<div style='font-size:32px'>⚽</div>", unsafe_allow_html=True)
+                                st.markdown(f"**{p.get('rival') or p.get('titol') or 'Rival'}**")
+                                st.caption(f"Jornada {p.get('jornada') or '—'} · {p.get('data') or 'Data pendent'} · {p.get('lloc') or 'Casa'}")
+                                resultat_card = str(p.get('resultat') or 'VS').strip()
+                                st.markdown(f"**Resultat:** {resultat_card}")
+                                tags = []
+                                if video_url_card and str(video_url_card).startswith('http'):
+                                    tags.append('🎬 Vídeo')
+                                if fotos_card:
+                                    tags.append(f'📸 {len(fotos_card)} foto(s)')
+                                st.caption(' · '.join(tags) if tags else 'Material audiovisual pendent')
+                                if st.button("Obrir partit", key=f"ginesta_open_video_{offset}_{col_idx}", use_container_width=True):
+                                    st.session_state["ginesta_video_selectbox"] = label
+                                    st.rerun()
 
-            img1_v_html = f"<img src='{eq_1_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if eq_1_img else "<div style='font-size: 30px;'>🛡️</div>"
-            img2_v_html = f"<img src='{eq_2_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if eq_2_img else "<div style='font-size: 30px;'>🛡️</div>"
-            
-            jornada_mostra = partit_actual.get('jornada')
-            jornada_txt_mostra = str(jornada_mostra) if jornada_mostra and str(jornada_mostra).strip() else "-"
+                opcions_partits = {etiqueta_partit(p): p for p in partits_filtrats}
+                seleccio_actual = st.session_state.get("ginesta_video_selectbox")
+                if seleccio_actual not in opcions_partits:
+                    seleccio_actual = next(iter(opcions_partits))
+                st.markdown("---")
+                st.markdown("#### ▶️ Partit seleccionat")
+                partit_seleccionat_str = st.selectbox("Selecciona un partit per veure'n el contingut", list(opcions_partits.keys()), index=list(opcions_partits.keys()).index(seleccio_actual), key="ginesta_video_selectbox")
+                partit_actual = opcions_partits[partit_seleccionat_str]
 
-            st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #ffffff 0%, #f7f3fb 100%); padding: 16px; border-radius: 14px; border: 2px solid #5c2d73; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(92,45,115,0.08);">
-                    <div style="text-align: center; font-size: 12px; color: #5c2d73; font-weight: bold; border-bottom: 1px solid #e8dbf2; padding-bottom: 6px; margin-bottom: 10px;">
-                        🏆 {partit_actual.get('titol')} &nbsp;|&nbsp; Jornada {jornada_txt_mostra} &nbsp;|&nbsp; 📅 {partit_actual.get('data')} &nbsp;|&nbsp; 📍 {lloc}
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="text-align: center; width: 38%;">
-                            {img1_v_html}
-                            <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{eq_1_n}</div>
-                        </div>
-                        <div style="text-align: center; width: 24%;">
-                            <span style="background-color: #f7f3fb; color: #5c2d73; padding: 6px 16px; border-radius: 8px; font-size: 16px; font-weight: 900; border: 2px solid #5c2d73; display: inline-block; box-shadow: 0px 2px 6px rgba(92,45,115,0.12);">{res_display_str}</span>
-                        </div>
-                        <div style="text-align: center; width: 38%;">
-                            {img2_v_html}
-                            <div style="font-weight: 900; font-size: 13px; color: #1a1a1a; line-height: 1.2;">{eq_2_n}</div>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+                rival = partit_actual.get('rival', 'Rival')
+                lloc = partit_actual.get('lloc', 'Casa')
+                fotos_str = partit_actual.get('fotos_partit_urls', '')
+                resultat_partit_actual = partit_actual.get('resultat', '')
+                res_display_str = str(resultat_partit_actual).strip() if resultat_partit_actual and str(resultat_partit_actual).strip().lower() != "none" and str(resultat_partit_actual).strip() != "" else "VS"
 
-            targetes_partit_str = partit_actual.get('targetes_partit', '')
-            if targetes_partit_str:
-                st.markdown(f"🟨 **Targetes del partit:** {targetes_partit_str}")
-
-            st.markdown("---")
-            sub_vid, sub_resum, sub_fot = st.tabs(["📺 Vídeo del Partit", "🎬 Resum del Partit", "📸 Galeria de Fotos"])
-
-            with sub_vid:
-                video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
-                if video_url and str(video_url).startswith("http"):
-                    try:
-                        st.video(video_url)
-                    except Exception:
-                        st.warning("⚠️ L'enllaç del vídeo no és compatible o no està accessible.")
+                if lloc == "Fora":
+                    eq_1_n, eq_1_img = rival, obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
+                    eq_2_n, eq_2_img = "C.F. Ginesta", obtenir_imatge_base64(LOGO_URL)
                 else:
-                    st.warning("⚠️ El vídeo d'aquest partit encara no està disponible o l'enllaç no és vàlid.")
+                    eq_1_n, eq_1_img = "C.F. Ginesta", obtenir_imatge_base64(LOGO_URL)
+                    eq_2_n, eq_2_img = rival, obtenir_imatge_base64(partit_actual.get('escut_rival_url', ''))
 
-            with sub_resum:
-                resum_url = partit_actual.get('resum_youtube_url')
-                if resum_url and str(resum_url).startswith("http"):
-                    try:
-                        st.video(resum_url)
-                    except Exception:
-                        st.warning("⚠️ L'enllaç del resum no és vàlid o no està accessible.")
-                else:
-                    st.info("ℹ️ Encara no hi ha cap resum en vídeo d'aquest partit disponible.")
+                img1_v_html = f"<img src='{eq_1_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if eq_1_img else "<div style='font-size: 30px;'>🛡️</div>"
+                img2_v_html = f"<img src='{eq_2_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if eq_2_img else "<div style='font-size: 30px;'>🛡️</div>"
+                jornada_txt_mostra = str(partit_actual.get('jornada') or '-').strip()
 
-            with sub_fot:
-                if fotos_str:
-                    lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f and f.strip()]))
-                    if lletres_fotos:
-                        for f_path in lletres_fotos:
-                            if f_path.startswith("http"):
-                                st.image(f_path, use_container_width=True)
-                            elif os.path.exists(f_path):
+                st.markdown(f"""
+                    <div class="match-feature" style="margin-top:12px">
+                      <div class="match-feature-label">🏆 {partit_actual.get('titol') or 'Partit'} · Jornada {jornada_txt_mostra} · 📅 {partit_actual.get('data') or 'Data pendent'} · 📍 {lloc}</div>
+                      <div class="match-feature-teams">
+                        <div class="match-feature-team">{img1_v_html}<div>{eq_1_n}</div></div>
+                        <div class="match-feature-vs">{res_display_str}</div>
+                        <div class="match-feature-team">{img2_v_html}<div>{eq_2_n}</div></div>
+                      </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+                targetes_partit_str = partit_actual.get('targetes_partit', '')
+                if targetes_partit_str:
+                    st.caption(f"🟨 Targetes del partit: {targetes_partit_str}")
+
+                sub_vid, sub_resum, sub_fot = st.tabs(["📺 Vídeo del partit", "🎬 Resum", "📸 Fotografies"])
+                with sub_vid:
+                    video_url = partit_actual.get('video_url') or partit_actual.get('enllaç_video')
+                    if video_url and str(video_url).startswith("http"):
+                        try:
+                            st.video(video_url)
+                        except Exception:
+                            st.warning("L'enllaç del vídeo no és compatible o no està accessible.")
+                    else:
+                        st.info("Encara no hi ha vídeo complet per a aquest partit.")
+                with sub_resum:
+                    resum_url = partit_actual.get('resum_youtube_url')
+                    if resum_url and str(resum_url).startswith("http"):
+                        try:
+                            st.video(resum_url)
+                        except Exception:
+                            st.warning("L'enllaç del resum no és vàlid o no està accessible.")
+                    else:
+                        st.info("Encara no hi ha cap resum disponible.")
+                with sub_fot:
+                    lletres_fotos = list(dict.fromkeys([f.strip() for f in str(fotos_str or '').split(",") if f and f.strip()]))
+                    fotos_valides = [f for f in lletres_fotos if f.startswith('http') or os.path.exists(f)]
+                    if fotos_valides:
+                        cols_fotos = st.columns(3)
+                        for idx_foto, f_path in enumerate(fotos_valides):
+                            with cols_fotos[idx_foto % 3]:
                                 st.image(f_path, use_container_width=True)
                     else:
-                        st.info("No hi ha fotos disponibles per a aquest partit.")
-                else:
-                    st.info("No hi ha fotos disponibles per a aquest partit.")
+                        st.info("No hi ha fotografies disponibles per a aquest partit.")
 
     # PESTANYA 3: PLANTILLA
     with tab_plantilla:
-        st.subheader("👥 Plantilla Oficial - C.F. Ginesta Cadet F11")
-        st.markdown("Fitxes individuals i estadístiques de cada jugadora.")
-        st.markdown("---")
+        st.markdown("<div class='section-kicker'>Team roster</div><div class='section-heading'>La plantilla del Ginesta</div><div class='section-copy'>Consulta les dades individuals, el rendiment i la disciplina de cada integrant de l'equip.</div>", unsafe_allow_html=True)
 
-        cols = st.columns(2)
-        for i, jugadora in enumerate(golejadores_data):
-            rol = jugadora.get('rol', 'Jugadora')
-            grogues_val = jugadora.get('grogues', 0)
-            vermelles_val = jugadora.get('vermelles', 0)
-            dorsal_val = jugadora.get('dorsal', '-')
-            nom_jugadora = jugadora.get('nom', '').upper()
-            titularitats_val = jugadora.get('titularitats', 0)
-            partits_jugats_val = jugadora.get('partits_jugats', 0)
-            
-            if rol == "Portera":
-                gols_encaixats_val = jugadora.get('gols_encaixats', 0)
-                estat_text = f"🧤 Encaixats: <b>{gols_encaixats_val}</b>"
-            else:
-                gols_realitzats_val = jugadora.get('gols', 0)
-                estat_text = f"⚽ Gols: <b>{gols_realitzats_val}</b>"
+        filtre_cols = st.columns([2, 1, 1])
+        with filtre_cols[0]:
+            cerca_jugadora = st.text_input("Cerca per nom o dorsal", placeholder="Escriu un nom o número…", key="ginesta_roster_search")
+        with filtre_cols[1]:
+            rols_disponibles = sorted(set(str(j.get('rol', 'Jugadora') or 'Jugadora') for j in golejadores_data))
+            filtre_rol = st.selectbox("Posició", ["Totes les posicions"] + rols_disponibles, key="ginesta_roster_role")
+        with filtre_cols[2]:
+            ordre_plantilla = st.selectbox("Ordena per", ["Dorsal", "Més gols", "Més partits"], key="ginesta_roster_sort")
 
-            if st.session_state["auth_level"] in ["admin", "coach"]:
-                info_partits_html = f"⚽ Partits Jugats: <b>{partits_jugats_val}</b> &nbsp;|&nbsp; ⭐ Titularitats: <b>{titularitats_val}</b>"
-            else:
-                info_partits_html = f"⚽ Partits Jugats: <b>{partits_jugats_val}</b>"
+        plantilla_filtrada = []
+        for j in golejadores_data:
+            nom_j = str(j.get('nom', '') or '')
+            dorsal_j = str(j.get('dorsal', '-') or '-')
+            rol_j = str(j.get('rol', 'Jugadora') or 'Jugadora')
+            if cerca_jugadora.strip().lower() not in f"{nom_j} {dorsal_j}".lower():
+                continue
+            if filtre_rol != "Totes les posicions" and rol_j != filtre_rol:
+                continue
+            plantilla_filtrada.append(j)
 
-            with cols[i % 2]:
-                with st.container():
-                    st.markdown(f"""
-                    <div class="player-card">
-                        <div style="font-size: 18px; font-weight: 900; color: #5c2d73; text-transform: uppercase;">
-                            #{dorsal_val} — {nom_jugadora} <span style="font-size: 11px; background-color: #f7f5fa; padding: 2px 6px; border-radius: 4px; color: #333; border: 1px solid #ddd;">{rol}</span>
-                        </div>
-                        <div style="font-size: 13px; color: #1a1a1a; margin-top: 6px; font-weight: 600;">
-                            {estat_text} &nbsp;|&nbsp; 🟨 <b>{grogues_val}</b> &nbsp;|&nbsp; 🟥 <b>{vermelles_val}</b>
-                        </div>
-                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-                        <div style="font-size: 11px; color: #1a1a1a;">
-                            {info_partits_html}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+        if ordre_plantilla == "Més gols":
+            plantilla_filtrada.sort(key=lambda j: int(j.get('gols', 0) or 0), reverse=True)
+        elif ordre_plantilla == "Més partits":
+            plantilla_filtrada.sort(key=lambda j: int(j.get('partits_jugats', 0) or 0), reverse=True)
+        else:
+            plantilla_filtrada.sort(key=lambda j: int(j.get('dorsal', 0) or 0))
+
+        total_plantilla = len(golejadores_data)
+        total_visible = len(plantilla_filtrada)
+        col_total, col_jugadores, col_porteres = st.columns(3)
+        col_total.metric("Integrants", total_plantilla)
+        col_jugadores.metric("Jugadores de camp", sum(1 for j in golejadores_data if str(j.get('rol', 'Jugadora')) != 'Portera'))
+        col_porteres.metric("Porteres", sum(1 for j in golejadores_data if str(j.get('rol', 'Jugadora')) == 'Portera'))
+        st.caption(f"Mostrant {total_visible} de {total_plantilla} fitxes")
+
+        if not plantilla_filtrada:
+            st.info("No s'han trobat integrants amb aquests filtres.")
+        else:
+            cols = st.columns(3)
+            for i, jugadora in enumerate(plantilla_filtrada):
+                rol = str(jugadora.get('rol', 'Jugadora') or 'Jugadora')
+                grogues_val = int(jugadora.get('grogues', 0) or 0)
+                vermelles_val = int(jugadora.get('vermelles', 0) or 0)
+                dorsal_val = jugadora.get('dorsal', '-')
+                nom_jugadora = str(jugadora.get('nom', 'Integrant') or 'Integrant')
+                titularitats_val = int(jugadora.get('titularitats', 0) or 0)
+                partits_jugats_val = int(jugadora.get('partits_jugats', 0) or 0)
+                gols_val = int(jugadora.get('gols', 0) or 0)
+                gols_encaixats_val = int(jugadora.get('gols_encaixats', 0) or 0)
+                with cols[i % 3]:
+                    with st.container(border=True):
+                        capçalera = st.columns([1, 3])
+                        with capçalera[0]:
+                            st.markdown(f"<div style='background:#eee5f4;color:#5c2d73;border-radius:14px;width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900'>#{dorsal_val}</div>", unsafe_allow_html=True)
+                        with capçalera[1]:
+                            st.markdown(f"**{nom_jugadora}**")
+                            st.caption(f"{'🧤' if rol == 'Portera' else '⚽'} {rol}")
+                        if rol == "Portera":
+                            st.metric("Gols encaixats", gols_encaixats_val)
+                        else:
+                            st.metric("Gols", gols_val)
+                        m1, m2 = st.columns(2)
+                        m1.metric("Partits", partits_jugats_val)
+                        m2.metric("Titularitats", titularitats_val)
+                        with st.expander("Veure fitxa completa"):
+                            d1, d2 = st.columns(2)
+                            d1.metric("🟨 Grogues", grogues_val)
+                            d2.metric("🟥 Vermelles", vermelles_val)
+                            if st.session_state["auth_level"] in ["admin", "coach"]:
+                                st.progress(min(1.0, titularitats_val / max(partits_jugats_val, 1)), text="Percentatge de titularitats")
+                                st.caption("La barra compara titularitats amb partits jugats registrats.")
+                            if rol != "Portera":
+                                st.caption(f"Mitjana de gols per partit: {gols_val / max(partits_jugats_val, 1):.2f}")
+                            else:
+                                st.caption("Estadística de porteria segons les dades registrades.")
 
     # PESTANYA 4: ESTADÍSTIQUES
     with tab_stats:
