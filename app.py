@@ -559,11 +559,25 @@ def main():
                 if fotos_str:
                     lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f and f.strip()]))
                     if lletres_fotos:
-                        for f_path in lletres_fotos:
-                            if f_path.startswith("http"):
-                                st.image(f_path, use_container_width=True)
-                            elif os.path.exists(f_path):
-                                st.image(f_path, use_container_width=True)
+                        st.markdown("Clica sobre qualsevol foto per veure-la a mida completa:")
+                        # Creem columnes en graella de 3 fotos per fila
+                        cols_galeria = st.columns(3)
+                        for idx, f_path in enumerate(lletres_fotos):
+                            col_actual = cols_galeria[idx % 3]
+                            with col_actual:
+                                # Miniatura amb estil CSS net
+                                f_b64 = obtenir_imatge_base64(f_path)
+                                if f_b64:
+                                    st.markdown(f"""
+                                        <div style="border: 2px solid #5c2d73; border-radius: 8px; overflow: hidden; margin-bottom: 10px; background: white; box-shadow: 2px 2px 6px rgba(0,0,0,0.08);">
+                                            <img src='{f_b64}' style='width: 100%; height: 130px; object-fit: cover; display: block;'>
+                                        </div>
+                                    """, unsafe_allow_html=True)
+                                    with st.expander(f"🔍 Veure foto {idx + 1}"):
+                                        if f_path.startswith("http"):
+                                            st.image(f_path, use_container_width=True)
+                                        elif os.path.exists(f_path):
+                                            st.image(f_path, use_container_width=True)
                     else:
                         st.info("No hi ha fotos disponibles per a aquest partit.")
                 else:
