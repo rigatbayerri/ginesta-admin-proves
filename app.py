@@ -214,6 +214,21 @@ section[data-testid="stSidebar"] div[role="radiogroup"] > label p { font-weight:
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+/* Navegació mòbil: barra compacta, independent del sidebar de Streamlit */
+.st-key-mobile_navigation { display:none; }
+@media (max-width: 768px) {
+  section[data-testid="stSidebar"] { display:none !important; }
+  .st-key-mobile_navigation { display:block; position:sticky; top:0; z-index:999; background:rgba(247,245,249,.97); backdrop-filter:blur(12px); border:1px solid #e7deed; border-radius:16px; padding:8px 9px 3px; margin:0 0 17px; box-shadow:0 5px 18px rgba(50,19,65,.08); }
+  .st-key-mobile_navigation .mobile-navigation-label { color:#795094; font-size:9px; font-weight:900; letter-spacing:1.5px; padding:1px 5px 6px; }
+  .st-key-mobile_navigation [data-testid="stRadio"] > label { display:none; }
+  .st-key-mobile_navigation div[role="radiogroup"] { display:flex; flex-wrap:nowrap; overflow-x:auto; gap:6px; padding:0 1px 7px; scrollbar-width:thin; }
+  .st-key-mobile_navigation div[role="radiogroup"] > label { flex:0 0 auto; border:1px solid #e7deed; background:#fff; border-radius:11px; padding:8px 10px !important; min-height:38px; white-space:nowrap; }
+  .st-key-mobile_navigation div[role="radiogroup"] > label:has(input:checked) { background:#5c2d73; border-color:#5c2d73; }
+  .st-key-mobile_navigation div[role="radiogroup"] > label:has(input:checked) p { color:#fff !important; }
+  .st-key-mobile_navigation div[role="radiogroup"] > label p { font-size:11px !important; font-weight:800 !important; margin:0 !important; }
+  .st-key-mobile_navigation div[role="radiogroup"] > label > div:first-child { display:none; }
+  [data-testid="stAppViewContainer"] > .main .block-container { padding-top:.55rem; }
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -341,20 +356,65 @@ with st.sidebar:
 
 # --- APLICACIÓ PRINCIPAL ---
 def main():
-    escut_b64 = obtenir_imatge_base64(LOGO_URL)
-    st.markdown(f"""
-        <header class="ginesta-hero">
-            <div class="ginesta-crest">
-                <img src="{escut_b64}" alt="Escut del C.F. Ginesta">
-            </div>
-            <div style="position:relative; z-index:1;">
-                <div class="ginesta-eyebrow">Club de Futbol Ginesta</div>
-                <div class="ginesta-title">CADET F11</div>
-                <div class="ginesta-subtitle">La temporada, els partits i l'equip en un sol lloc.</div>
-                <div class="ginesta-chip">ORGULL GINESTA · TEMPORADA 2026/27</div>
-            </div>
-        </header>
-    """, unsafe_allow_html=True)
+    # NAVEGACIÓ PRINCIPAL: MENÚ LATERAL RESPONSIVE
+    seccions_menu = ["🏠 D’un cop d’ull", "📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos"]
+    if st.session_state["auth_level"] == "admin":
+        seccions_menu.append("⚙️ Admin")
+
+    # Sincronitza els selectors d'escriptori i mòbil perquè la navegació mantingui la selecció.
+    if "ginesta_seccio_principal" not in st.session_state:
+        st.session_state["ginesta_seccio_principal"] = seccions_menu[0]
+    if st.session_state.get("ginesta_seccio_principal") not in seccions_menu:
+        st.session_state["ginesta_seccio_principal"] = seccions_menu[0]
+    if "ginesta_seccio_mobil" not in st.session_state:
+        st.session_state["ginesta_seccio_mobil"] = st.session_state["ginesta_seccio_principal"]
+    if st.session_state.get("ginesta_seccio_mobil") not in seccions_menu:
+        st.session_state["ginesta_seccio_mobil"] = seccions_menu[0]
+
+    def _sync_mobile_to_desktop():
+        st.session_state["ginesta_seccio_principal"] = st.session_state["ginesta_seccio_mobil"]
+
+    def _sync_desktop_to_mobile():
+        st.session_state["ginesta_seccio_mobil"] = st.session_state["ginesta_seccio_principal"]
+
+    with st.container(key="mobile_navigation"):
+        st.markdown('<div class="mobile-navigation-label">NAVEGACIÓ · C.F. GINESTA</div>', unsafe_allow_html=True)
+        st.radio(
+            "Navegació mòbil", seccions_menu,
+            key="ginesta_seccio_mobil", horizontal=True,
+            label_visibility="collapsed", on_change=_sync_mobile_to_desktop
+        )
+
+    with st.sidebar:
+        st.markdown('<div class="sidebar-brand">', unsafe_allow_html=True)
+        st.image(LOGO_URL, width=92)
+        st.markdown('<div class="sidebar-brand-title">C.F. GINESTA</div><div class="sidebar-brand-subtitle">CADET F11 · TEMPORADA 2026/27</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-menu-label">MENÚ PRINCIPAL</div>', unsafe_allow_html=True)
+        seccio_principal = st.radio(
+            "Navegació principal",
+            seccions_menu,
+            index=0,
+            key="ginesta_seccio_principal",
+            label_visibility="collapsed",
+            on_change=_sync_desktop_to_mobile
+        )
+        st.markdown('<div class="sidebar-footer">MATCH CENTRE<br><span>Una passió, un equip.</span></div>', unsafe_allow_html=True)
+
+    if seccio_principal == "🏠 D’un cop d’ull":
+        escut_b64 = obtenir_imatge_base64(LOGO_URL)
+        st.markdown(f"""
+            <header class="ginesta-hero">
+                <div class="ginesta-crest">
+                    <img src="{escut_b64}" alt="Escut del C.F. Ginesta">
+                </div>
+                <div style="position:relative; z-index:1;">
+                    <div class="ginesta-eyebrow">Club de Futbol Ginesta</div>
+                    <div class="ginesta-title">CADET F11</div>
+                    <div class="ginesta-subtitle">La temporada, els partits i l'equip en un sol lloc.</div>
+                    <div class="ginesta-chip">ORGULL GINESTA · TEMPORADA 2026/27</div>
+                </div>
+            </header>
+        """, unsafe_allow_html=True)
 
 
     # --- CARREGAR DADES AMB CATXÈ ---
@@ -362,70 +422,71 @@ def main():
     golejadores_data = obtenir_golejadores_db()
     res_extra_data = obtenir_estadistiques_generals_db()
 
-    # --- BANNER PROPER PARTIT ---
-    try:
-        if calendari_all_data:
-            def parse_data_partit(p):
-                d_str = p.get('data')
-                if not d_str:
-                    return datetime.date.max
-                try:
-                    return datetime.datetime.strptime(str(d_str).strip(), "%Y-%m-%d").date()
-                except:
-                    return datetime.date.max
+    if seccio_principal == "🏠 D’un cop d’ull":
+        # --- BANNER PROPER PARTIT ---
+        try:
+            if calendari_all_data:
+                def parse_data_partit(p):
+                    d_str = p.get('data')
+                    if not d_str:
+                        return datetime.date.max
+                    try:
+                        return datetime.datetime.strptime(str(d_str).strip(), "%Y-%m-%d").date()
+                    except:
+                        return datetime.date.max
 
-            llista_cal_per_data = sorted(calendari_all_data, key=parse_data_partit)
-            avui = datetime.date.today()
-            proper_partit = None
+                llista_cal_per_data = sorted(calendari_all_data, key=parse_data_partit)
+                avui = datetime.date.today()
+                proper_partit = None
             
-            for p in llista_cal_per_data:
-                d_obj = parse_data_partit(p)
-                res_val = str(p.get('resultat', '')).strip().lower()
-                sense_resultat = (not res_val or res_val == "none" or res_val == "")
+                for p in llista_cal_per_data:
+                    d_obj = parse_data_partit(p)
+                    res_val = str(p.get('resultat', '')).strip().lower()
+                    sense_resultat = (not res_val or res_val == "none" or res_val == "")
                 
-                if d_obj >= avui and sense_resultat:
-                    proper_partit = p
-                    break
+                    if d_obj >= avui and sense_resultat:
+                        proper_partit = p
+                        break
             
-            if not proper_partit and llista_cal_per_data:
-                proper_partit = llista_cal_per_data[-1]
+                if not proper_partit and llista_cal_per_data:
+                    proper_partit = llista_cal_per_data[-1]
 
-            if proper_partit:
-                j_prop = proper_partit.get('jornada', '-')
-                data_prop = proper_partit.get('data', '-')
-                hora_prop = proper_partit.get('hora', '-')
-                rival_prop = proper_partit.get('rival', '-')
-                lloc_prop = proper_partit.get('lloc', 'Casa')
-                escut_prop = proper_partit.get('escut_rival_url', '')
-                maps_prop = proper_partit.get('maps_url', '')
+                if proper_partit:
+                    j_prop = proper_partit.get('jornada', '-')
+                    data_prop = proper_partit.get('data', '-')
+                    hora_prop = proper_partit.get('hora', '-')
+                    rival_prop = proper_partit.get('rival', '-')
+                    lloc_prop = proper_partit.get('lloc', 'Casa')
+                    escut_prop = proper_partit.get('escut_rival_url', '')
+                    maps_prop = proper_partit.get('maps_url', '')
 
-                if lloc_prop == "Fora":
-                    e1_nom = rival_prop
-                    e1_img = obtenir_imatge_base64(escut_prop)
-                    e2_nom = "C.F. Ginesta"
-                    e2_img = obtenir_imatge_base64(LOGO_URL)
-                else:
-                    e1_nom = "C.F. Ginesta"
-                    e1_img = obtenir_imatge_base64(LOGO_URL)
-                    e2_nom = rival_prop
-                    e2_img = obtenir_imatge_base64(escut_prop)
+                    if lloc_prop == "Fora":
+                        e1_nom = rival_prop
+                        e1_img = obtenir_imatge_base64(escut_prop)
+                        e2_nom = "C.F. Ginesta"
+                        e2_img = obtenir_imatge_base64(LOGO_URL)
+                    else:
+                        e1_nom = "C.F. Ginesta"
+                        e1_img = obtenir_imatge_base64(LOGO_URL)
+                        e2_nom = rival_prop
+                        e2_img = obtenir_imatge_base64(escut_prop)
 
-                img1_p = f"<img src='{e1_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if e1_img else "<div style='font-size: 32px;'>🛡️</div>"
-                img2_p = f"<img src='{e2_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if e2_img else "<div style='font-size: 32px;'>🛡️</div>"
-                maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
+                    img1_p = f"<img src='{e1_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if e1_img else "<div style='font-size: 32px;'>🛡️</div>"
+                    img2_p = f"<img src='{e2_img}' style='width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;'>" if e2_img else "<div style='font-size: 32px;'>🛡️</div>"
+                    maps_p_html = f"&nbsp;|&nbsp; 📍 <a href='{maps_prop}' target='_blank' style='color: #5c2d73; font-weight: bold; text-decoration: underline;'>Com arribar</a>" if maps_prop and str(maps_prop).startswith("http") else ""
 
-                st.markdown(f"""
-                    <section class="match-feature">
-                      <div class="match-feature-label">⚡ Proper partit · Jornada {j_prop} · {data_prop} · {hora_prop} {maps_p_html}</div>
-                      <div class="match-feature-teams">
-                        <div class="match-feature-team">{img1_p}<div>{e1_nom}</div></div>
-                        <div class="match-feature-vs">VS</div>
-                        <div class="match-feature-team">{img2_p}<div>{e2_nom}</div></div>
-                      </div>
-                    </section>
-                """, unsafe_allow_html=True)
-    except:
-        pass
+                    st.markdown(f"""
+                        <section class="match-feature">
+                          <div class="match-feature-label">⚡ Proper partit · Jornada {j_prop} · {data_prop} · {hora_prop} {maps_p_html}</div>
+                          <div class="match-feature-teams">
+                            <div class="match-feature-team">{img1_p}<div>{e1_nom}</div></div>
+                            <div class="match-feature-vs">VS</div>
+                            <div class="match-feature-team">{img2_p}<div>{e2_nom}</div></div>
+                          </div>
+                        </section>
+                    """, unsafe_allow_html=True)
+        except:
+            pass
 
     if not golejadores_data:
         golejadores_data = [
@@ -455,47 +516,48 @@ def main():
     total_grogues = sum(int(j.get('grogues', 0) or 0) for j in golejadores_data)
     total_vermelles = sum(int(j.get('vermelles', 0) or 0) for j in golejadores_data)
 
-    # --- NOU PANELL DE TEMPORADA: RESUM VISUAL SENSE MODIFICAR DADES ---
-    st.markdown("""
-      <div class="section-kicker">Match centre · 2026/27</div>
-      <div class="section-heading">El Ginesta, d'una ullada</div>
-      <div class="section-copy">Un resum ràpid de la temporada abans d'entrar a cada secció.</div>
-    """, unsafe_allow_html=True)
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        st.metric("Partits jugats", n_partits)
-    with k2:
-        st.metric("Gols a favor", g_favor_total)
-    with k3:
-        st.metric("Gols encaixats", gols_contra_total)
-    with k4:
-        st.metric("Porteries a zero", porteries_zero)
+    if seccio_principal == "🏠 D’un cop d’ull":
+        # --- NOU PANELL DE TEMPORADA: RESUM VISUAL SENSE MODIFICAR DADES ---
+        st.markdown("""
+          <div class="section-kicker">Match centre · 2026/27</div>
+          <div class="section-heading">El Ginesta, d'una ullada</div>
+          <div class="section-copy">Un resum ràpid de la temporada abans d'entrar a cada secció.</div>
+        """, unsafe_allow_html=True)
+        k1, k2, k3, k4 = st.columns(4)
+        with k1:
+            st.metric("Partits jugats", n_partits)
+        with k2:
+            st.metric("Gols a favor", g_favor_total)
+        with k3:
+            st.metric("Gols encaixats", gols_contra_total)
+        with k4:
+            st.metric("Porteries a zero", porteries_zero)
 
-    panell_gols, panell_equip = st.columns([1.15, 1])
-    with panell_gols:
-        jugadores_gol = [j for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora']
-        mejores_goleadoras = sorted(jugadores_gol, key=lambda j: int(j.get('gols', 0) or 0), reverse=True)[:3]
-        scorer_rows = []
-        for pos, j in enumerate(mejores_goleadoras, start=1):
-            nom = str(j.get('nom', 'Jugadora'))
-            dorsal = j.get('dorsal', '-')
-            gols = int(j.get('gols', 0) or 0)
-            scorer_rows.append(f'<div class="scorer-row"><div class="scorer-number">{pos:02d}</div><div class="scorer-name">{nom}<div class="scorer-role">Dorsal #{dorsal}</div></div><div class="scorer-goals">{gols} ⚽</div></div>')
-        if not scorer_rows:
-            scorer_rows.append('<div class="section-copy">Encara no hi ha dades de golejadores.</div>')
-        st.markdown('<div class="overview-panel"><div class="overview-panel-title">🏆 Golejadores destacades</div>' + ''.join(scorer_rows) + '</div>', unsafe_allow_html=True)
-    with panell_equip:
-        promig_gols = (g_favor_total / n_partits) if n_partits else 0
-        percentatge_zero = (porteries_zero / n_partits * 100) if n_partits else 0
-        resum_html = (
-            '<div class="overview-panel"><div class="overview-panel-title">📈 Resum col·lectiu</div>'
-            f'<div class="quick-stat"><span>Mitjana de gols per partit</span><strong>{promig_gols:.2f}</strong></div>'
-            f'<div class="quick-stat"><span>Partits amb porteria a zero</span><strong>{percentatge_zero:.0f}%</strong></div>'
-            f'<div class="quick-stat"><span>Targetes grogues</span><strong>{total_grogues}</strong></div>'
-            f'<div class="quick-stat"><span>Targetes vermelles</span><strong>{total_vermelles}</strong></div></div>'
-        )
-        st.markdown(resum_html, unsafe_allow_html=True)
-    st.markdown("<div style='height:22px'></div>", unsafe_allow_html=True)
+        panell_gols, panell_equip = st.columns([1.15, 1])
+        with panell_gols:
+            jugadores_gol = [j for j in golejadores_data if j.get('rol', 'Jugadora') == 'Jugadora']
+            mejores_goleadoras = sorted(jugadores_gol, key=lambda j: int(j.get('gols', 0) or 0), reverse=True)[:3]
+            scorer_rows = []
+            for pos, j in enumerate(mejores_goleadoras, start=1):
+                nom = str(j.get('nom', 'Jugadora'))
+                dorsal = j.get('dorsal', '-')
+                gols = int(j.get('gols', 0) or 0)
+                scorer_rows.append(f'<div class="scorer-row"><div class="scorer-number">{pos:02d}</div><div class="scorer-name">{nom}<div class="scorer-role">Dorsal #{dorsal}</div></div><div class="scorer-goals">{gols} ⚽</div></div>')
+            if not scorer_rows:
+                scorer_rows.append('<div class="section-copy">Encara no hi ha dades de golejadores.</div>')
+            st.markdown('<div class="overview-panel"><div class="overview-panel-title">🏆 Golejadores destacades</div>' + ''.join(scorer_rows) + '</div>', unsafe_allow_html=True)
+        with panell_equip:
+            promig_gols = (g_favor_total / n_partits) if n_partits else 0
+            percentatge_zero = (porteries_zero / n_partits * 100) if n_partits else 0
+            resum_html = (
+                '<div class="overview-panel"><div class="overview-panel-title">📈 Resum col·lectiu</div>'
+                f'<div class="quick-stat"><span>Mitjana de gols per partit</span><strong>{promig_gols:.2f}</strong></div>'
+                f'<div class="quick-stat"><span>Partits amb porteria a zero</span><strong>{percentatge_zero:.0f}%</strong></div>'
+                f'<div class="quick-stat"><span>Targetes grogues</span><strong>{total_grogues}</strong></div>'
+                f'<div class="quick-stat"><span>Targetes vermelles</span><strong>{total_vermelles}</strong></div></div>'
+            )
+            st.markdown(resum_html, unsafe_allow_html=True)
+        st.markdown("<div style='height:22px'></div>", unsafe_allow_html=True)
 
     def sincronitzar_estadistiques_generals(nous_partits, noves_p_zero, nous_propia, nous_contra):
         try:
@@ -512,30 +574,13 @@ def main():
         except Exception as e:
             st.error(f"❌ Error en sincronitzar estadístiques: {e}")
 
-    # NAVEGACIÓ PRINCIPAL: MENÚ LATERAL RESPONSIVE
-    seccions_menu = ["📅 Calendari", "🎬 Videoteca", "👥 Plantilla", "📊 Estadístiques", "🤝 Amistosos"]
-    if st.session_state["auth_level"] == "admin":
-        seccions_menu.append("⚙️ Admin")
-
-    with st.sidebar:
-        st.markdown('<div class="sidebar-brand">', unsafe_allow_html=True)
-        st.image(LOGO_URL, width=92)
-        st.markdown('<div class="sidebar-brand-title">C.F. GINESTA</div><div class="sidebar-brand-subtitle">CADET F11 · TEMPORADA 2026/27</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="sidebar-menu-label">MENÚ PRINCIPAL</div>', unsafe_allow_html=True)
-        seccio_principal = st.radio(
-            "Navegació principal",
-            seccions_menu,
-            key="ginesta_seccio_principal",
-            label_visibility="collapsed"
+    if seccio_principal != "🏠 D’un cop d’ull":
+        st.markdown(
+            '<div class="section-kicker">C.F. Ginesta · Cadet F11</div>'
+            f'<div class="section-heading">{seccio_principal}</div>'
+            '<div class="section-copy">Consulta la informació de l’equip des del menú lateral. La secció seleccionada es manté ressaltada mentre navegues.</div>',
+            unsafe_allow_html=True
         )
-        st.markdown('<div class="sidebar-footer">MATCH CENTRE<br><span>Una passió, un equip.</span></div>', unsafe_allow_html=True)
-
-    st.markdown(
-        '<div class="section-kicker">C.F. Ginesta · Cadet F11</div>'
-        f'<div class="section-heading">{seccio_principal}</div>'
-        '<div class="section-copy">Consulta la informació de l’equip des del menú lateral. La secció seleccionada es manté ressaltada mentre navegues.</div>',
-        unsafe_allow_html=True
-    )
 
     # PESTANYA 1: CALENDARI PÚBLIC
     if seccio_principal == "📅 Calendari":
