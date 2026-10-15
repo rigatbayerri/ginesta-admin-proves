@@ -559,25 +559,76 @@ def main():
                 if fotos_str:
                     lletres_fotos = list(dict.fromkeys([f.strip() for f in fotos_str.split(",") if f and f.strip()]))
                     if lletres_fotos:
-                        st.markdown("Clica sobre qualsevol foto per veure-la a mida completa:")
-                        # Creem columnes en graella de 3 fotos per fila
-                        cols_galeria = st.columns(3)
-                        for idx, f_path in enumerate(lletres_fotos):
-                            col_actual = cols_galeria[idx % 3]
-                            with col_actual:
-                                # Miniatura amb estil CSS net
-                                f_b64 = obtenir_imatge_base64(f_path)
-                                if f_b64:
-                                    st.markdown(f"""
-                                        <div style="border: 2px solid #5c2d73; border-radius: 8px; overflow: hidden; margin-bottom: 10px; background: white; box-shadow: 2px 2px 6px rgba(0,0,0,0.08);">
-                                            <img src='{f_b64}' style='width: 100%; height: 130px; object-fit: cover; display: block;'>
-                                        </div>
-                                    """, unsafe_allow_html=True)
-                                    with st.expander(f"🔍 Veure foto {idx + 1}"):
-                                        if f_path.startswith("http"):
-                                            st.image(f_path, use_container_width=True)
-                                        elif os.path.exists(f_path):
-                                            st.image(f_path, use_container_width=True)
+                        st.markdown("📸 **Clica sobre qualsevol foto per obrir l'àlbum a pantalla completa:**")
+                        
+                        # Generar llista de base64 per injectar a JavaScript
+                        b64_list = [obtenir_imatge_base64(f) for f in lletres_fotos]
+                        
+                        # HTML + CSS + JS per a l'àlbum modal amb fletxes
+                        thumbnails_html = ""
+                        for idx, b64_img in enumerate(b64_list):
+                            thumbnails_html += f"""
+                                <div onclick="openModal({idx})" style="cursor: pointer; background: white; border: 2px solid #5c2d73; border-radius: 10px; overflow: hidden; box-shadow: 2px 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 140px;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                                    <img src="{b64_img}" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+                                </div>
+                            """
+
+                        slides_js_array = str(b64_list).replace("'", '"')
+
+                        album_component = f"""
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 10px;">
+                                {thumbnails_html}
+                            </div>
+
+                            <div id="photoModal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; flex-direction: column;">
+                                <span onclick="closeModal()" style="position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 1000000;">&times;</span>
+                                <div style="position: relative; max-width: 90%; max-height: 80vh; display: flex; align-items: center; justify-content: center;">
+                                    <button onclick="changeSlide(-1)" style="position: absolute; left: -50px; background: #5c2d73; color: white; border: none; font-size: 24px; padding: 12px 16px; cursor: pointer; border-radius: 50%; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">&#10094;</button>
+                                    <img id="modalImg" src="" style="max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+                                    <button onclick="changeSlide(1)" style="position: absolute; right: -50px; background: #5c2d73; color: white; border: none; font-size: 24px; padding: 12px 16px; cursor: pointer; border-radius: 50%; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">&#10095;</button>
+                                </div>
+                                <div id="modalCounter" style="color: white; margin-top: 15px; font-size: 16px; font-weight: bold; letter-spacing: 1px;"></div>
+                            </div>
+
+                            <script>
+                                const images = {slides_js_array};
+                                let currentIndex = 0;
+
+                                function openModal(index) {{
+                                    currentIndex = index;
+                                    updateModalImage();
+                                    document.getElementById('photoModal').style.display = 'flex';
+                                }}
+
+                                function closeModal() {{
+                                    document.getElementById('photoModal').style.display = 'none';
+                                }}
+
+                                function changeSlide(direction) {{
+                                    currentIndex += direction;
+                                    if (currentIndex >= images.length) {{
+                                        currentIndex = 0;
+                                    }} else if (currentIndex < 0) {{
+                                        currentIndex = images.length - 1;
+                                    }}
+                                    updateModalImage();
+                                }}
+
+                                function updateModalImage() {{
+                                    document.getElementById('modalImg').src = images[currentIndex];
+                                    document.getElementById('modalCounter').innerText = (currentIndex + 1) + ' / ' + images.length;
+                                }}
+
+                                document.addEventListener('keydown', function(event) {{
+                                    if (document.getElementById('photoModal').style.display === 'flex') {{
+                                        if (event.key === 'ArrowRight') {{ changeSlide(1); }}
+                                        if (event.key === 'ArrowLeft') {{ changeSlide(-1); }}
+                                        if (event.key === 'Escape') {{ closeModal(); }}
+                                    }}
+                                }});
+                            </script>
+                        """
+                        st.markdown(album_component, unsafe_allow_html=True)
                     else:
                         st.info("No hi ha fotos disponibles per a aquest partit.")
                 else:
